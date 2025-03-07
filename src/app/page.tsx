@@ -1,36 +1,74 @@
-import Link from "next/link";
+"use client"; // Required for event handlers in the App Router
+
+// import Link from "next/link";
+
+import React from "react";
+import axios from "axios";
+import Image from "next/image";
+// import google_login_icon from "@/components/icons/google_login_icons/svg/light/web_light_sq_SI.svg"; // Ensure the correct import path
+
+axios.defaults.withCredentials = true;
+
+const Login: React.FC = () => {
+  const handleLogin = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/login", { withCredentials: true });
+      window.location.href = response.data.auth_url; // Redirect to Google login
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
+
+  return (
+    <button onClick={handleLogin} className="shadow-md relative w-60 h-14 bg-white rounded-lg">
+      <Image
+        src="/images/google_login_icons/svg/light/web_light_sq_SI.svg" 
+        alt="Sign in with Google"
+        fill
+        className="object-contain" // Ensures it fits inside the container
+      />
+    </button>
+  );
+};
+
+const About: React.FC = () => {
+  return (
+    <div className="bg-[#E7E2CF] p-6 rounded-lg shadow-md w-1/2">
+      <h3 className="text-xl font-medium mb-4 font-serif font-source-serif-pro">About</h3>
+      <p>
+        CMUCal offers convenient search for academic resources and events on campus, with the option of adding
+        events to your personal Google Calendar.
+      </p>
+    </div>
+  );
+};
+
+const Video: React.FC = () => {
+  return (
+    <div className="border p-6 rounded-lg shadow-md w-1/2">
+      <p className="text-xl font-medium mb-4 font-serif font-source-serif-pro">Video Tutorial</p>
+    </div>
+  );
+};
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+    <main className="flex min-h-screen flex-col items-center justify-center ">
+      <div className="h-4/5 bg-lightgrey text-center">
+        <h1 className="text-black font-serif font-source-serif-pro text-[76px] font-normal leading-normal pt-28">
+          Welcome to CMUCal
         </h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/usage/first-steps"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">First Steps →</h3>
-            <div className="text-lg">
-              Just the basics - Everything you need to know to set up your
-              database and authentication.
-            </div>
-          </Link>
-          <Link
-            className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-            href="https://create.t3.gg/en/introduction"
-            target="_blank"
-          >
-            <h3 className="text-2xl font-bold">Documentation →</h3>
-            <div className="text-lg">
-              Learn more about Create T3 App, the libraries it uses, and how to
-              deploy it.
-            </div>
-          </Link>
+        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-12">
+          the all-in-one CMU resources platform
+        </h2>
+        <div className="flex justify-center gap-8 pb-14">
+          <Login />
         </div>
+      </div>
+
+      <div className="flex justify-around px-10 py-6 gap-8">
+        <About />
+        <Video />
       </div>
     </main>
   );

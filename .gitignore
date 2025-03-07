@@ -36,6 +36,12 @@ yarn-error.log*
 .env
 .env*.local
 
+# Ignore Google API credentials
+backend/client_secret.json
+
+# Ignore virtual environment in backend
+backend/venv
+
 # vercel
 .vercel
 
