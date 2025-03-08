@@ -1,13 +1,13 @@
-"use client"; // Required for event handlers in the App Router
+"use client"; // Required for hooks in Next.js App Router
 
-import { useState } from "react";
+import { usePathname } from "next/navigation"; // Detects the current path
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi"; // Search icon
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 
 export default function Navbar() {
-  const [selectedTerm, setSelectedTerm] = useState("Fall 24");
+  const pathname = usePathname(); // Get the current route
 
   return (
     <nav className="flex items-center justify-between p-3 border-b bg-white">
@@ -15,22 +15,27 @@ export default function Navbar() {
       <div className="flex items-center space-x-2">
         {/* User Icon (Links to Profile Page) */}
         <Link href="/profile">
-          <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300">
-            <FaRegUser className="text-gray-600" size={18} />
+          <div
+            className={`flex items-center justify-center w-10 h-10 rounded-md cursor-pointer
+              ${pathname === "/profile" ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}
+            `}
+          >
+            <FaRegUser size={18} />
           </div>
         </Link>
 
         {/* Search Button (Links to Search Page) */}
         <Link href="/explore">
-          <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300">
-            <FiSearch className="text-gray-600" size={18} />
+          <div className={`flex items-center justify-center w-10 h-10 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300
+            ${pathname === "/explore" ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>
+            <FiSearch size={18} />
           </div>
         </Link>
 
         {/* Term Selector (Not a link, just UI) */}
         <button className="flex items-center px-3 py-2 space-x-2 border rounded-md">
           <BsCalendar3 className="text-gray-600" size={16} />
-          <span className="text-sm font-medium">{selectedTerm}</span>
+          <span className="text-sm font-medium">Fall 24</span>
         </button>
       </div>
 
