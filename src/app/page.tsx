@@ -33,7 +33,7 @@ const Login: React.FC = () => {
 
 const About: React.FC = () => {
   return (
-    <div className="bg-[#E7E2CF] p-6 rounded-lg shadow-md w-1/2">
+    <div className="bg-gray-200 p-6 rounded-lg shadow-md w-1/2">
       <h3 className="text-xl font-medium mb-4 font-serif font-source-serif-pro">About</h3>
       <p>
         CMUCal offers convenient search for academic resources and events on campus, with the option of adding
@@ -54,11 +54,11 @@ const Video: React.FC = () => {
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center ">
-      <div className="h-4/5 bg-lightgrey text-center">
+      <div className="h-3/5 bg-lightgrey text-center">
         <h1 className="text-black font-serif font-source-serif-pro text-[76px] font-normal leading-normal pt-28">
           Welcome to CMUCal
         </h1>
-        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-12">
+        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-6">
           the all-in-one CMU resources platform
         </h2>
         <div className="flex justify-center gap-8 pb-14">
@@ -66,7 +66,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="flex justify-around px-10 py-6 gap-8">
+      <div className="flex justify-around px-10 py-6 gap-8 pb-20">
         <About />
         <Video />
       </div>

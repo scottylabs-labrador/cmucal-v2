@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"; // Detects the current path
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FiSearch, FiMoon, FiSun } from "react-icons/fi"; // Search icon
+import { FiSearch, FiMoon, FiSun, FiLogOut } from "react-icons/fi"; // Search, dark mode, logout
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 
@@ -34,7 +34,7 @@ export default function Navbar() {
 
         {/* Search Button (Links to Search Page) */}
         <Link href="/explore">
-          <div className={`flex items-center justify-center w-10 h-10 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300 dark:bg-gray-600
+          <div className={`flex items-center justify-center w-10 h-10 rounded-md cursor-pointer dark:bg-gray-600
             ${pathname === "/explore" ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}`}>
             <FiSearch className="text-gray-600 dark:text-white" size={18} />
           </div>
@@ -57,26 +57,32 @@ export default function Navbar() {
         />
       </div>
 
-      {/* Right Section: Upload Button (Links to Upload Page) */}
-      <Link href="/upload">
-        <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
-          Upload
-        </button>
-      </Link>
-      {/* Moon Icon for Dark Mode Toggle */}
-      {/* Dark Mode Toggle Button */}
-      {mounted && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md cursor-pointer"
-          >
-            {theme === "dark" ? (
-              <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode
-            ) : (
-              <FiMoon className="text-gray-600 dark:text-white" size={18} /> // Moon icon for Dark mode
-            )}
+      {/* Right Section: Upload Button, dark mode, logout */}
+      <div className="flex items-center space-x-2">
+        <Link href="/upload">
+          <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
+            Upload
           </button>
+        </Link>
+        {/* Moon Icon for Dark Mode Toggle */}
+        {/* Dark Mode Toggle Button */}
+        {mounted && (
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="flex items-center justify-center w-10 h-10 pl-2 rounded-md cursor-pointer"
+            >
+              {theme === "dark" ? (
+                <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode
+              ) : (
+                <FiMoon className="text-gray-600 dark:text-white" size={18} /> // Moon icon for Dark mode
+              )}
+            </button>
         )}
+        <button className="flex items-center px-3 py-2 space-x-2">
+          <FiLogOut className="text-gray-600 dark:text-white" size={16} />
+          <span className="text-sm font-medium">Sign out</span>
+        </button>
+      </div>
     </nav>
   );
 }
