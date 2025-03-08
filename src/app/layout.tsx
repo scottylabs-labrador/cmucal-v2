@@ -1,8 +1,11 @@
 import "~/styles/globals.css";
 
+import ThemeProvider from "@components/ThemeProvider";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 import Navbar from "@components/Navbar";
+
+
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -14,10 +17,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
-      <body>
-        <Navbar />
-        {children}
+    <html lang="en" className={`${GeistSans.variable}`}> 
+      <body className="bg-white text-black dark:bg-gray-900 dark:text-white">
+        <ThemeProvider>
+          <Navbar />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
