@@ -6,6 +6,7 @@ base_bp = Blueprint("base", __name__)
 def home():
     return "Welcome to the CMUCal Flask API!"
 
+# need to test mongo connection
 @base_bp.route("/test_mongo", methods=["GET"])
 def test_mongo():
     """Check if MongoDB is accessible"""
