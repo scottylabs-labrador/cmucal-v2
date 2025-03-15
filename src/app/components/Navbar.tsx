@@ -45,6 +45,12 @@ export default function Navbar() {
           <BsCalendar3 className="text-gray-600 dark:text-white" size={16} />
           <span className="text-sm font-medium">Fall 24</span>
         </button>
+
+        <Link href="/upload">
+          <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
+            Upload
+          </button>
+        </Link>
       </div>
 
       {/* Middle Section: Search Bar */}
@@ -59,11 +65,9 @@ export default function Navbar() {
 
       {/* Right Section: Upload Button, dark mode, logout */}
       <div className="flex items-center space-x-2">
-        <Link href="/upload">
-          <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
-            Upload
-          </button>
-        </Link>
+        <button className="flex items-center px-3 py-2 space-x-2">
+          <span className="text-gray-600 dark:text-white">Connect to Cal</span>
+        </button>
         {/* Moon Icon for Dark Mode Toggle */}
         {/* Dark Mode Toggle Button */}
         {mounted && (
@@ -78,10 +82,10 @@ export default function Navbar() {
               )}
             </button>
         )}
-        <button className="flex items-center px-3 py-2 space-x-2">
+        <Link href="/" className="flex items-center px-3 py-2 space-x-2">
           <FiLogOut className="text-gray-600 dark:text-white" size={16} />
           <span className="text-sm font-medium">Sign out</span>
-        </button>
+        </Link>
       </div>
     </nav>
   );

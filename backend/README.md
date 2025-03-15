@@ -1,7 +1,7 @@
 cd into the backend folder 
 
 1. Virtual Environment
-If there isn't a venv folder, run `python3 -m venv venv` in terminal to create an venv (ignore this step if already have venv).
+(ignore this step if already have venv) If there isn't a venv folder, run `python3 -m venv venv` in terminal to create an venv.
 
 Run the following command to activate venv
 macOS: `source venv/bin/activate`

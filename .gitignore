@@ -50,3 +50,5 @@ backend/venv
 
 # idea files
 .idea
+# clerk configuration (can include secrets)
+/.clerk/

@@ -1,3 +1,5 @@
+"use client"
+
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import Calendar from "@components/Calendar";
 
@@ -24,5 +26,6 @@ function ProfileSidebar() {
 }
 
 export default function Profile() {
+
   return <TwoColumnLayout leftContent={<ProfileSidebar />} rightContent={<Calendar />} />;
 }

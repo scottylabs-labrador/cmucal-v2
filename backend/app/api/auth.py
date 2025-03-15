@@ -1,16 +1,16 @@
 from flask import Blueprint, request, jsonify
-from app.services.auth_service import check_password, create_token, get_user_by_username
+from app.services.auth_service import verify_clerk_token
+from app.models.user import get_user_role
 
 auth_bp = Blueprint("auth", __name__)
 
-@auth_bp.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    username, password = data.get("username"), data.get("password")
+@auth_bp.route("/role", methods=["GET"])
+def get_role():
+    """ Verify Clerk JWT and return user role """
+    clerk_user = verify_clerk_token()
+    if not clerk_user:
+        return jsonify({"msg": "Unauthorized"}), 401
 
-    user = get_user_by_username(username)
-    if not user or not check_password(user["password"], password):
-        return jsonify({"msg": "Invalid credentials"}), 401
-
-    token = create_token(user)
-    return jsonify(access_token=token)
+    clerk_id = clerk_user["id"]
+    role = get_user_role(clerk_id)
+    return jsonify({"role": role})
