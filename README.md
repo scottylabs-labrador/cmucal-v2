@@ -5,7 +5,8 @@
 It is bootstrapped with `create-t3-app`.
 
 ## How to run
-`npm run dev`
+- Frontend: `npm run dev`
+- Backend: see the `readme` file in the backend folder.
 
 ## How do I deploy this?
 
