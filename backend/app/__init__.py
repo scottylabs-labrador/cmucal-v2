@@ -10,25 +10,26 @@ from app.api.base import base_bp
 from app.api.webhook import webhook_bp
 
 from dotenv import load_dotenv
-from flask_pymongo import PyMongo
+# from flask_pymongo import PyMongo
+from app.services.db import init_db
 
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize PyMongo globally
-mongo = PyMongo()
+# mongo = PyMongo()
 
 def create_app():
     app = Flask(__name__)
 
-    app.json = json.provider.DefaultJSONProvider(app)
+    # app.json = json.provider.DefaultJSONProvider(app)
 
-    app.config.from_object(Config)
+    # app.config.from_object(Config)
     
 
     # Bind the Flask app to the globally initialized `mongo`
-    mongo.init_app(app)
+    init_db(app)
 
     CORS(app)
     JWTManager(app)
