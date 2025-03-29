@@ -7,8 +7,14 @@ import Link from "next/link";
 import { FiSearch, FiMoon, FiSun, FiLogOut } from "react-icons/fi"; // Search, dark mode, logout
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
+import { ReactNode } from "react";
 
-export default function Navbar() {
+
+type NavBarProps = {
+  UserButton: ReactNode;
+};
+
+export default function Navbar({ UserButton }: NavBarProps) {
   const { theme, setTheme } = useTheme(); // Get the current theme
   const [mounted, setMounted] = useState(false); // Prevents hydration mismatch
   const pathname = usePathname(); // Get the current route
@@ -22,7 +28,7 @@ export default function Navbar() {
       {/* Left Section: User & Search */}
       <div className="flex items-center space-x-2">
         {/* User Icon (Links to Profile Page) */}
-        <Link href="/profile">
+        <Link href="/">
           <div
             className={`flex items-center justify-center w-10 h-10 rounded-md cursor-pointer dark:bg-gray-600
               ${pathname === "/profile" ? "bg-gray-500 text-white" : "bg-gray-200 text-gray-600 hover:bg-gray-300"}
@@ -82,10 +88,11 @@ export default function Navbar() {
               )}
             </button>
         )}
-        <Link href="/" className="flex items-center px-3 py-2 space-x-2">
+        <div>{UserButton}</div>
+        {/* <Link href="/" className="flex items-center px-3 py-2 space-x-2">
           <FiLogOut className="text-gray-600 dark:text-white" size={16} />
           <span className="text-sm font-medium">Sign out</span>
-        </Link>
+        </Link> */}
       </div>
     </nav>
   );
