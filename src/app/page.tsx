@@ -1,75 +1,31 @@
-"use client"; // Required for event handlers in the App Router
+"use client"
 
-// import Link from "next/link";
+import TwoColumnLayout from "@components/TwoColumnLayout";
+import Calendar from "@components/Calendar";
 
-import React from "react";
-import axios from "axios";
-import Image from "next/image";
-// import google_login_icon from "@/components/icons/google_login_icons/svg/light/web_light_sq_SI.svg"; // Ensure the correct import path
+const userSchedule = [
+  { id: "1", title: "15-122 Lecture", time: "Mon/Wed/Fri 10:00AM - 11:00AM" },
+  { id: "2", title: "15-151 Recitation", time: "Tue 8:00AM - 8:50AM" },
+  { id: "3", title: "Office Hours", time: "Thu 2:00PM - 4:00PM" },
+];
 
-axios.defaults.withCredentials = true;
-
-const Login: React.FC = () => {
-  const handleLogin = async () => {
-    try {
-      const response = await axios.get("http://localhost:8000/login", { withCredentials: true });
-      window.location.href = response.data.auth_url; // Redirect to Google login
-    } catch (error) {
-      console.error("Login failed", error);
-    }
-  };
-
+function ProfileSidebar() {
   return (
-    <button onClick={handleLogin} className="shadow-md relative w-60 h-14 bg-white rounded-lg">
-      <Image
-        src="/images/google_login_icons/svg/light/web_light_sq_SI.svg" 
-        alt="Sign in with Google"
-        fill
-        className="object-contain" // Ensures it fits inside the container
-      />
-    </button>
-  );
-};
-
-const About: React.FC = () => {
-  return (
-    <div className="bg-gray-200 p-6 rounded-lg shadow-md w-1/2">
-      <h3 className="text-xl font-medium mb-4 font-serif font-source-serif-pro">About</h3>
-      <p>
-        CMUCal offers convenient search for academic resources and events on campus, with the option of adding
-        events to your personal Google Calendar.
-      </p>
+    <div>
+      <h2 className="text-lg font-semibold mb-2">Current Schedule</h2>
+      <ul className="space-y-2">
+        {userSchedule.map((item) => (
+          <li key={item.id} className="p-2 bg-gray-100 rounded">
+            <p className="font-medium">{item.title}</p>
+            <p className="text-sm text-gray-600">{item.time}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-};
+}
 
-const Video: React.FC = () => {
-  return (
-    <div className="border p-6 rounded-lg shadow-md w-1/2">
-      <p className="text-xl font-medium mb-4 font-serif font-source-serif-pro">Video Tutorial</p>
-    </div>
-  );
-};
+export default function Profile() {
 
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center ">
-      <div className="h-3/5 bg-lightgrey text-center">
-        <h1 className="text-black font-serif font-source-serif-pro text-[76px] font-normal leading-normal pt-28">
-          Welcome to CMUCal
-        </h1>
-        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-6">
-          the all-in-one CMU resources platform
-        </h2>
-        <div className="flex justify-center gap-8 pb-14">
-          <Login />
-        </div>
-      </div>
-
-      <div className="flex justify-around px-10 py-6 gap-8 pb-20">
-        <About />
-        <Video />
-      </div>
-    </main>
-  );
+  return <TwoColumnLayout leftContent={<ProfileSidebar />} rightContent={<Calendar />} />;
 }

@@ -17,6 +17,8 @@ import ThemeProvider from "@components/ThemeProvider";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 import Navbar from "@components/Navbar";
+import Welcome from "./components/Welcome";
+import SignedOutNav from "./components/SignedOutNav";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -40,31 +42,32 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${GeistSans.variable}`}> 
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-              {/* <GoogleOneTap /> */}
-            </SignedOut>
+    <html lang="en"> 
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
+          <SignedIn>
+            <Navbar UserButton={<UserButton />} />
+          </SignedIn>
+          <SignedOut>
+            <SignedOutNav />
+          </SignedOut>
+
+          <main>
             <SignedIn>
-              <UserButton />
+              {children}
             </SignedIn>
-          </header>
-          <ThemeProvider>
-            <Navbar />
-            {children}
-          </ThemeProvider>
-        </body>
-        
-        {/* <body className="bg-white text-black dark:bg-gray-900 dark:text-white">
-          <ThemeProvider>
-            <Navbar />
-            {children}
-          </ThemeProvider>
-        </body> */}
-      </html>
-    </ClerkProvider>
+
+            <SignedOut>
+              {/* Show a login screen or redirect maybe */}
+              <div className="flex justify-center items-center h-[80vh]">
+                <Welcome />
+              </div>
+            </SignedOut>
+          </main>
+        </ThemeProvider>
+      </body>
+    </html>
+  </ClerkProvider>
+
   );
 }
