@@ -8,12 +8,13 @@ def clerk_webhook():
     """ Webhook to assign default role when a new user signs up in Clerk """
     data = request.json
     print("called the webhook")
+    user_data = data.get("data")
 
-    if not data or "id" not in data:
-        return jsonify({"msg": "Invalid request"}), 400
+    clerk_id = user_data.get("id")
+    if not clerk_id:
+        return jsonify({"msg": "Invalid payload"}), 400
 
-    clerk_id = data["id"]
-    create_user(clerk_id, role="user")  # Assign "user" by default
+    create_user(user_data)
     print("User role assigned successfully")
 
     return jsonify({"msg": "User role assigned successfully"}), 200
