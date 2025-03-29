@@ -7,7 +7,6 @@ base_bp = Blueprint("base", __name__)
 def home():
     return "Welcome to the CMUCal Flask API!"
 
-
 @base_bp.route("/ping_mongo")
 def ping_mongo():
     try:
@@ -16,7 +15,6 @@ def ping_mongo():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# need to test mongo connection
 @base_bp.route("/test_mongo", methods=["GET"])
 def test_mongo():
     """Check if MongoDB is accessible"""
