@@ -1,31 +1,17 @@
-"use client"
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-import TwoColumnLayout from "@components/TwoColumnLayout";
-import Calendar from "@components/Calendar";
+export default async function Home() {
+  const { userId } = await auth();
 
-const userSchedule = [
-  { id: "1", title: "15-122 Lecture", time: "Mon/Wed/Fri 10:00AM - 11:00AM" },
-  { id: "2", title: "15-151 Recitation", time: "Tue 8:00AM - 8:50AM" },
-  { id: "3", title: "Office Hours", time: "Thu 2:00PM - 4:00PM" },
-];
+  if (userId) {
+    redirect("/profile"); // redirect to profile if signed in
+  }
 
-function ProfileSidebar() {
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-2">Current Schedule</h2>
-      <ul className="space-y-2">
-        {userSchedule.map((item) => (
-          <li key={item.id} className="p-2 bg-gray-100 rounded">
-            <p className="font-medium">{item.title}</p>
-            <p className="text-sm text-gray-600">{item.time}</p>
-          </li>
-        ))}
-      </ul>
+    <div className="flex justify-center items-center h-[80vh]">
+      {/* Optional: a signed-out landing page or leave empty */}
+      <p>Welcome! Please sign in to continue.</p>
     </div>
   );
-}
-
-export default function Profile() {
-
-  return <TwoColumnLayout leftContent={<ProfileSidebar />} rightContent={<Calendar />} />;
 }
