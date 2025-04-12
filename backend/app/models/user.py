@@ -23,3 +23,36 @@ def get_user_role(clerk_id):
     db = mongo.cx["CMUCal"]  # Get `mongo` from Flask context
     user = db.users.find_one({"clerk_id": clerk_id})
     return user["role"] if user else None
+
+
+# Save token data from Google (access_token, refresh_token, expiry, etc.)
+def save_google_token(user_id: str, token_data: dict):
+    """
+    Store Google OAuth token info in user's record.
+    """
+    db = mongo.cx["CMUCal"]
+    db.users.update_one(
+        {"clerk_id": user_id},
+        {
+            "$set": {
+                "google_oauth": {
+                    "access_token": token_data.get("access_token"),
+                    "refresh_token": token_data.get("refresh_token"),
+                    "expires_in": token_data.get("expires_in"),
+                    "scope": token_data.get("scope"),
+                    "token_type": token_data.get("token_type"),
+                    "id_token": token_data.get("id_token"),
+                }
+            }
+        },
+        upsert=True
+    )
+
+# Retrieve Google access token (returns None if not set)
+def get_access_token_for_user(user_id: str) -> str | None:
+    """
+    Fetch the user's Google access token if it exists.
+    """
+    db = mongo.cx["CMUCal"]
+    user = db.users.find_one({"clerk_id": user_id}, {"google_oauth.access_token": 1})
+    return user.get("google_oauth", {}).get("access_token") if user else None
