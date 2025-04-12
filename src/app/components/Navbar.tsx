@@ -8,6 +8,7 @@ import { FiSearch, FiMoon, FiSun, FiLogOut } from "react-icons/fi"; // Search, d
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
+import { ConnectGoogleButton } from "./ConnectGoogleButton";
 
 
 type NavBarProps = {
@@ -71,9 +72,10 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
       {/* Right Section: Upload Button, dark mode, logout */}
       <div className="flex items-center space-x-2">
-        <button className="flex items-center px-3 py-2 space-x-2">
+        {/* <button className="flex items-center px-3 py-2 space-x-2">
           <span className="text-gray-600 dark:text-white">Connect to Cal</span>
-        </button>
+        </button> */}
+        <ConnectGoogleButton />
         {/* Moon Icon for Dark Mode Toggle */}
         {/* Dark Mode Toggle Button */}
         {mounted && (

@@ -8,6 +8,7 @@ from app.api.users import users_bp
 from app.api.admin import admin_bp
 from app.api.base import base_bp
 from app.api.webhook import webhook_bp
+from app.api.google_oauth import google_bp
 
 from dotenv import load_dotenv
 from app.services.db import init_db
@@ -39,6 +40,7 @@ def create_app():
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(webhook_bp, url_prefix="/api/webhook")
+    app.register_blueprint(google_bp, url_prefix="/api/google")
     app.register_blueprint(base_bp)
 
     return app

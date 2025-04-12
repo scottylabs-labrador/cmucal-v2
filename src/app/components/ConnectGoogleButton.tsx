@@ -22,12 +22,20 @@ export function ConnectGoogleButton() {
 
   const handleConnect = async () => {
     const token = await getToken();
-    const stateRes = await fetch("http://localhost:5001/api/google/oauth/state", {
+    console.log(token);
+    const res = await fetch("http://localhost:5001/api/google/oauth/state", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const { state } = await stateRes.json();
+  
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Failed to get state token", err);
+      return;
+    }
+  
+    const { state } = await res.json();
 
     const params = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,

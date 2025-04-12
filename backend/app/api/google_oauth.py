@@ -1,17 +1,37 @@
 from flask import Blueprint, request, jsonify, redirect, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.services.clerk_auth import verify_clerk_token
+# from app.services.jwt_state import create_oauth_state_token
 from app.services.jwt_state import create_oauth_state_token, verify_oauth_state_token
 from app.models.user import get_access_token_for_user, save_google_token
 import requests
 
 google_bp = Blueprint("google", __name__)
 
+# @jwt_required()
+
 @google_bp.route("/oauth/state")
 @jwt_required()
 def oauth_state():
+    print("oauth_state called")
     user_id = get_jwt_identity()
+    print(f"User ID: {user_id}")
     state = create_oauth_state_token(user_id)
     return jsonify({"state": state})
+
+    # auth_header = request.headers.get("Authorization", "")
+    # if not auth_header.startswith("Bearer "):
+    #     return jsonify({"error": "Missing Bearer token"}), 401
+
+    # token = auth_header.split(" ")[1]
+
+    # try:
+    #     user_id = verify_clerk_token(token)
+    # except Exception as e:
+    #     return jsonify({"error": f"Invalid token: {str(e)}"}), 401
+
+    # state = create_oauth_state_token(user_id)
+    # return jsonify({"state": state})
 
 @google_bp.route("/oauth/callback")
 def oauth_callback():

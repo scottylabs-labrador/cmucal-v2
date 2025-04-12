@@ -49,7 +49,7 @@ def save_google_token(user_id: str, token_data: dict):
     )
 
 # Retrieve Google access token (returns None if not set)
-def get_access_token_for_user(user_id: str) -> str | None:
+def get_access_token_for_user(user_id: str):
     """
     Fetch the user's Google access token if it exists.
     """
