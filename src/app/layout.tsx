@@ -9,20 +9,20 @@ import {
   UserButton,
   GoogleOneTap
 } from '@clerk/nextjs'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Geist_Mono } from 'next/font/google'
 
 import type { AppProps } from "next/app";
 
 import ThemeProvider from "@components/ThemeProvider";
-import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 import Navbar from "@components/Navbar";
 import Welcome from "./components/Welcome";
 import SignedOutNav from "./components/SignedOutNav";
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
+  display: 'swap',
 })
 
 const geistMono = Geist_Mono({
@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html lang="en"> 
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
         <ThemeProvider>
           <SignedIn>
             <Navbar UserButton={<UserButton />} />
