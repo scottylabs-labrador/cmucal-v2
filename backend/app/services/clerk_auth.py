@@ -4,7 +4,7 @@ from jwt.algorithms import RSAAlgorithm
 
 # Replace this with your actual Clerk domain (no trailing slash)
 CLERK_JWKS_URL = "https://cmucal-456604.clerk.accounts.dev/.well-known/jwks.json"
-CLERK_AUDIENCE = "<your-clerk-frontend-api>"  # e.g., "https://cmucal.clerk.accounts.dev"
+CLERK_AUDIENCE = "https://cmucal-456604.clerk.accounts.dev"  # e.g., "https://cmucal.clerk.accounts.dev"
 
 _cached_public_key = None
 
