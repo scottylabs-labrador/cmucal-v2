@@ -29,11 +29,11 @@ export function ConnectGoogleButton() {
       },
     });
   
-    if (!res.ok) {
-      const err = await res.json();
-      console.error("Failed to get state token", err);
-      return;
-    }
+    // if (!res.ok) {
+    //   const err = await res.json();
+    //   console.error("Failed to get state token", err);
+    //   return;
+    // }
   
     const { state } = await res.json();
 
