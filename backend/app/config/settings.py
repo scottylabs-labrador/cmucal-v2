@@ -6,6 +6,6 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-jwt-secret")
     MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/flaskapp")
     GOOGLE_CLIENT_SECRET_FILE = "client_secret.json"  # Google API credentials
-    GOOGLE_SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+    GOOGLE_SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 

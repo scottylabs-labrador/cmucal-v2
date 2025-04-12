@@ -24,7 +24,8 @@ def create_app():
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-    app.config["NEXT_PUBLIC_GOOGLE_CLIENT_ID"] = os.getenv("NEXT_PUBLIC_GOOGLE_CLIENT_ID")
+    # app.config["NEXT_PUBLIC_GOOGLE_CLIENT_ID"] = os.getenv("NEXT_PUBLIC_GOOGLE_CLIENT_ID")
+    app.config["GOOGLE_CLIENT_SECRET_FILE"] = "client_secret.json"
     
 
     # Bind the Flask app to mongo
