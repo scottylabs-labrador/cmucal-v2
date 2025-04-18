@@ -4,7 +4,6 @@
 
 import React from "react";
 import axios from "axios";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 // import google_login_icon from "@/components/icons/google_login_icons/svg/light/web_light_sq_SI.svg"; // Ensure the correct import path
 
@@ -55,7 +54,7 @@ const About: React.FC = () => {
 
 const Video: React.FC = () => {
   return (
-    <div className="border-gray-200 p-6 rounded-lg shadow-md w-1/2 dark:bg-gray-600 dark:text-gray-300">
+    <div className="border-gray p-6 rounded-lg shadow-md w-1/2 dark:bg-gray-600 dark:text-gray-300 dark: border-gray-200">
       <p className="text-xl font-medium mb-4 font-serif font-source-serif-pro">Video Tutorial</p>
     </div>
   );
