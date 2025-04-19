@@ -7,6 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core"; 
+import { useGcalEvents } from "../../context/GCalEventsContext";
 
 
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
@@ -16,12 +17,18 @@ import { useUser } from "@clerk/nextjs";
 
 type Props = {
   events: EventInput[];
+  setEvents: React.Dispatch<React.SetStateAction<any[]>>;
 };
 
-const Calendar: FC<Props> = ({ events }) => {
+const Calendar: FC<Props> = ({ events, setEvents }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
+  const { gcalEvents } = useGcalEvents();
+  // const mergedEvents = [...events, ...gcalEvents];
+  // console.log("Merged Events:", mergedEvents);
+  // const [mergedEvents, setMergedEvents] = useState(events);
   const { user } = useUser();
+
   
   const handleEventClick = async (info: EventClickArg) => {
     const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
@@ -39,6 +46,13 @@ const Calendar: FC<Props> = ({ events }) => {
 
       // Remove from calendar UI immediately
       info.event.remove();
+
+      // Update local state so sidebar reflects it
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === info.event.id ? { ...e, added: false } : e
+        )
+      );
     } catch (error) {
       console.error("Failed to delete event:", error);
       alert("Something went wrong deleting this event.");
