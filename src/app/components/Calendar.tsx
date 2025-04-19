@@ -7,6 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core"; 
+import { useGcalEvents } from "../../context/GCalEventsContext";
 
 
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
@@ -21,7 +22,21 @@ type Props = {
 const Calendar: FC<Props> = ({ events }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
+  const { gcalEvents } = useGcalEvents();
+  // const mergedEvents = [...events, ...gcalEvents];
+  // console.log("Merged Events:", mergedEvents);
+  // const [mergedEvents, setMergedEvents] = useState(events);
   const { user } = useUser();
+
+  // useEffect(() => {
+  //   setMergedEvents((prevEvents) => {
+  //     // Optional: remove duplicates by event.id
+  //     const merged = [...prevEvents, ...gcalEvents];
+  //     // const unique = Array.from(new Map(merged.map(e => [e.id, e])).values());
+  //     return merged;
+  //   });
+  //   console.log("Merged Events:", mergedEvents);
+  // }, [gcalEvents]);
   
   const handleEventClick = async (info: EventClickArg) => {
     const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);

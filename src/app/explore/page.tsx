@@ -11,6 +11,7 @@ import SearchResultsSidebar from "@components/SearchResultSidebar";
 //   { id: "3", title: "ScottySpark", date: "Apr 19, 5:00PM - 8:00PM", location: "Swartz Center, Tepper", added: false },
 // ];
 
+
 const initialEvents = [
   {
     id: "1",
@@ -38,7 +39,12 @@ const initialEvents = [
   },
 ];
 
-export default function Explore() {
+// interface ExplorePageProps {
+//   gcalEvents: any[];
+//   setGcalEvents: React.Dispatch<React.SetStateAction<any[]>>;
+// }
+
+export default function ExplorePage() {
   const [events, setEvents] = useState(initialEvents);
 
   const calendarEvents = events

@@ -12,6 +12,7 @@ import FormControl from '@mui/material/FormControl';
 import ListItemText from '@mui/material/ListItemText';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Checkbox from '@mui/material/Checkbox';
+import { useGcalEvents } from "../../context/GCalEventsContext";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -34,8 +35,9 @@ export function ConnectGoogleButton() {
 
   const [availableCalendars, setAvailableCalendars] = useState<any[]>([]); // full objects with id & summary
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]); // selected calendar IDs from dropdown
-  const [gcalEvents, setGcalEvents] = useState<any[]>([]); // events from all selected calendars
-
+  // const [gcalEvents, setGcalEvents] = useState<any[]>([]); // events from all selected calendars
+  const { gcalEvents, setGcalEvents } = useGcalEvents();
+  
   const [message, setMessage] = useState("");
   // "http://localhost:5001/api/google/authorize"
 
@@ -86,7 +88,13 @@ export function ConnectGoogleButton() {
       body: JSON.stringify({ calendarIds }),
     });
     const data = await res.json();
-    setGcalEvents(data);
+    const formattedGCalEvents = data.map((event: any) => ({
+      title: event.summary,
+      start: event.start.dateTime || event.start.date,
+      end: event.end.dateTime || event.end.date,
+      classNames: ["gcal-event"], // Add a custom class for styling
+    }));
+    setGcalEvents(formattedGCalEvents);
     console.log("Fetched events:", data);
   };
 
