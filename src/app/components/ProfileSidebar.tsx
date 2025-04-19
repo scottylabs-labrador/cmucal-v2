@@ -1,9 +1,10 @@
 "use client";
 
-import { FiFilter, FiPlusCircle } from "react-icons/fi";
+import { FiFilter } from "react-icons/fi";
 import Accordion from "./Accordion";
 import ToggleItem from "./ToggleItem";
 import EventCard from "./EventCard";
+import CourseSearch from "./CourseSearch";
 import { sampleEvent } from "../profile/data/mockData";
 import { Course, Club } from "../utils/types";
 
@@ -12,6 +13,7 @@ interface ProfileSidebarProps {
   clubs: Club[];
   onToggleCourse: (courseId: string, optionId: string) => void;
   onToggleClub: (clubId: string, optionId: string) => void;
+  onCourseSelect: (course: Course) => void;
 }
 
 /**
@@ -21,7 +23,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   courses, 
   clubs, 
   onToggleCourse, 
-  onToggleClub 
+  onToggleClub,
+  onCourseSelect
 }) => {
   return (
     <div className="h-full">
@@ -33,11 +36,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       </div>
 
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-md font-medium">My Courses</h3>
-          <button className="text-blue-600 text-sm flex items-center">
-            <FiPlusCircle size={14} className="mr-1" /> Add
-          </button>
+        <div className="mb-2">
+          <h3 className="text-md font-medium mb-2">My Courses</h3>
+          <CourseSearch onCourseSelect={onCourseSelect} />
         </div>
 
         {courses.map(course => (
@@ -64,7 +65,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-md font-medium">My Clubs</h3>
           <button className="text-blue-600 text-sm flex items-center">
-            <FiPlusCircle size={14} className="mr-1" /> Add
+            <FiFilter size={14} className="mr-1" /> Add
           </button>
         </div>
 

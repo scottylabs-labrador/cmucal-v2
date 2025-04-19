@@ -21,6 +21,20 @@ export default function Profile() {
   const [clubs, setClubs] = useState<Club[]>(userClubs);
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
 
+  const handleCourseSelect = (course: Course) => {
+    // Check if course already exists
+    if (!courses.some(c => c.courseId === course.courseId)) {
+      setCourses(prev => [...prev, {
+        ...course,
+        options: [
+          { id: `${course.id}-1`, type: "Lecture and recitation", selected: true },
+          { id: `${course.id}-2`, type: "Office hours", selected: true },
+          { id: `${course.id}-3`, type: "Supplemental instruction sessions", selected: true }
+        ]
+      }]);
+    }
+  };
+
   // Generic toggle function for options
   const toggleOption = <T extends { id: string, options: { id: string, selected: boolean }[] }>(
     itemId: string,
@@ -106,7 +120,8 @@ export default function Profile() {
           courses={courses} 
           clubs={clubs} 
           onToggleCourse={toggleCourseOption} 
-          onToggleClub={toggleClubOption} 
+          onToggleClub={toggleClubOption}
+          onCourseSelect={handleCourseSelect}
         />
       } 
       rightContent={<CustomCalendar events={calendarEvents} />} 
