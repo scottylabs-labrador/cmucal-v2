@@ -11,7 +11,7 @@ import SearchResultsSidebar from "@components/SearchResultSidebar";
 //   { id: "3", title: "ScottySpark", date: "Apr 19, 5:00PM - 8:00PM", location: "Swartz Center, Tepper", added: false },
 // ];
 
-const initialSearchResults = [
+const initialEvents = [
   {
     id: "1",
     title: "TartanHacks Hackathon",
@@ -39,38 +39,28 @@ const initialSearchResults = [
 ];
 
 export default function Explore() {
-  const [searchResults, setSearchResults] = useState(initialSearchResults);
+  const [events, setEvents] = useState(initialEvents);
 
-
-  const toggleAdded = (id: string) => {
-    setSearchResults(prev =>
-      prev.map(event =>
-        event.id === id ? { ...event, added: !event.added } : event
-    ));
-  };
-
-  const handleRemoveFromCalendar = (id: string) => {
-    setSearchResults(prev =>
-      prev.map(event =>
-        event.id === id ? { ...event, added: false } : event
-      )
-    );
-  };
-
-  // Convert added events to FullCalendar's format
-  const calendarEvents = searchResults
-    .filter(event => event.added)
-    .map(event => ({
+  const calendarEvents = events
+    .filter((event) => event.added)
+    .map((event) => ({
       id: event.id,
       title: event.title,
       start: event.start,
       end: event.end,
-      location: event.location,
     }));
 
-  return <TwoColumnLayout 
-        leftContent={<SearchResultsSidebar
-          events={searchResults}
-          toggleAdded={toggleAdded}/>} 
-        rightContent={<Calendar events={calendarEvents} onDeleteEvent={handleRemoveFromCalendar}/>} />;
+  const handleEventDelete = (id: string) => {
+    const updated = events.map((event) =>
+      event.id === id ? { ...event, added: false } : event
+    );
+    setEvents(updated);
+  };
+
+  return (
+    <TwoColumnLayout
+      leftContent={<SearchResultsSidebar events={events} setEvents={setEvents} />}
+      rightContent={<Calendar events={calendarEvents} />}
+    />
+  );
 }
