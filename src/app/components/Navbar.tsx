@@ -8,6 +8,10 @@ import { FiSearch, FiMoon, FiSun, FiLogOut } from "react-icons/fi"; // Search, d
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
+
+import Modal from "./Modal"; 
+import ModalUpload from "./ModalUpload"; 
+
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
 
 import MenuItem from '@mui/material/MenuItem';
@@ -21,22 +25,23 @@ type NavBarProps = {
 };
 
 export default function Navbar({ UserButton }: NavBarProps) {
-  const { theme, setTheme } = useTheme(); // Get the current theme
-  const [mounted, setMounted] = useState(false); // Prevents hydration mismatch
-  const [term, setTerm] = useState('Spring 25');
 
-  // const handleTermChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setTerm(event.target.value);
-  // };
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);  
+  const pathname = usePathname();
+
+  const [term, setTerm] = useState('Spring 25');
 
   const handleTermChange = (event: SelectChangeEvent) => {
     setTerm(event.target.value);
   };
 
-  const pathname = usePathname(); // Get the current route
 
   useEffect(() => {
-    setMounted(true); // Ensures component is mounted before showing icons
+    setMounted(true);
   }, []);
 
   return (
@@ -111,12 +116,14 @@ export default function Navbar({ UserButton }: NavBarProps) {
             </MenuItem>
           </Select>
         </FormControl>
+        
+        <button
+          onClick={() => setShowScheduleModal(true)}
+          className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500"
+        >
+          Upload
+        </button>
 
-        <Link href="/upload">
-          <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
-            Upload
-          </button>
-        </Link>
       </div>
 
       {/* Middle Section: Search Bar */}
@@ -131,23 +138,23 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
       {/* Right Section: Upload Button, dark mode, logout */}
       <div className="flex items-center space-x-2">
-        {/* <button className="flex items-center px-3 py-2 space-x-2">
-          <span className="text-gray-600 dark:text-white">Connect to Cal</span>
-        </button> */}
+
+        {/* Inside Right Section */}
+        
         <ConnectGoogleButton />
         {/* Moon Icon for Dark Mode Toggle */}
         {/* Dark Mode Toggle Button */}
         {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="flex items-center justify-center w-10 h-10 pl-2 rounded-md cursor-pointer"
-            >
-              {theme === "dark" ? (
-                <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode
-              ) : (
-                <FiMoon className="text-gray-600 dark:text-white" size={18} /> // Moon icon for Dark mode
-              )}
-            </button>
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex items-center justify-center w-10 h-10 pl-2 rounded-md cursor-pointer"
+          >
+            {theme === "dark" ? (
+              <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode
+            ) : (
+              <FiMoon className="text-gray-600 dark:text-white" size={18} /> // Moon icon for Dark mode
+            )}
+          </button>
         )}
         <div>{UserButton}</div>
         {/* <Link href="/" className="flex items-center px-3 py-2 space-x-2">
@@ -155,6 +162,28 @@ export default function Navbar({ UserButton }: NavBarProps) {
           <span className="text-sm font-medium">Sign out</span>
         </Link> */}
       </div>
+
+    {/* Modal component */}
+    <Modal show={showScheduleModal} onClose={() => setShowScheduleModal(false)}>
+      <h2 className="text-lg font-semibold mb-4">Choose a schedule</h2>
+      <select className="w-full border rounded-md p-2 mb-4">
+        <option>CMUCal Events Dashboard</option>
+        <option>ScottyLabs</option>
+        <option>15-122 Principles of Imperative Computation</option>
+        <option>Create New Schedule</option>
+      </select>
+      <button
+        className="px-4 py-2 bg-blue-600 text-white rounded-md w-full"
+        onClick={() => {
+          setShowScheduleModal(false);
+          setShowUploadModal(true);
+        }}
+      >
+        Next
+      </button>
+    </Modal>
+
+    <ModalUpload show={showUploadModal} onClose={() => setShowUploadModal(false)} />
     </nav>
   );
 }
