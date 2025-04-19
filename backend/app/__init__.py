@@ -1,38 +1,49 @@
 # Initializes the Flask app, database, and JWT authentication.
 from flask import Flask, json
-from flask_jwt_extended import JWTManager
 from flask_cors import CORS
-from app.config.settings import Config
-from app.api.auth import auth_bp
 from app.api.users import users_bp
-from app.api.admin import admin_bp
 from app.api.base import base_bp
 from app.api.webhook import webhook_bp
+# from app.api.google_oauth import google_bp
 
 from dotenv import load_dotenv
 from app.services.db import init_db
+import os
+
+
 
 
 # Load environment variables from .env file
 load_dotenv()
+# load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+# load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
 
 def create_app():
     app = Flask(__name__)
 
     # app.json = json.provider.DefaultJSONProvider(app)
     
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+    app.config["MONGO_URI"] = os.getenv("MONGO_URI")
+    app.config["GOOGLE_CLIENT_SECRET_FILE"] = "client_secret.json" 
 
     # Bind the Flask app to mongo
     init_db(app)
 
     CORS(app)
-    JWTManager(app)
+    # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+    # JWTManager(app)
 
     # Register blueprints (modular routing)
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    # app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(users_bp, url_prefix="/api/users")
-    app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    # app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(webhook_bp, url_prefix="/api/webhook")
+    # app.register_blueprint(google_bp, url_prefix="/api/google")
     app.register_blueprint(base_bp)
+
+    # print('key', os.getenv("JWT_SECRET_KEY"))
+    
 
     return app
