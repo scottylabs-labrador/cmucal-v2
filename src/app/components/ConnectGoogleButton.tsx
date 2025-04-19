@@ -32,8 +32,10 @@ export function ConnectGoogleButton() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [calendars, setCalendars] = useState<string[]>([]); // state for selected calendars
-  const [cals, setCals] = useState<string[]>([]); // state for all calendars from api 
+  const [availableCalendars, setAvailableCalendars] = useState<any[]>([]); // full objects with id & summary
+  const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]); // selected calendar IDs from dropdown
+  const [gcalEvents, setGcalEvents] = useState<any[]>([]); // events from all selected calendars
+
   const [message, setMessage] = useState("");
   // "http://localhost:5001/api/google/authorize"
 
@@ -48,7 +50,7 @@ export function ConnectGoogleButton() {
         if (res.ok) {
           const data = await res.json();
           setIsConnected(true);
-          if (cals.length === 0) {
+          if (availableCalendars.length === 0) {
             fetchCalendars();
           }
         }
@@ -70,11 +72,30 @@ export function ConnectGoogleButton() {
     }
   }, [loading, isConnected]);
 
-  const handleChange = (event: SelectChangeEvent<typeof calendars>) => {
+  useEffect(() => {
+    if (selectedCalendarIds.length > 0) {
+      fetchEventsFromCalendars(selectedCalendarIds);
+    }
+  }, [selectedCalendarIds]);
+
+  const fetchEventsFromCalendars = async (calendarIds: string[]) => {
+    const res = await fetch("http://localhost:5001/api/google/calendar/events/bulk", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calendarIds }),
+    });
+    const data = await res.json();
+    setGcalEvents(data);
+    console.log("Fetched events:", data);
+  };
+
+
+  const handleChange = (event: SelectChangeEvent<typeof selectedCalendarIds>) => {
     const {
       target: { value },
     } = event;
-    setCalendars(
+    setSelectedCalendarIds(
       // On autofill we get a stringified value.
       typeof value === 'string' ? value.split(',') : value,
     );
@@ -116,7 +137,8 @@ export function ConnectGoogleButton() {
     });
   
     // Save the sorted calendars (or just summary list if you prefer)
-    setCals(sorted.map((cal: any) => cal.summary));
+    // setAvailableCalendars(sorted.map((cal: any) => cal.summary));
+    setAvailableCalendars(sorted);
   };
   
   
@@ -141,20 +163,12 @@ export function ConnectGoogleButton() {
 
 
   return (
-  //   <button
-  //   className="flex items-center px-3 py-2 space-x-2 border rounded-md dark:border-gray-600"
-  //   disabled={loading || isConnected}
-  // >
-  //   <span className="text-gray-600 dark:text-white">
-  //   {loading ? "Checking..." : isConnected ? "Google Calendar Connected" : "Connect Google Calendar"}
-  //   </span>
-  // </button>
   <div>
   <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
     <Select
-      id="demo-multiple-checkbox"
+      id="calendar-select"
       multiple
-      value={calendars}
+      value={selectedCalendarIds}
       onChange={handleChange}
       input={<OutlinedInput />}
       renderValue={(selected) => getGoogleConnectionStatus()}
@@ -179,21 +193,21 @@ export function ConnectGoogleButton() {
         }
       }}
     >
-      {cals.map((name) => (
+      {availableCalendars.map((cal) => (
         <MenuItem
-          key={name}
-          value={name}
+          key={cal.id}
+          value={cal.id}
           sx={{
             fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',
           }}
         >
-          <Checkbox checked={calendars.includes(name)} />
+          <Checkbox checked={selectedCalendarIds.includes(cal.id)} />
           <ListItemText
             primary={
               <div className="overflow-x-scroll whitespace-nowrap text-sm">
-                {name}
+                {cal.summary}
               </div>
             }
           />

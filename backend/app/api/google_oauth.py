@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, redirect, current_app, session, u
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
+import datetime
+from datetime import timedelta
 
 # from app.models.user import get_access_token_for_user, save_google_token
 # import requests
@@ -28,7 +30,12 @@ def authorize():
         scopes=SCOPES,
     )
     flow.redirect_uri = current_app.config["GOOGLE_REDIRECT_URI"]
-    authorization_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent"  # force refresh_token to be issued every time
+    )
+
     session["state"] = state
     session["post_auth_redirect"] = redirect_url  # save redirect location
     return redirect(authorization_url)
@@ -54,7 +61,7 @@ def oauth2callback():
 
     credentials = flow.credentials
     session["credentials"] = {
-        "token": credentials.token,
+       "token": credentials.token,
         "refresh_token": credentials.refresh_token,
         "token_uri": credentials.token_uri,
         "client_id": credentials.client_id,
@@ -85,6 +92,50 @@ def list_calendars():
     service = build("calendar", "v3", credentials=creds)
     calendar_list = service.calendarList().list().execute()
     return jsonify(calendar_list["items"])
+
+@google_bp.route("/api/google/calendar/events/bulk", methods=["POST"])
+def fetch_bulk_events():
+    data = request.get_json()
+    calendar_ids = data.get("calendarIds", [])
+
+    creds = get_credentials()
+    service = build("calendar", "v3", credentials=creds)
+
+    all_events = []
+
+    # Define the reference date
+    reference_date = datetime.now()
+
+    # Calculate three months before and after
+    time_min = (reference_date - timedelta(days=90)).isoformat() + "Z"
+    time_max = (reference_date + timedelta(days=90)).isoformat() + "Z"
+
+    for cal_id in calendar_ids:
+        res = (
+            service.events()
+            .list(
+                calendarId=cal_id,
+                timeMin=time_min, # 3 months before now
+                timeMax=time_max, # 3 months from now
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        for event in res.get("items", []):
+            all_events.append({
+                "title": event.get("summary", "No Title"),
+                "start": event["start"].get("dateTime") or event["start"].get("date"),
+                "end": event["end"].get("dateTime") or event["end"].get("date"),
+                "calendarId": cal_id,
+            })
+
+    return jsonify(all_events)
+
+@google_bp.route("/api/google/calendar/events/bulk", methods=["OPTIONS"])
+def bulk_events_options():
+    return '', 204
+
 
 @google_bp.route("/calendar/events", methods=["POST"])
 def create_event():
