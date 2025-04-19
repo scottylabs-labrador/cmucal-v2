@@ -37,10 +37,15 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
           title: event.title,
           start: event.start,
           end: event.end,
-        });
+        }, {
+          withCredentials: true,
+        });        
       } else {
         // Remove from Google Calendar via backend
-        await axios.delete(`http://localhost:5001/api/google/calendar/events/${event.id}`);
+        await axios.delete(`http://localhost:5001/api/google/calendar/events/${event.id}`, {
+          withCredentials: true,
+        });
+        
       }
     } catch (err) {
       console.error("Error syncing with Google Calendar:", err);

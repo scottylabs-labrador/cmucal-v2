@@ -27,7 +27,10 @@ const Calendar: FC<Props> = ({ events }) => {
 
     try {
       // Delete from Google Calendar via backend
-      await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`);
+      await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`, {
+        withCredentials: true,
+      });
+      
 
       // Remove from calendar UI immediately
       info.event.remove();
