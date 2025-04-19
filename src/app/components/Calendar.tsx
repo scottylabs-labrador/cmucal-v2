@@ -17,9 +17,10 @@ import { useUser } from "@clerk/nextjs";
 
 type Props = {
   events: EventInput[];
+  setEvents: React.Dispatch<React.SetStateAction<any[]>>;
 };
 
-const Calendar: FC<Props> = ({ events }) => {
+const Calendar: FC<Props> = ({ events, setEvents }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
   const { gcalEvents } = useGcalEvents();
@@ -28,15 +29,6 @@ const Calendar: FC<Props> = ({ events }) => {
   // const [mergedEvents, setMergedEvents] = useState(events);
   const { user } = useUser();
 
-  // useEffect(() => {
-  //   setMergedEvents((prevEvents) => {
-  //     // Optional: remove duplicates by event.id
-  //     const merged = [...prevEvents, ...gcalEvents];
-  //     // const unique = Array.from(new Map(merged.map(e => [e.id, e])).values());
-  //     return merged;
-  //   });
-  //   console.log("Merged Events:", mergedEvents);
-  // }, [gcalEvents]);
   
   const handleEventClick = async (info: EventClickArg) => {
     const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
@@ -54,6 +46,13 @@ const Calendar: FC<Props> = ({ events }) => {
 
       // Remove from calendar UI immediately
       info.event.remove();
+
+      // Update local state so sidebar reflects it
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === info.event.id ? { ...e, added: false } : e
+        )
+      );
     } catch (error) {
       console.error("Failed to delete event:", error);
       alert("Something went wrong deleting this event.");

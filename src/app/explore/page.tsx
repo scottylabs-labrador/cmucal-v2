@@ -66,7 +66,7 @@ export default function ExplorePage() {
   return (
     <TwoColumnLayout
       leftContent={<SearchResultsSidebar events={events} setEvents={setEvents} />}
-      rightContent={<Calendar events={calendarEvents} />}
+      rightContent={<Calendar events={calendarEvents}  setEvents={setEvents}/>}
     />
   );
 }
