@@ -12,9 +12,7 @@ First, `cd` into the backend folder
 - Once activated, you can install dependencies by `pip install -r requirements.txt`, and save them by running `pip freeze > requirements.txt`
 
 ## 2. MongoDB
-- Use the following code to get access to mongodb if having trouble.
-    - `from app.services.db import mongo`
-    - `db = mongo.cx["CMUCal"]`
+- (can ignore this) see app.services.db
 
 ## 3. Flask app
 Open a terminal (in the backend folder with virtual environment), run `python run.py` to start the Flask app.
@@ -25,3 +23,5 @@ Open a terminal (in the backend folder with virtual environment), run `python ru
     - Create an account on ngrok, then run this in a separate terminal from the python app. You need both terminals (ngrok and the python app) open. 
     - `ngrok http --url=foxhound-true-finally.ngrok-free.app 5001`
 
+## Dev To-do
+- remove `os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"` after flask app has been deployed. This is only for developmet environment.

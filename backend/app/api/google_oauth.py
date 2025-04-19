@@ -1,0 +1,117 @@
+from flask import Blueprint, request, jsonify, redirect, current_app, session, url_for
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+
+# from app.models.user import get_access_token_for_user, save_google_token
+# import requests
+
+google_bp = Blueprint("google", __name__)
+
+SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/userinfo.email", 
+          "https://www.googleapis.com/auth/calendar", "openid", "https://www.googleapis.com/auth/calendar.readonly"]
+
+@google_bp.route("/authorize")
+def authorize():
+    session.pop("credentials", None)
+    redirect_url = request.args.get("redirect", "http://localhost:3000")
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": current_app.config["GOOGLE_CLIENT_ID"],
+                "client_secret": current_app.config["GOOGLE_CLIENT_SECRET"],
+                "redirect_uris": current_app.config["GOOGLE_REDIRECT_URI"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=SCOPES,
+    )
+    flow.redirect_uri = current_app.config["GOOGLE_REDIRECT_URI"]
+    authorization_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
+    session["state"] = state
+    session["post_auth_redirect"] = redirect_url  # save redirect location
+    return redirect(authorization_url)
+
+@google_bp.route("/oauth/callback")
+def oauth2callback():
+    state = session["state"]
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": current_app.config["GOOGLE_CLIENT_ID"],
+                "client_secret": current_app.config["GOOGLE_CLIENT_SECRET"],
+                "redirect_uris": current_app.config["GOOGLE_REDIRECT_URI"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=SCOPES,
+        state=state,
+    )
+    flow.redirect_uri = current_app.config["GOOGLE_REDIRECT_URI"]
+    flow.fetch_token(authorization_response=request.url)
+
+    credentials = flow.credentials
+    session["credentials"] = {
+        "token": credentials.token,
+        "refresh_token": credentials.refresh_token,
+        "token_uri": credentials.token_uri,
+        "client_id": credentials.client_id,
+        "client_secret": credentials.client_secret,
+        "scopes": credentials.scopes,
+    }
+    frontend_url = current_app.config["FRONTEND_REDIRECT_URI"]
+    redirect_target = session.pop("post_auth_redirect", frontend_url)
+    return redirect(redirect_target)  # React frontend
+
+@google_bp.route("/calendar/status")
+def calendar_status():
+    has_creds = "credentials" in session
+    return jsonify({ "authorized": has_creds })
+
+def get_credentials():
+    creds_data = session.get("credentials")
+    if not creds_data:
+        return None
+    return Credentials(**creds_data)
+
+@google_bp.route("/calendars")
+def list_calendars():
+    creds = get_credentials()
+    if not creds:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    service = build("calendar", "v3", credentials=creds)
+    calendar_list = service.calendarList().list().execute()
+    return jsonify(calendar_list["items"])
+
+@google_bp.route("/calendar/events", methods=["POST"])
+def create_event():
+    # posts event to primary calendar
+    creds = get_credentials()
+    if not creds:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    calendar_id = data.get("calendarId", "primary")
+    service = build("calendar", "v3", credentials=creds)
+
+    event = {
+        "summary": data.get("summary", "Test Event"),
+        "start": {
+            "dateTime": data.get("start"),
+            "timeZone": "America/New_York",
+        },
+        "end": {
+            "dateTime": data.get("end"),
+            "timeZone": "America/New_York",
+        },
+    }
+
+    created = service.events().insert(calendarId=calendar_id, body=event).execute()
+    return jsonify({"status": "created", "link": created.get("htmlLink")})
+
+
+
+
