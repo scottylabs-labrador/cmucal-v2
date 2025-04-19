@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from datetime import datetime
-from app.services.db import get_db  # adjust if your db.py defines it differently
+from app.services.db import get_db 
 
 def save_google_event(user_id, local_event_id, google_event_id, title, start, end):
     db = get_db()
