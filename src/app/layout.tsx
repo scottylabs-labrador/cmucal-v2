@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html lang="en"> 
-      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased dark:bg-gray-800`}>
         <ThemeProvider>
           <SignedIn>
             <Navbar UserButton={<UserButton />} />
@@ -59,7 +59,7 @@ export default function RootLayout({
 
             <SignedOut>
               {/* Show a login screen or redirect maybe */}
-              <div className="flex justify-center items-center h-[80vh]">
+              <div className="flex justify-center items-center h-[80vh] dark:bg-gray-700">
                 <Welcome />
               </div>
             </SignedOut>
