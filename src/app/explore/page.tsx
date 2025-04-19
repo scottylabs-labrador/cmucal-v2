@@ -35,7 +35,7 @@ const initialEvents = [
     start: "2025-04-19T17:00:00",
     end: "2025-04-19T20:00:00",
     location: "Swartz Center, Tepper",
-    added: true,
+    added: false,
   },
 ];
 
