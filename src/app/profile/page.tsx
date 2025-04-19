@@ -12,6 +12,8 @@ import {
   shouldShowCourseEvent, 
   shouldShowClubEvent 
 } from "../utils/helpers"; 
+import { useUser } from "@clerk/nextjs";
+import { sendUserToBackend } from "~/utils/authService";
 
 /**
  * Profile page with personalized calendar view
@@ -34,6 +36,24 @@ export default function Profile() {
       }]);
     }
   };
+
+  // handle clerk user and sync with backend
+  const { user } = useUser();
+  useEffect(() => {
+    if (user) {
+      const emailAddress = user.primaryEmailAddress?.emailAddress ? user.primaryEmailAddress.emailAddress : "";
+      const firstName = user.firstName ? user.firstName : "";
+      const lastName = user.lastName ? user.lastName : "";
+      const userData = {
+        id: user.id,
+        email: emailAddress,
+        firstName: firstName,
+        lastName: lastName,
+      };
+      sendUserToBackend(userData);
+    }
+  }, [user]);
+
 
   // Generic toggle function for options
   const toggleOption = <T extends { id: string, options: { id: string, selected: boolean }[] }>(
