@@ -1,31 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FC } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { EventClickArg } from "@fullcalendar/core"; 
+import { useGcalEvents } from "../../context/GCalEventsContext";
+
+
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
+import axios from "axios";
+import { useUser } from "@clerk/nextjs";
 
-export default function Calendar() {
+
+type Props = {
+  events: EventInput[];
+  setEvents: React.Dispatch<React.SetStateAction<any[]>>;
+};
+
+const Calendar: FC<Props> = ({ events, setEvents }) => {
   // Define state with EventInput type
-  const [events, setEvents] = useState<EventInput[]>([]);
+  // const [events, setEvents] = useState<EventInput[]>([]);
+  const { gcalEvents } = useGcalEvents();
+  // const mergedEvents = [...events, ...gcalEvents];
+  // console.log("Merged Events:", mergedEvents);
+  // const [mergedEvents, setMergedEvents] = useState(events);
+  const { user } = useUser();
 
-  useEffect(() => {
-    // Fetch events dynamically (Replace with API call if needed)
-    const fetchEvents = async () => {
-      const data: EventInput[] = [
-        { id: "1", title: "Lecture", start: "2025-03-08T08:00:00", color: "#9b5de5" },
-        { id: "2", title: "Office Hours", start: "2025-03-19T13:30:00", end: "2025-03-19T14:30:00", color: "#ff6f61" },
-      ];
-      setEvents(data);
-    };
+  
+  const handleEventClick = async (info: EventClickArg) => {
+    const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
+    if (!confirmed) return;
 
-    fetchEvents();
-  }, []);
+    try {
+      // Delete from Google Calendar via backend
+      await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`, {
+        data: {
+          user_id: user?.id,
+        },
+        withCredentials: true,
+      });
+      
+
+      // Remove from calendar UI immediately
+      info.event.remove();
+
+      // Update local state so sidebar reflects it
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === info.event.id ? { ...e, added: false } : e
+        )
+      );
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+      alert("Something went wrong deleting this event.");
+    }
+  };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
+    <div className="p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
@@ -37,7 +72,7 @@ export default function Calendar() {
         events={events}
         editable={true}
         selectable={true}
-        eventClick={(info) => alert(`Event: ${info.event.title}`)}
+        eventClick={handleEventClick}
         height="auto"
         // eventClassNames="text-sm font-semibold p-1 rounded-md"
       />
@@ -45,3 +80,5 @@ export default function Calendar() {
     </div>
   );
 }
+
+export default Calendar;

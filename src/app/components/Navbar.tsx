@@ -8,8 +8,16 @@ import { FiSearch, FiMoon, FiSun, FiLogOut } from "react-icons/fi"; // Search, d
 import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
+
 import Modal from "./Modal"; 
 import ModalUpload from "./ModalUpload"; 
+
+import { ConnectGoogleButton } from "./ConnectGoogleButton";
+
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+
 
 
 type NavBarProps = {
@@ -17,12 +25,20 @@ type NavBarProps = {
 };
 
 export default function Navbar({ UserButton }: NavBarProps) {
+
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);  
   const pathname = usePathname();
+
+  const [term, setTerm] = useState('Spring 25');
+
+  const handleTermChange = (event: SelectChangeEvent) => {
+    setTerm(event.target.value);
+  };
+
 
   useEffect(() => {
     setMounted(true);
@@ -51,10 +67,61 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </div>
         </Link>
 
-        {/* Term Selector (Not a link, just UI) */}
-        <button className="flex items-center px-3 py-2 space-x-2 border rounded-md dark:border-gray-600">
+        {/* Term Selector Dropdown */}
+        {/* <button className="flex items-center px-3 py-2.5 space-x-2 border rounded-md dark:border-gray-600">
           <BsCalendar3 className="text-gray-600 dark:text-white" size={16} />
-          <span className="text-sm font-medium">Fall 24</span>
+          <select
+            value={term}
+            onChange={handleTermChange}
+            className="bg-transparent text-sm text-gray-800 dark:text-white focus:outline-none appearance-none"
+          >
+            <option value="Spring 25">Spring 25</option>
+            <option value="Fall 24">Fall 24</option>
+          </select>
+        </button> */}
+        <FormControl sx={{ m: 1, minWidth: 120}} size="small">
+          <Select
+            value={term}
+            onChange={handleTermChange}
+            displayEmpty
+            inputProps={{ 'aria-label': 'Without label' }}
+            sx={{
+              border: "1px solid #f1f1f1",
+              '&:focus': {
+                border: "1px solid #f1f1f1",
+              },
+              '& .MuiSelect-icon': {
+                display: "none", // hide dropdown arrow
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                border: "1px solid #f1f1f1",
+              },
+              '&.Mui-focused': {
+                boxShadow: "none", // remove focus ring
+                border: "1px solid #f1f1f1"
+              }
+            }}
+          >
+            <MenuItem value={'Spring 25'}>
+              <div className="flex items-center space-x-2">
+                {term === 'Spring 25' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
+                <span className="text-sm text-gray-800 dark:text-white">Spring 25</span>
+              </div>
+            </MenuItem>
+            <MenuItem value={'Fall 24'}>
+              <div className="flex items-center space-x-2">
+                {term === 'Fall 24' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
+                <span className="text-sm text-gray-800 dark:text-white">Fall 24</span>
+              </div>
+            </MenuItem>
+          </Select>
+        </FormControl>
+        
+        <button
+          onClick={() => setShowScheduleModal(true)}
+          className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500"
+        >
+          Upload
         </button>
 
       </div>
@@ -71,17 +138,10 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
       {/* Right Section: Upload Button, dark mode, logout */}
       <div className="flex items-center space-x-2">
-        {/* Inside Right Section */}
-        <button
-          onClick={() => setShowScheduleModal(true)}
-          className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500"
-        >
-          Upload
-        </button>
 
-        <button className="flex items-center px-3 py-2 space-x-2">
-          <span className="text-gray-600 dark:text-white">Connect to Cal</span>
-        </button>
+        {/* Inside Right Section */}
+        
+        <ConnectGoogleButton />
         {/* Moon Icon for Dark Mode Toggle */}
         {/* Dark Mode Toggle Button */}
         {mounted && (

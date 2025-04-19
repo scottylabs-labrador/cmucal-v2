@@ -12,6 +12,8 @@ import {
   shouldShowCourseEvent, 
   shouldShowClubEvent 
 } from "../utils/helpers"; 
+import { useUser } from "@clerk/nextjs";
+import { sendUserToBackend } from "~/utils/authService";
 
 /**
  * Profile page with personalized calendar view
@@ -20,6 +22,38 @@ export default function Profile() {
   const [courses, setCourses] = useState<Course[]>(userCourses);
   const [clubs, setClubs] = useState<Club[]>(userClubs);
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
+
+  const handleCourseSelect = (course: Course) => {
+    // Check if course already exists
+    if (!courses.some(c => c.courseId === course.courseId)) {
+      setCourses(prev => [...prev, {
+        ...course,
+        options: [
+          { id: `${course.id}-1`, type: "Lecture and recitation", selected: true },
+          { id: `${course.id}-2`, type: "Office hours", selected: true },
+          { id: `${course.id}-3`, type: "Supplemental instruction sessions", selected: true }
+        ]
+      }]);
+    }
+  };
+
+  // handle clerk user and sync with backend
+  const { user } = useUser();
+  useEffect(() => {
+    if (user) {
+      const emailAddress = user.primaryEmailAddress?.emailAddress ? user.primaryEmailAddress.emailAddress : "";
+      const firstName = user.firstName ? user.firstName : "";
+      const lastName = user.lastName ? user.lastName : "";
+      const userData = {
+        id: user.id,
+        email: emailAddress,
+        firstName: firstName,
+        lastName: lastName,
+      };
+      sendUserToBackend(userData);
+    }
+  }, [user]);
+
 
   // Generic toggle function for options
   const toggleOption = <T extends { id: string, options: { id: string, selected: boolean }[] }>(
@@ -106,7 +140,8 @@ export default function Profile() {
           courses={courses} 
           clubs={clubs} 
           onToggleCourse={toggleCourseOption} 
-          onToggleClub={toggleClubOption} 
+          onToggleClub={toggleClubOption}
+          onCourseSelect={handleCourseSelect}
         />
       } 
       rightContent={<CustomCalendar events={calendarEvents} />} 

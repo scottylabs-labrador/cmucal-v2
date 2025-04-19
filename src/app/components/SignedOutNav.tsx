@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"; // Detects the current path
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { FiMoon, FiSun } from "react-icons/fi"; // Search, dark mode, logout
+import { FiMoon, FiSun } from "react-icons/fi"; // dark mode icons
 
 
 
@@ -28,7 +28,7 @@ export default function SignedOutNav() {
         {mounted && (
             <button
               onClick={handleClick}
-              className="flex items-center justify-center w-20 h-20 mr-6 rounded-md cursor-pointer"
+              className="z-50 relative flex items-center justify-center w-20 h-20 mr-6 rounded-md cursor-pointer"
             >
               {theme === "dark" ? (
                 <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode

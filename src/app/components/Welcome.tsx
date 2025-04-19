@@ -42,7 +42,7 @@ const Login: React.FC = () => {
 
 const About: React.FC = () => {
   return (
-    <div className="bg-gray-200 p-6 rounded-lg shadow-md w-1/2">
+    <div className="bg-gray-200 p-6 rounded-lg shadow-md w-1/2 dark:bg-gray-600 dark:text-gray-300">
       <h3 className="text-xl font-medium mb-4 font-serif font-source-serif-pro">About</h3>
       <p>
         CMUCal offers convenient search for academic resources and events on campus, with the option of adding
@@ -54,7 +54,7 @@ const About: React.FC = () => {
 
 const Video: React.FC = () => {
   return (
-    <div className="border p-6 rounded-lg shadow-md w-1/2">
+    <div className="border-gray p-6 rounded-lg shadow-md w-1/2 dark:bg-gray-600 dark:text-gray-300 dark: border-gray-200">
       <p className="text-xl font-medium mb-4 font-serif font-source-serif-pro">Video Tutorial</p>
     </div>
   );
@@ -64,10 +64,10 @@ export default function Welcome() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <div className="h-3/5 bg-lightgrey text-center">
-        <h1 className="text-black font-serif font-source-serif-pro text-[76px] font-normal leading-normal pt-28">
+        <h1 className="text-black font-serif font-source-serif-pro text-[76px] font-normal leading-normal pt-28 dark:text-gray-300">
           Welcome to CMUCal
         </h1>
-        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-6">
+        <h2 className="text-black font-serif font-source-serif-pro text-[35px] font-normal leading-normal mb-6 dark:text-gray-400">
           the all-in-one CMU resources platform
         </h2>
         <div className="flex justify-center gap-8 pb-14">

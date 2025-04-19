@@ -1,20 +1,28 @@
-import axios from "axios";
 import { useAuth } from "@clerk/nextjs";
 
-export const getUserRole = async (): Promise<string | null> => {
-  const { getToken } = useAuth();
-  const token = await getToken();
+// type User = {
+//   id: string;
+//   email: string;
+//   firstBame: string;
+//   lastName: string;
+// };
 
-//   if (!token) return null; // Ensure the user is logged in
+export const sendUserToBackend = async (user: { id: string; email: string; firstName: string; lastName: string }) => {
+  const res = await fetch("http://localhost:5001/api/users/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include", 
+    body: JSON.stringify({
+      clerk_id: user.id,
+      email: user.email,
+      first_name: user.firstName,
+      last_name: user.lastName,
+    }),
+  });
 
-  try {
-    const response = await axios.get("http://127.0.0.1:5001/api/auth/role", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return response.data.role;
-  } catch (error) {
-    console.error("Error fetching role", error);
-    return null;
-  }
+  const result = await res.json();
+  console.log(result);
 };
+

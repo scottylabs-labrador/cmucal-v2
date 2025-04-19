@@ -33,7 +33,7 @@ const Accordion: React.FC<AccordionProps> = ({
           </div>
         </div>
         <div className="flex items-center">
-          {badge && <span className="text-xs bg-gray-100 px-2 py-1 rounded mr-2">{badge}</span>}
+          {badge && <span className="text-xs bg-gray-100 px-2 py-1 rounded mr-2 dark:bg-gray-500 dark:text-gray-200">{badge}</span>}
           <FiChevronRight 
             className={`transition-transform ${isOpen ? 'rotate-90' : ''}`} 
             size={16}
@@ -43,7 +43,7 @@ const Accordion: React.FC<AccordionProps> = ({
 
 
       {isOpen && (
-        <div className="p-3 border-t">
+        <div className="p-3 border-t dark:text-gray-300">
           {children}
         </div>
       )}

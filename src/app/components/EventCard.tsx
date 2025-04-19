@@ -17,7 +17,7 @@ interface EventCardProps {
  */
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
-    <div className="bg-white border rounded-lg shadow-sm mb-4 overflow-hidden">
+    <div className="bg-white border rounded-lg shadow-sm mb-4 overflow-hidden dark:bg-gray-600 dark:text-gray-200">
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-semibold text-lg">{event.resource_type}</h3>
@@ -31,7 +31,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
 
         <div className="space-y-2 mb-3">
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-600 dark:text-gray-300">
             <MdOutlineAccessTime className="mr-2" size={16} />
             <span className="text-sm">
               {formatDateRange(event.start_datetime, event.end_datetime)}
@@ -39,14 +39,14 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
 
 
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-600 dark:text-gray-300">
             <MdOutlinePlace className="mr-2" size={16} />
             <span className="text-sm">{event.location}</span>
           </div>
 
 
           {event.instructor && (
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
               <MdOutlinePeople className="mr-2" size={16} />
               <span className="text-sm">{event.instructor}</span>
             </div>
@@ -54,7 +54,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
 
           {event.professor && (
-            <div className="flex items-center text-gray-600">
+            <div className="flex items-center text-gray-600 dark:text-gray-300">
               <MdOutlineSchool className="mr-2" size={16} />
               <span className="text-sm">{event.professor}</span>
             </div>
@@ -64,7 +64,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
         <div className="text-xs text-gray-500 mt-3 flex justify-between items-center">
           <span>Source: {event.resource_source}</span>
-          <button className="text-blue-600 flex items-center">
+          <button className="text-blue-600 flex items-center dark:text-blue-300">
             <FiEdit size={14} className="mr-1" /> Edit
           </button>
         </div>
