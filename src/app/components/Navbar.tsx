@@ -11,6 +11,7 @@ import { ReactNode } from "react";
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
 
 
+
 type NavBarProps = {
   UserButton: ReactNode;
 };
@@ -18,6 +19,12 @@ type NavBarProps = {
 export default function Navbar({ UserButton }: NavBarProps) {
   const { theme, setTheme } = useTheme(); // Get the current theme
   const [mounted, setMounted] = useState(false); // Prevents hydration mismatch
+  const [term, setTerm] = useState('Spring 25');
+
+  const handleTermChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setTerm(event.target.value);
+  };
+
   const pathname = usePathname(); // Get the current route
 
   useEffect(() => {
@@ -47,10 +54,18 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </div>
         </Link>
 
-        {/* Term Selector (Not a link, just UI) */}
-        <button className="flex items-center px-3 py-2 space-x-2 border rounded-md dark:border-gray-600">
+        {/* Term Selector Dropdown */}
+        <button className="flex items-center px-3 py-2.5 space-x-2 border rounded-md dark:border-gray-600">
           <BsCalendar3 className="text-gray-600 dark:text-white" size={16} />
-          <span className="text-sm font-medium">Spring 25</span>
+          {/* <span className="text-sm font-medium">Spring 25</span> */}
+          <select
+            value={term}
+            onChange={handleTermChange}
+            className="bg-transparent text-sm text-gray-800 dark:text-white focus:outline-none appearance-none"
+          >
+            <option value="Spring 25">Spring 25</option>
+            <option value="Fall 24">Fall 24</option>
+          </select>
         </button>
 
         <Link href="/upload">
