@@ -2,6 +2,7 @@
 import { formatDate } from "~/utils/dateService";
 import { useState } from "react";
 import axios from "axios";
+import { useUser } from "@clerk/nextjs";
 
 type Event = {
   id: string;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export default function SearchResultsSidebar({ events, setEvents }: Props) {
+  const { user } = useUser();
   const toggleAdded = async (thisId: string) => {
     const updatedEvents = [...events];
     const index = updatedEvents.findIndex((e) => e.id === thisId);
@@ -28,11 +30,11 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
     // Toggle locally
     event.added = !event.added;
     setEvents(updatedEvents);
-
     try {
       if (event.added) {
         // Add to Google Calendar via backend
         await axios.post("http://localhost:5001/api/google/calendar/events/add", {
+          user_id: user?.id,
           local_event_id: event.id,
           title: event.title,
           start: event.start,
@@ -43,8 +45,12 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
       } else {
         // Remove from Google Calendar via backend
         await axios.delete(`http://localhost:5001/api/google/calendar/events/${event.id}`, {
+          data: {
+            user_id: user?.id,
+          },
           withCredentials: true,
         });
+        
         
       }
     } catch (err) {

@@ -153,7 +153,7 @@ def add_event_to_calendar():
     event = service.events().insert(calendarId="primary", body=event_data).execute()
 
     save_google_event(
-        user_id=session["user_id"],  # or however you track logged-in users
+        user_id=data["user_id"],  # or however you track logged-in users
         local_event_id=data["local_event_id"],
         google_event_id=event["id"],
         title=data["title"],
@@ -170,20 +170,32 @@ def delete_event_from_calendar(local_event_id):
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
-        # Look up Google event ID for this local event
-        record = get_google_event_by_local_id(user_id=session["user_id"], local_event_id=local_event_id)
+        data = request.get_json(force=True) or {}
+        user_id = data.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Missing user_id"}), 400
+
+        print(f"Deleting event {local_event_id} for user {user_id}")
+
+        # Look up Google event ID
+        record = get_google_event_by_local_id(user_id=user_id, local_event_id=local_event_id)
         if not record:
             return jsonify({ "error": "No matching event found" }), 404
 
         google_event_id = record["google_event_id"]
 
         # Delete from Google Calendar
-        service = build("calendar", "v3", credentials=creds)
-        service.events().delete(calendarId="primary", eventId=google_event_id).execute()
+        try:
+            service = build("calendar", "v3", credentials=creds)
+            service.events().delete(calendarId="primary", eventId=google_event_id).execute()
+        except Exception as google_error:
+            print("Google API error:", google_error)
+            return jsonify({"error": "Failed to delete from Google Calendar"}), 500
 
         # Delete from DB
-        delete_google_event_by_local_id(user_id=session["user_id"], local_event_id=local_event_id)
+        delete_google_event_by_local_id(user_id=user_id, local_event_id=local_event_id)
 
         return jsonify({ "status": "deleted" })
     except Exception as e:
+        print("Unexpected error:", e)
         return jsonify({ "error": str(e) }), 500

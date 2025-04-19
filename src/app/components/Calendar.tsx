@@ -11,6 +11,7 @@ import { EventClickArg } from "@fullcalendar/core";
 
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
 import axios from "axios";
+import { useUser } from "@clerk/nextjs";
 
 
 type Props = {
@@ -20,7 +21,8 @@ type Props = {
 const Calendar: FC<Props> = ({ events }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
-
+  const { user } = useUser();
+  
   const handleEventClick = async (info: EventClickArg) => {
     const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
     if (!confirmed) return;
@@ -28,6 +30,9 @@ const Calendar: FC<Props> = ({ events }) => {
     try {
       // Delete from Google Calendar via backend
       await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`, {
+        data: {
+          user_id: user?.id,
+        },
         withCredentials: true,
       });
       
