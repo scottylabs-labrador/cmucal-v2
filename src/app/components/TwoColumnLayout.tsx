@@ -14,7 +14,7 @@ export default function TwoColumnLayout({ leftContent, rightContent }: TwoColumn
       </aside>
 
       {/* Right Section - Takes 2/3 width on large screens */}
-      <main className="md:col-span-2 p-4 bg-white rounded-lg shadow-md dark:bg-gray-700">
+      <main className="md:col-span-2 p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 overflow-scroll h-screen">
         {rightContent}
       </main>
     </div>
