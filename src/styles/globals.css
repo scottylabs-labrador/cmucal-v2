@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* darkmode for overriding FullCalendar styles */
+.dark .fc-col-header {
+    background-color: #374151; /* Tailwind gray-700 */
+    color: #e5e7eb; /* Tailwind gray-200 */
+  }

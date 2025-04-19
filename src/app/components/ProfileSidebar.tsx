@@ -24,10 +24,10 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   onToggleClub 
 }) => {
   return (
-    <div className="h-full">
+    <div className="h-full dark:bg-gray-700 dark:text-gray-200">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">My Schedule</h2>
-        <button className="text-blue-600 text-sm flex items-center">
+        <button className="text-blue-600 text-sm flex items-center dark:text-blue-300">
           <FiFilter size={14} className="mr-1" /> Filter
         </button>
       </div>
@@ -35,7 +35,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-md font-medium">My Courses</h3>
-          <button className="text-blue-600 text-sm flex items-center">
+          <button className="text-blue-600 text-sm flex items-center dark:text-blue-300">
             <FiPlusCircle size={14} className="mr-1" /> Add
           </button>
         </div>
@@ -63,7 +63,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-md font-medium">My Clubs</h3>
-          <button className="text-blue-600 text-sm flex items-center">
+          <button className="text-blue-600 text-sm flex items-center dark:text-blue-300">
             <FiPlusCircle size={14} className="mr-1" /> Add
           </button>
         </div>
