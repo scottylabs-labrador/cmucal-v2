@@ -1,11 +1,15 @@
 from flask_pymongo import PyMongo
 from flask import Flask
-from app.config.settings import Config
 
 mongo = PyMongo()
+_db = None
 
 def init_db(app: Flask):
-    # print("Using MONGO_URI:", Config.MONGO_URI)
-    # app.config["MONGO_URI"] = Config.MONGO_URI
+    global _db
     mongo.init_app(app)
-    
+    _db = mongo.cx["CMUCal"]
+
+def get_db():
+    if _db is None:
+        raise RuntimeError("Database not initialized. Call init_db(app) first.")
+    return _db

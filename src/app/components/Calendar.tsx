@@ -6,24 +6,42 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { EventClickArg } from "@fullcalendar/core"; 
+
+
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
+import axios from "axios";
+import { useUser } from "@clerk/nextjs";
+
 
 type Props = {
   events: EventInput[];
-  onDeleteEvent?: (id: string) => void;
 };
 
-const Calendar: FC<Props> = ({ events, onDeleteEvent }) => {
+const Calendar: FC<Props> = ({ events }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
+  const { user } = useUser();
+  
+  const handleEventClick = async (info: EventClickArg) => {
+    const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
+    if (!confirmed) return;
 
-  const handleEventClick = (info: any) => {
-    const confirmed = confirm(`Delete event "${info.event.title}"?`);
-    if (confirmed) {
-      info.event.remove(); // Remove from calendar
-      if (onDeleteEvent) {
-        onDeleteEvent(info.event.id); // Notify parent
-      }
+    try {
+      // Delete from Google Calendar via backend
+      await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`, {
+        data: {
+          user_id: user?.id,
+        },
+        withCredentials: true,
+      });
+      
+
+      // Remove from calendar UI immediately
+      info.event.remove();
+    } catch (error) {
+      console.error("Failed to delete event:", error);
+      alert("Something went wrong deleting this event.");
     }
   };
 

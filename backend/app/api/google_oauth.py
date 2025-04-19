@@ -2,8 +2,12 @@ from flask import Blueprint, request, jsonify, redirect, current_app, session, u
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
-import datetime
+from datetime import datetime
 from datetime import timedelta
+
+from app.models.google_event import save_google_event
+from app.models.google_event import get_google_event_by_local_id, delete_google_event_by_local_id
+
 
 # from app.models.user import get_access_token_for_user, save_google_token
 # import requests
@@ -93,7 +97,7 @@ def list_calendars():
     calendar_list = service.calendarList().list().execute()
     return jsonify(calendar_list["items"])
 
-@google_bp.route("/api/google/calendar/events/bulk", methods=["POST"])
+@google_bp.route("/calendar/events/bulk", methods=["POST"])
 def fetch_bulk_events():
     data = request.get_json()
     calendar_ids = data.get("calendarIds", [])
@@ -132,37 +136,66 @@ def fetch_bulk_events():
 
     return jsonify(all_events)
 
-@google_bp.route("/api/google/calendar/events/bulk", methods=["OPTIONS"])
-def bulk_events_options():
-    return '', 204
-
-
-@google_bp.route("/calendar/events", methods=["POST"])
-def create_event():
-    # posts event to primary calendar
+@google_bp.route("/calendar/events/add", methods=["POST"])
+def add_event_to_calendar():
     creds = get_credentials()
     if not creds:
         return jsonify({"error": "Unauthorized"}), 401
 
-    data = request.json
-    calendar_id = data.get("calendarId", "primary")
-    service = build("calendar", "v3", credentials=creds)
-
-    event = {
-        "summary": data.get("summary", "Test Event"),
-        "start": {
-            "dateTime": data.get("start"),
-            "timeZone": "America/New_York",
-        },
-        "end": {
-            "dateTime": data.get("end"),
-            "timeZone": "America/New_York",
-        },
+    data = request.get_json()
+    event_data = {
+        "summary": data["title"],
+        "start": {"dateTime": data["start"], "timeZone": "America/New_York"},
+        "end": {"dateTime": data["end"], "timeZone": "America/New_York"},
     }
 
-    created = service.events().insert(calendarId=calendar_id, body=event).execute()
-    return jsonify({"status": "created", "link": created.get("htmlLink")})
+    service = build("calendar", "v3", credentials=creds)
+    event = service.events().insert(calendarId="primary", body=event_data).execute()
 
+    save_google_event(
+        user_id=data["user_id"],  # or however you track logged-in users
+        local_event_id=data["local_event_id"],
+        google_event_id=event["id"],
+        title=data["title"],
+        start=data["start"],
+        end=data["end"]
+    )
 
+    return jsonify({ "googleEventId": event["id"] })
 
+@google_bp.route("/calendar/events/<local_event_id>", methods=["DELETE"])
+def delete_event_from_calendar(local_event_id):
+    creds = get_credentials()
+    if not creds:
+        return jsonify({"error": "Unauthorized"}), 401
 
+    try:
+        data = request.get_json(force=True) or {}
+        user_id = data.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Missing user_id"}), 400
+
+        print(f"Deleting event {local_event_id} for user {user_id}")
+
+        # Look up Google event ID
+        record = get_google_event_by_local_id(user_id=user_id, local_event_id=local_event_id)
+        if not record:
+            return jsonify({ "error": "No matching event found" }), 404
+
+        google_event_id = record["google_event_id"]
+
+        # Delete from Google Calendar
+        try:
+            service = build("calendar", "v3", credentials=creds)
+            service.events().delete(calendarId="primary", eventId=google_event_id).execute()
+        except Exception as google_error:
+            print("Google API error:", google_error)
+            return jsonify({"error": "Failed to delete from Google Calendar"}), 500
+
+        # Delete from DB
+        delete_google_event_by_local_id(user_id=user_id, local_event_id=local_event_id)
+
+        return jsonify({ "status": "deleted" })
+    except Exception as e:
+        print("Unexpected error:", e)
+        return jsonify({ "error": str(e) }), 500

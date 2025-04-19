@@ -1,26 +1,49 @@
 from flask import current_app
-from app.services.db import mongo
+from app.services.db import get_db
+# from pymongo import MongoClient
+
+# client = MongoClient(current_app.config["MONGO_URI"])
 
 
-def create_user(data, role="user"):
-    """ Automatically assign 'user' role when a new Clerk user registers """
-    db = mongo.cx["CMUCal"]
-    # print("Mongo client in create_user: ", db)
-    if db is None:
-        print("Mongo not initialized")
-        return
-    clerk_id = data.get("id")
-    existing_user = db.users.find_one({"clerk_id": clerk_id})
-    print("clerk_id in create_user: ", clerk_id)
-    if not existing_user:
-        user = {"clerk_id": clerk_id, "role": role, "first_name": data.get("first_name"), "last_name": data.get("last_name")}
-        result = db.users.insert_one(user)
-        print("User created with ID:", result.inserted_id)
+def get_user_by_clerk_id(clerk_id: str):
+    db = get_db()
+    users_collection = db["users"]
+    return users_collection.find_one({"clerk_id": clerk_id})
+
+# def create_user(data, role="user"):
+#     """ Automatically assign 'user' role when a new Clerk user registers """
+#     db = get_db()
+#     # print("Mongo client in create_user: ", db)
+#     if db is None:
+#         print("Mongo not initialized")
+#         return
+#     clerk_id = data.get("id")
+#     existing_user = db.users.find_one({"clerk_id": clerk_id})
+#     print("clerk_id in create_user: ", clerk_id)
+#     if not existing_user:
+#         user = {"clerk_id": clerk_id, "role": role, "first_name": data.get("first_name"), "last_name": data.get("last_name")}
+#         result = db.users.insert_one(user)
+#         print("User created with ID:", result.inserted_id)
+
+
+def create_user(clerk_id: str, email: str, first_name: str = "", last_name: str = ""):
+    db = get_db()
+    users_collection = db["users"]
+    
+    user_data = {
+        "clerk_id": clerk_id,
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+    }
+    users_collection.insert_one(user_data)
+    return user_data
+
 
 def get_user_role(clerk_id):
     """ Retrieve user role from MongoDB """
 
-    db = mongo.cx["CMUCal"]  # Get `mongo` from Flask context
+    db = get_db()  # Get `mongo` from Flask context
     user = db.users.find_one({"clerk_id": clerk_id})
     return user["role"] if user else None
 
@@ -30,7 +53,7 @@ def save_google_token(user_id: str, token_data: dict):
     """
     Store Google OAuth token info in user's record.
     """
-    db = mongo.cx["CMUCal"]
+    db = get_db()
     db.users.update_one(
         {"clerk_id": user_id},
         {
@@ -53,6 +76,6 @@ def get_access_token_for_user(user_id: str):
     """
     Fetch the user's Google access token if it exists.
     """
-    db = mongo.cx["CMUCal"]
+    db = get_db()
     user = db.users.find_one({"clerk_id": user_id}, {"google_oauth.access_token": 1})
     return user.get("google_oauth", {}).get("access_token") if user else None
