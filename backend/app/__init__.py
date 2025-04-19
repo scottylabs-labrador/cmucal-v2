@@ -37,8 +37,11 @@ def create_app():
     # Bind the Flask app to mongo
     init_db(app)
 
-    CORS(app)
-    CORS(google_bp, supports_credentials=True)
+    # CORS(app)
+    # CORS(google_bp, supports_credentials=True)
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True, automatic_options=True)
+
+    # CORS(google_bp, supports_credentials=True)
 
     # JWTManager(app)
 

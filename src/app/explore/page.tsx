@@ -2,51 +2,75 @@
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import Calendar from "@components/Calendar";
 import { useState } from "react";
+import SearchResultsSidebar from "@components/SearchResultSidebar";
 
-const searchResults = [
-  { id: "1", title: "TartanHacks Hackathon", date: "Feb 2, 10:00AM - Feb 3, 5:00PM", location: "Rangos Auditorium" , added: false },
-  { id: "2", title: "CMU AI Conference", date: "March 15, 9:00AM - 4:00PM", location: "Gates 6115", added: false },
+
+// const initialSearchResults = [
+//   { id: "1", title: "TartanHacks Hackathon", date: "Feb 2, 10:00AM - Feb 3, 5:00PM", location: "Rangos Auditorium" , added: false },
+//   { id: "2", title: "CMU AI Conference", date: "Apr 16, 9:00AM - 4:00PM", location: "Gates 6115", added: false },
+//   { id: "3", title: "ScottySpark", date: "Apr 19, 5:00PM - 8:00PM", location: "Swartz Center, Tepper", added: false },
+// ];
+
+const initialSearchResults = [
+  {
+    id: "1",
+    title: "TartanHacks Hackathon",
+    start: "2025-02-02T10:00:00",
+    end: "2025-02-03T17:00:00",
+    location: "Rangos Auditorium",
+    added: false,
+  },
+  {
+    id: "2",
+    title: "CMU AI Conference",
+    start: "2025-04-16T09:00:00",
+    end: "2025-04-16T16:00:00",
+    location: "Gates 6115",
+    added: false,
+  },
+  {
+    id: "3",
+    title: "ScottySpark",
+    start: "2025-04-19T17:00:00",
+    end: "2025-04-19T20:00:00",
+    location: "Swartz Center, Tepper",
+    added: true,
+  },
 ];
 
-function SearchResultsSidebar() {
-  const [events, setEvents] = useState(searchResults);
-  const [filter, setFilter] = useState(""); // State for dropdown filter
-
-  const toggleAdded = (this_id: string) => {
-    setEvents(prevEvents =>
-      prevEvents.map((event) =>
-        event.id === this_id ? { ...event, added : !event.added } : event 
-      )
-    )
-  }
-
-  return (
-    <div>
-      {/* <h2 className="text-lg font-semibold mb-2">Search Results</h2> */}
-      <ul className="space-y-3">
-        <select id="exploreFilter" className="border rounded-lg px-3 py-2 bg-white text-gray-700">
-          <option value="explore_career"> Career </option>
-          <option value="explore_academic"> Academic </option>
-          <option value="explore_activity"> Activity </option>
-        </select>
-        {events.map((event) => (
-          <li key={event.id} className="p-3 rounded">
-            <p className="text-sm text-gray-400">EVENT</p>
-            <p className="text-lg leading-[2.00]">{event.title}</p>
-            <p className="text-base text-gray-500 leading-lg">{event.date}</p>
-            <p className="text-base text-gray-500 leading-lg">{event.location}</p>
-            <button className="mt-2 mr-2 px-3 py-1.5 rounded-md bg-gray-100">Register</button>
-            <button className="mr-2 px-3 py-1.5 rounded-md bg-gray-100 ">Learn more</button>
-            <button onClick={() => toggleAdded(event.id)}
-              className={`mr-2 px-3 py-1.5 rounded-lg ${ event.added ? 'bg-blue-300' : 'bg-blue-500'} text-white`}>
-                { event.added ? "Remove" : "Add" }  </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 export default function Explore() {
-  return <TwoColumnLayout leftContent={<SearchResultsSidebar />} rightContent={<Calendar />} />;
+  const [searchResults, setSearchResults] = useState(initialSearchResults);
+
+
+  const toggleAdded = (id: string) => {
+    setSearchResults(prev =>
+      prev.map(event =>
+        event.id === id ? { ...event, added: !event.added } : event
+    ));
+  };
+
+  const handleRemoveFromCalendar = (id: string) => {
+    setSearchResults(prev =>
+      prev.map(event =>
+        event.id === id ? { ...event, added: false } : event
+      )
+    );
+  };
+
+  // Convert added events to FullCalendar's format
+  const calendarEvents = searchResults
+    .filter(event => event.added)
+    .map(event => ({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      location: event.location,
+    }));
+
+  return <TwoColumnLayout 
+        leftContent={<SearchResultsSidebar
+          events={searchResults}
+          toggleAdded={toggleAdded}/>} 
+        rightContent={<Calendar events={calendarEvents} onDeleteEvent={handleRemoveFromCalendar}/>} />;
 }

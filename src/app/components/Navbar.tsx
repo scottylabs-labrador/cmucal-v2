@@ -10,9 +10,7 @@ import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
 
-import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import FormHelperText from '@mui/material/FormHelperText';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
@@ -77,42 +75,42 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </select>
         </button> */}
         <FormControl sx={{ m: 1, minWidth: 120}} size="small">
-        <Select
-          value={term}
-          onChange={handleTermChange}
-          displayEmpty
-          inputProps={{ 'aria-label': 'Without label' }}
-          sx={{
-            border: "1px solid #f1f1f1",
-            '&:focus': {
+          <Select
+            value={term}
+            onChange={handleTermChange}
+            displayEmpty
+            inputProps={{ 'aria-label': 'Without label' }}
+            sx={{
               border: "1px solid #f1f1f1",
-            },
-            '& .MuiSelect-icon': {
-              display: "none", // hide dropdown arrow
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              border: "1px solid #f1f1f1",
-            },
-            '&.Mui-focused': {
-              boxShadow: "none", // remove focus ring
-              border: "1px solid #f1f1f1"
-            }
-          }}
-        >
-          <MenuItem value={'Spring 25'}>
-            <div className="flex items-center space-x-2">
-              {term === 'Spring 25' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
-              <span className="text-sm text-gray-800 dark:text-white">Spring 25</span>
-            </div>
-          </MenuItem>
-          <MenuItem value={'Fall 24'}>
-            <div className="flex items-center space-x-2">
-              {term === 'Fall 24' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
-              <span className="text-sm text-gray-800 dark:text-white">Fall 24</span>
-            </div>
-          </MenuItem>
-        </Select>
-      </FormControl>
+              '&:focus': {
+                border: "1px solid #f1f1f1",
+              },
+              '& .MuiSelect-icon': {
+                display: "none", // hide dropdown arrow
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                border: "1px solid #f1f1f1",
+              },
+              '&.Mui-focused': {
+                boxShadow: "none", // remove focus ring
+                border: "1px solid #f1f1f1"
+              }
+            }}
+          >
+            <MenuItem value={'Spring 25'}>
+              <div className="flex items-center space-x-2">
+                {term === 'Spring 25' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
+                <span className="text-sm text-gray-800 dark:text-white">Spring 25</span>
+              </div>
+            </MenuItem>
+            <MenuItem value={'Fall 24'}>
+              <div className="flex items-center space-x-2">
+                {term === 'Fall 24' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
+                <span className="text-sm text-gray-800 dark:text-white">Fall 24</span>
+              </div>
+            </MenuItem>
+          </Select>
+        </FormControl>
 
         <Link href="/upload">
           <button className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500">
