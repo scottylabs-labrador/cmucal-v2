@@ -8,3 +8,4 @@ def init_db(app: Flask):
     # print("Using MONGO_URI:", Config.MONGO_URI)
     # app.config["MONGO_URI"] = Config.MONGO_URI
     mongo.init_app(app)
+    

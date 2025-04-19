@@ -50,7 +50,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
         {/* Term Selector (Not a link, just UI) */}
         <button className="flex items-center px-3 py-2 space-x-2 border rounded-md dark:border-gray-600">
           <BsCalendar3 className="text-gray-600 dark:text-white" size={16} />
-          <span className="text-sm font-medium">Fall 24</span>
+          <span className="text-sm font-medium">Spring 25</span>
         </button>
 
         <Link href="/upload">
