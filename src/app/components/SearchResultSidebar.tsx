@@ -11,6 +11,7 @@ type Event = {
   end: string;
   location: string;
   added: boolean;
+  classNames: string[];
 };
 
 type Props = {
@@ -30,6 +31,8 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
     // Toggle locally
     event.added = !event.added;
     setEvents(updatedEvents);
+
+
     try {
       if (event.added) {
         // Add to Google Calendar via backend

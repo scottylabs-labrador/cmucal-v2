@@ -8,11 +8,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core"; 
 import { useGcalEvents } from "../../context/GCalEventsContext";
+import "../../styles/calendar.css"; 
 
 
 import { EventInput } from "@fullcalendar/core"; // Import FullCalendar's Event Type
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
+import FullCalendarCard from "./FullCalendarCard";
 
 
 type Props = {
@@ -24,8 +26,26 @@ const Calendar: FC<Props> = ({ events, setEvents }) => {
   // Define state with EventInput type
   // const [events, setEvents] = useState<EventInput[]>([]);
   const { gcalEvents } = useGcalEvents();
-  // const mergedEvents = [...events, ...gcalEvents];
-  // console.log("Merged Events:", mergedEvents);
+
+  const mergedEventsMap = new Map<string, EventInput>();
+
+  // First add gcalEvents (lower priority)
+  gcalEvents.forEach(event => {
+    // mergedEventsMap.set(event.id as string, event);
+    const key = event.id?.toString() || `${event.title}-${event.start}`;
+    mergedEventsMap.set(key, event);
+  });
+
+  // Then add events (higher priority — will overwrite duplicates)
+  events.forEach(event => {
+    const key = event.id?.toString() || `${event.title}-${event.start}`;
+    mergedEventsMap.set(key, event);
+  });
+
+  const mergedEvents = Array.from(mergedEventsMap.values());
+
+
+  console.log("Merged Events:", mergedEvents);
   // const [mergedEvents, setMergedEvents] = useState(events);
   const { user } = useUser();
 
@@ -60,7 +80,7 @@ const Calendar: FC<Props> = ({ events, setEvents }) => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300">
+    <div className="-pt-4 p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
@@ -69,11 +89,14 @@ const Calendar: FC<Props> = ({ events, setEvents }) => {
           center: "title",
           right: "dayGridMonth,timeGridWeek,timeGridDay",
         }}
-        events={events}
+        // events={events}
+        events={mergedEvents}
         editable={true}
         selectable={true}
         eventClick={handleEventClick}
-        height="auto"
+        eventContent={FullCalendarCard} 
+        // height="auto"
+        height={600}
         // eventClassNames="text-sm font-semibold p-1 rounded-md"
       />
 

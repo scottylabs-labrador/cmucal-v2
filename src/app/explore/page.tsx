@@ -14,28 +14,31 @@ import SearchResultsSidebar from "@components/SearchResultSidebar";
 
 const initialEvents = [
   {
-    id: "1",
+    id: "TartanHacks Hackathon-2025-02-02T10:00:00",
     title: "TartanHacks Hackathon",
     start: "2025-02-02T10:00:00",
     end: "2025-02-03T17:00:00",
     location: "Rangos Auditorium",
     added: false,
+    classNames: ["cmucal-event"],
   },
   {
-    id: "2",
+    id: "CMU AI Conference-2025-04-16T09:00:00",
     title: "CMU AI Conference",
     start: "2025-04-16T09:00:00",
     end: "2025-04-16T16:00:00",
     location: "Gates 6115",
     added: false,
+    classNames: ["cmucal-event"],
   },
   {
-    id: "3",
+    id: "ScottySpark-2025-04-19T17:00:00",
     title: "ScottySpark",
     start: "2025-04-19T17:00:00",
     end: "2025-04-19T20:00:00",
     location: "Swartz Center, Tepper",
     added: true,
+    classNames: ["cmucal-event"],
   },
 ];
 
@@ -54,6 +57,7 @@ export default function ExplorePage() {
       title: event.title,
       start: event.start,
       end: event.end,
+      classNames: event.classNames,
     }));
 
   const handleEventDelete = (id: string) => {

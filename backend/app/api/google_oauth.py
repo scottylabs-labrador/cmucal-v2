@@ -127,10 +127,15 @@ def fetch_bulk_events():
             .execute()
         )
         for event in res.get("items", []):
+            start = event["start"]
+            end = event["end"]
+            is_all_day = "date" in start  # all-day if 'date' is used instead of 'dateTime'
+
             all_events.append({
                 "title": event.get("summary", "No Title"),
-                "start": event["start"].get("dateTime") or event["start"].get("date"),
-                "end": event["end"].get("dateTime") or event["end"].get("date"),
+                "start": start.get("dateTime") or start.get("date"),
+                "end": end.get("dateTime") or end.get("date"),
+                "allDay": is_all_day,
                 "calendarId": cal_id,
             })
 
