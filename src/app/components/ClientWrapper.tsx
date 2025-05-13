@@ -24,7 +24,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
         <main>
           <SignedIn>{children}</SignedIn>
           <SignedOut>
-            <div className="flex justify-center items-center h-[80vh] dark:bg-gray-700">
+            <div className="flex justify-center items-center h-[90vh] dark:bg-gray-700">
               <Welcome />
             </div>
           </SignedOut>

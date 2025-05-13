@@ -22,7 +22,7 @@ export default function SignedOutNav() {
   }
 
   return (
-    <nav className="flex justify-end border-b bg-white dark:bg-gray-800">
+    <nav className="flex justify-end border-b bg-[#C41230] dark:bg-gray-800">
       {/* Right Section: Upload Button, dark mode, logout */}
         <div className="cursor-pointer">
         {mounted && (
@@ -33,7 +33,7 @@ export default function SignedOutNav() {
               {theme === "dark" ? (
                 <FiSun className="text-yellow-400" size={18} /> // Sun icon for Light mode
               ) : (
-                <FiMoon className="text-gray-600 dark:text-white" size={18} /> // Moon icon for Dark mode
+                <FiMoon className="text-gray-50" size={18} /> // Moon icon for Dark mode
               )}
             </button>
         )}
