@@ -14,6 +14,7 @@ import {
 } from "../utils/helpers"; 
 import { useUser } from "@clerk/nextjs";
 import { sendUserToBackend } from "~/utils/authService";
+import Calendar from "../components/Calendar";
 
 /**
  * Profile page with personalized calendar view
@@ -123,7 +124,12 @@ export default function Profile() {
           instructor: sampleEvent.instructor,
           course_name: sampleEvent.course_name
         },
-        color: "#f87171"
+        color: "#f87171",
+        // need these fields for the calendar component. 
+        // feel free to change the calendar component as long as it doesn't break the explore page
+        classNames: ["cmucal-event"],
+        allDay: false,
+        added: true,
       },
       ...mockCalendarEvents
     ];
@@ -144,7 +150,7 @@ export default function Profile() {
           onCourseSelect={handleCourseSelect}
         />
       } 
-      rightContent={<CustomCalendar events={calendarEvents} />} 
+      rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents}/>} 
     />
   );
 }

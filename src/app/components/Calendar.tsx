@@ -24,7 +24,6 @@ type Props = {
 
 const Calendar: FC<Props> = ({ events, setEvents }) => {
   // Define state with EventInput type
-  // const [events, setEvents] = useState<EventInput[]>([]);
   const { gcalEvents } = useGcalEvents();
 
   const mergedEventsMap = new Map<string, EventInput>();

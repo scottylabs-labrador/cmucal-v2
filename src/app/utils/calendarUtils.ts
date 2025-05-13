@@ -16,6 +16,7 @@ type FullCalendarEvent = {
     classNames?: string[];
 };
 
+// need to add more fields to this, such as location, description, source, etc.
 export function formatGCalEvent(event: GCalEvent): FullCalendarEvent {
     return {
         id: `${event.title}-${event.start}`,
@@ -27,7 +28,8 @@ export function formatGCalEvent(event: GCalEvent): FullCalendarEvent {
     };
 }
 
-export function formatCMUCalEvent(event: FullCalendarEvent): FullCalendarEvent {
+// note: probably need to change this to use the same format as gcal events
+export function formatCMUCalEvent(event: any) {
     return {
         ...event,
         classNames: ["cmucal-event"],
