@@ -1,26 +1,95 @@
-# import os
-# import google.oauth2.credentials
-# import google_auth_oauthlib.flow
-# import googleapiclient.discovery
-# from flask import url_for, redirect, session
-# from app.config.settings import Config
+# handles API logic (Google Calendar)
+from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from flask import session
+from datetime import datetime, timedelta
 
-# def get_google_calendar_service():
-#     """ Authenticate and return a Google Calendar API service instance """
-#     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-#         Config.GOOGLE_CLIENT_SECRET_FILE, scopes=Config.GOOGLE_SCOPES
-#     )
-#     flow.redirect_uri = url_for("google_auth_callback", _external=True)
 
-#     auth_url, state = flow.authorization_url(access_type="offline", prompt="consent")
-#     session["state"] = state
-#     return auth_url
+SCOPES = [
+    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/calendar",
+    "openid",
+    "https://www.googleapis.com/auth/calendar.readonly"
+]
 
-# def fetch_calendar_events():
-#     """ Retrieve Google Calendar events """
-#     credentials = google.oauth2.credentials.Credentials(**session["google_credentials"])
-#     service = googleapiclient.discovery.build("calendar", "v3", credentials=credentials)
+def create_google_flow(config, state=None):
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": config["GOOGLE_CLIENT_ID"],
+                "client_secret": config["GOOGLE_CLIENT_SECRET"],
+                "redirect_uris": config["GOOGLE_REDIRECT_URI"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=SCOPES,
+        state=state
+    )
+    flow.redirect_uri = config["GOOGLE_REDIRECT_URI"]
+    return flow
 
-#     events_result = service.events().list(calendarId="primary", maxResults=10).execute()
-#     events = events_result.get("items", [])
-#     return events
+def fetch_user_credentials():
+    creds_data = session.get("credentials")
+    return Credentials(**creds_data) if creds_data else None
+
+def build_calendar_service(credentials):
+    return build("calendar", "v3", credentials=credentials)
+
+def list_user_calendars(credentials):
+    service = build_calendar_service(credentials)
+    return service.calendarList().list().execute()["items"]
+
+def fetch_events_for_calendars(credentials, calendar_ids):
+    service = build_calendar_service(credentials)
+    now = datetime.utcnow()
+    time_min = (now - timedelta(days=90)).isoformat() + "Z"
+    time_max = (now + timedelta(days=90)).isoformat() + "Z"
+    all_events = []
+
+    for cal_id in calendar_ids:
+        res = service.events().list(
+            calendarId=cal_id,
+            timeMin=time_min,
+            timeMax=time_max,
+            singleEvents=True,
+            orderBy="startTime"
+        ).execute()
+        for event in res.get("items", []):
+            start = event["start"]
+            end = event["end"]
+            is_all_day = "date" in start
+            all_events.append({
+                "title": event.get("summary", "No Title"),
+                "start": start.get("dateTime") or start.get("date"),
+                "end": end.get("dateTime") or end.get("date"),
+                "allDay": is_all_day,
+                "calendarId": cal_id,
+            })
+    return all_events
+
+def add_event(credentials, data, calendar_id):
+    service = build_calendar_service(credentials)
+    event_data = {
+        "summary": data["title"],
+        "start": {"dateTime": data["start"], "timeZone": "America/New_York"},
+        "end": {"dateTime": data["end"], "timeZone": "America/New_York"},
+    }
+    # "primary"
+    return service.events().insert(calendarId=calendar_id, body=event_data).execute()
+
+def delete_event(credentials, event_id, calendar_id):
+    service = build_calendar_service(credentials)
+    service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+
+def create_cmucal_calendar(credentials):
+    service = build("calendar", "v3", credentials=credentials)
+    calendar = {
+        "summary": "CMUCal",
+        "timeZone": "America/New_York"
+    }
+    created_calendar = service.calendars().insert(body=calendar).execute()
+    return created_calendar["id"]
+
