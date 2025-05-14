@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import { EventInput } from "@fullcalendar/core";
 import ProfileSidebar from "../components/ProfileSidebar";
-import CustomCalendar from "../components/CustomCalendar";
 import { sampleEvent, mockCalendarEvents, userCourses, userClubs } from "./data/mockData";
 import { Course, Club } from "../utils/types";
 import { 

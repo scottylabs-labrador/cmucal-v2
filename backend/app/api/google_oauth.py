@@ -9,9 +9,6 @@ from app.models.google_event import save_google_event
 from app.models.google_event import get_google_event_by_local_id, delete_google_event_by_local_id
 
 
-# from app.models.user import get_access_token_for_user, save_google_token
-# import requests
-
 google_bp = Blueprint("google", __name__)
 
 SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/userinfo.email", 
