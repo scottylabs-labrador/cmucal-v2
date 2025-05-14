@@ -105,7 +105,7 @@ export function ConnectGoogleButton() {
   };
 
   const getGoogleConnectionStatus = () => 
-    loading ? "Checking..." : isConnected ? "Google Calendar Connected" : "Connect Google Calendar";
+    loading ? "Checking..." : isConnected ? "Display GCal Events" : "Connect Google Calendar";
   
 
 

@@ -8,6 +8,8 @@ def init_db(app: Flask):
     global _db
     mongo.init_app(app)
     _db = mongo.cx["CMUCal"]
+    _db.users.create_index("clerk_id", unique=True)
+
 
 def get_db():
     if _db is None:

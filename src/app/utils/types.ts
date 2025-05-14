@@ -61,8 +61,3 @@ export interface AccordionProps {
   children: React.ReactNode;
   badge?: string;
 }
-
-
-export interface CustomCalendarProps {
-  events: EventInput[];
-} 
