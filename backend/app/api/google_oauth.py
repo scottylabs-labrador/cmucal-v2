@@ -1,11 +1,9 @@
 # routes requests and coordinates services/models
 from flask import Blueprint, request, jsonify, redirect, current_app, session
-from datetime import datetime, timedelta
 
 from app.services.google_service import (
     create_google_flow,
     fetch_user_credentials,
-    build_calendar_service,
     list_user_calendars,
     fetch_events_for_calendars,
     add_event,

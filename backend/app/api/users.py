@@ -20,7 +20,7 @@ def handle_login():
     user = get_user_by_clerk_id(clerk_id)
     if user is None:
         create_user(clerk_id, email, first_name, last_name)
-        # now re-fetch to get the DB-generated _id and calendar_id
+        # re-fetch to get the DB-generated _id and calendar_id
         user = get_user_by_clerk_id(clerk_id)
 
         if not user.get("calendar_id"):

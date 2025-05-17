@@ -3,7 +3,7 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from flask import session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 SCOPES = [
@@ -44,7 +44,7 @@ def list_user_calendars(credentials):
 
 def fetch_events_for_calendars(credentials, calendar_ids):
     service = build_calendar_service(credentials)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     time_min = (now - timedelta(days=90)).isoformat() + "Z"
     time_max = (now + timedelta(days=90)).isoformat() + "Z"
     all_events = []
