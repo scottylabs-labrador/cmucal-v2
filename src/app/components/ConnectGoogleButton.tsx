@@ -78,6 +78,8 @@ export function ConnectGoogleButton() {
     console.log("Selected calendar IDs:", selectedCalendarIds);
     if (selectedCalendarIds.length > 0) {
       fetchEventsFromCalendars(selectedCalendarIds);
+    } else {
+      setGcalEvents([]);
     }
   }, [selectedCalendarIds]);
 

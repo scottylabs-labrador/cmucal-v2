@@ -46,7 +46,7 @@ def list_user_calendars(credentials):
 
 def fetch_events_for_calendars(credentials, calendar_ids):
     service = build_calendar_service(credentials)
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow() # don't change this, changing will cause error!
     time_min = (now - timedelta(days=90)).isoformat() + "Z"
     time_max = (now + timedelta(days=90)).isoformat() + "Z"
     all_events = []
