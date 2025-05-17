@@ -16,8 +16,8 @@ const initialEvents = [
   {
     id: "TartanHacks Hackathon-2025-02-02T10:00:00",
     title: "TartanHacks Hackathon",
-    start: "2025-02-02T10:00:00",
-    end: "2025-02-03T17:00:00",
+    start: "2025-05-02T10:00:00",
+    end: "2025-05-03T17:00:00",
     location: "Rangos Auditorium",
     added: false,
     classNames: ["cmucal-event"],
@@ -25,8 +25,8 @@ const initialEvents = [
   {
     id: "CMU AI Conference-2025-04-16T09:00:00",
     title: "CMU AI Conference",
-    start: "2025-04-16T09:00:00",
-    end: "2025-04-16T16:00:00",
+    start: "2025-05-16T09:00:00",
+    end: "2025-05-16T16:00:00",
     location: "Gates 6115",
     added: false,
     classNames: ["cmucal-event"],
@@ -34,8 +34,8 @@ const initialEvents = [
   {
     id: "ScottySpark-2025-04-19T17:00:00",
     title: "ScottySpark",
-    start: "2025-04-19T17:00:00",
-    end: "2025-04-19T20:00:00",
+    start: "2025-05-19T17:00:00",
+    end: "2025-05-19T20:00:00",
     location: "Swartz Center, Tepper",
     added: false,
     classNames: ["cmucal-event"],

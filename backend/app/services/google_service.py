@@ -42,6 +42,8 @@ def list_user_calendars(credentials):
     service = build_calendar_service(credentials)
     return service.calendarList().list().execute()["items"]
 
+
+
 def fetch_events_for_calendars(credentials, calendar_ids):
     service = build_calendar_service(credentials)
     now = datetime.now(timezone.utc)
@@ -50,24 +52,28 @@ def fetch_events_for_calendars(credentials, calendar_ids):
     all_events = []
 
     for cal_id in calendar_ids:
-        res = service.events().list(
-            calendarId=cal_id,
-            timeMin=time_min,
-            timeMax=time_max,
-            singleEvents=True,
-            orderBy="startTime"
-        ).execute()
-        for event in res.get("items", []):
-            start = event["start"]
-            end = event["end"]
-            is_all_day = "date" in start
-            all_events.append({
-                "title": event.get("summary", "No Title"),
-                "start": start.get("dateTime") or start.get("date"),
-                "end": end.get("dateTime") or end.get("date"),
-                "allDay": is_all_day,
-                "calendarId": cal_id,
-            })
+        try:
+            res = service.events().list(
+                calendarId=cal_id,
+                timeMin=time_min,
+                timeMax=time_max,
+                singleEvents=True,
+                orderBy="startTime"
+            ).execute()
+            for event in res.get("items", []):
+                start = event["start"]
+                end = event["end"]
+                is_all_day = "date" in start
+                all_events.append({
+                    "title": event.get("summary", "No Title"),
+                    "start": start.get("dateTime") or start.get("date"),
+                    "end": end.get("dateTime") or end.get("date"),
+                    "allDay": is_all_day,
+                    "calendarId": cal_id,
+                })
+        except Exception as e:
+            print(f"Error fetching calendar {cal_id}: {e}")
+            continue
     return all_events
 
 def add_event(credentials, data, calendar_id):
@@ -92,4 +98,14 @@ def create_cmucal_calendar(credentials):
     }
     created_calendar = service.calendars().insert(body=calendar).execute()
     return created_calendar["id"]
+
+def credentials_to_dict(credentials):
+    return {
+        "token": credentials.token,
+        "refresh_token": credentials.refresh_token,
+        "token_uri": credentials.token_uri,
+        "client_id": credentials.client_id,
+        "client_secret": credentials.client_secret,
+        "scopes": credentials.scopes,
+    }
 

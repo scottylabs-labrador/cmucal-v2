@@ -33,16 +33,18 @@ def create_app():
     app.config["MONGO_URI"] = os.getenv("MONGO_URI")
     app.config["GOOGLE_CLIENT_SECRET_FILE"] = "client_secret.json" 
 
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+
     # Bind the Flask app to mongo
     init_db(app)
 
-
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True, automatic_options=True)
 
     # Register blueprints (modular routing)
     app.register_blueprint(users_bp, url_prefix="/api/users")
     app.register_blueprint(google_bp, url_prefix="/api/google")
     app.register_blueprint(base_bp)
+
+    # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True, automatic_options=True)
     
 
     return app

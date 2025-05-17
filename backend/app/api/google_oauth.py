@@ -7,12 +7,16 @@ from app.services.google_service import (
     list_user_calendars,
     fetch_events_for_calendars,
     add_event,
-    delete_event
+    delete_event,
+    credentials_to_dict
 )
 from app.models.google_event import save_google_event, get_google_event_by_local_id, delete_google_event_by_local_id
 from app.models.user import get_user_by_clerk_id
 
 google_bp = Blueprint("google", __name__)
+
+
+
 
 @google_bp.route("/authorize")
 def authorize():
@@ -33,7 +37,7 @@ def oauth2callback():
     state = session["state"]
     flow = create_google_flow(current_app.config, state)
     flow.fetch_token(authorization_response=request.url)
-    session["credentials"] = vars(flow.credentials)
+    session["credentials"] = credentials_to_dict(flow.credentials)
     return redirect(session.pop("post_auth_redirect", current_app.config["FRONTEND_REDIRECT_URI"]))
 
 @google_bp.route("/calendar/status")

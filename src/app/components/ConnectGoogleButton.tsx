@@ -75,6 +75,7 @@ export function ConnectGoogleButton() {
   }, [loading, isConnected]);
 
   useEffect(() => {
+    console.log("Selected calendar IDs:", selectedCalendarIds);
     if (selectedCalendarIds.length > 0) {
       fetchEventsFromCalendars(selectedCalendarIds);
     }
@@ -144,26 +145,6 @@ export function ConnectGoogleButton() {
     setAvailableCalendars(sorted);
   };
   
-  
-  
-
-  const createEvent = async () => {
-    const res = await fetch("http://localhost:5001/api/google/calendar/events", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        summary: "CMUCal Meeting",
-        start: "2025-04-20T10:00:00-04:00",
-        end: "2025-04-20T11:00:00-04:00",
-        calendarId: "primary",
-      }),
-    });
-    const result = await res.json();
-    if (result.link) setMessage(`Event created: ${result.link}`);
-    else setMessage("Event creation failed");
-  };
-
 
   return (
   <div>
