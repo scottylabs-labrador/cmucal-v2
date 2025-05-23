@@ -69,9 +69,9 @@ export function ConnectGoogleButton() {
 
   useEffect(() => {
     // If we've finished loading and user is NOT connected, redirect to auth
-    if (!loading && !isConnected) {
-      authorizeGoogle();
-    }
+    // if (!loading && !isConnected) {
+    //   authorizeGoogle();
+    // }
   }, [loading, isConnected]);
 
   useEffect(() => {

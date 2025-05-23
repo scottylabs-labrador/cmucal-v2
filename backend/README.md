@@ -10,6 +10,7 @@ First, `cd` into the backend folder
     - windows: `venv\Scripts\activate`
 
 - Once activated, you can install dependencies by `pip install -r requirements.txt`, and save them by running `pip freeze > requirements.txt`
+- If you encounter an error with psycogp2, run `brew install postgresql` first.
 
 ## 2. MongoDB
 - (can ignore this) see app.services.db
