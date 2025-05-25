@@ -37,9 +37,15 @@ def handle_login():
             #     update_user_calendar_id(clerk_id, calendar_id)
             
             #     user["calendar_id"] = calendar_id  # Update response payload
-            return jsonify({"status": "created", "user": user}), 201
+            print("User:", user)
+            print("Type:", type(user))
 
-        return jsonify({"status": "exists", "user": user}), 200
+            return jsonify({"status": "created", "user": user.to_dict()}), 201
+
+        return jsonify({"status": "exists", "user": user.to_dict()}), 200
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
     finally:
         db.close()
 

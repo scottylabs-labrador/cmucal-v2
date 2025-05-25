@@ -22,7 +22,6 @@ def home():
 def db_health_check():
     db = SessionLocal()
     try:
-        # db.execute(text("SELECT 1"))
         user = User(clerk_id="123456")
         db.add(user)
         db.commit()

@@ -16,6 +16,17 @@ class User(Base):
     calendar_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "clerk_id": self.clerk_id,
+            "email": self.email,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "calendar_id": self.calendar_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
 def create_user(clerk_id, **kwargs):
     db = SessionLocal()
     user = db.query(User).filter(User.clerk_id == clerk_id).first()

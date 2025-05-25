@@ -51,13 +51,13 @@ def calendars():
         return jsonify({"error": "Unauthorized"}), 401
     return jsonify(list_user_calendars(creds))
 
-# @google_bp.route("/calendar/events/bulk", methods=["POST"])
-# def bulk_events():
-#     creds = fetch_user_credentials()
-#     if not creds:
-#         return jsonify({"error": "Unauthorized"}), 401
-#     calendar_ids = request.get_json().get("calendarIds", [])
-#     return jsonify(fetch_events_for_calendars(creds, calendar_ids))
+@google_bp.route("/calendar/events/bulk", methods=["POST"])
+def bulk_events():
+    creds = fetch_user_credentials()
+    if not creds:
+        return jsonify({"error": "Unauthorized"}), 401
+    calendar_ids = request.get_json().get("calendarIds", [])
+    return jsonify(fetch_events_for_calendars(creds, calendar_ids))
 
 # @google_bp.route("/calendar/events/add", methods=["POST"])
 # def add_event_route():

@@ -74,6 +74,12 @@ export function ConnectGoogleButton() {
     // }
   }, [loading, isConnected]);
 
+  function handleClick() {
+    if (!loading && !isConnected) {
+      authorizeGoogle();
+    }
+  }
+
   useEffect(() => {
     console.log("Selected calendar IDs:", selectedCalendarIds);
     if (selectedCalendarIds.length > 0) {
@@ -155,6 +161,7 @@ export function ConnectGoogleButton() {
       id="calendar-select"
       multiple
       value={selectedCalendarIds}
+      onClick={handleClick}
       onChange={handleChange}
       input={<OutlinedInput />}
       renderValue={(selected) => getGoogleConnectionStatus()}

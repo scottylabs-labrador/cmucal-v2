@@ -1,11 +1,5 @@
 import { useAuth } from "@clerk/nextjs";
 
-// type User = {
-//   id: string;
-//   email: string;
-//   firstBame: string;
-//   lastName: string;
-// };
 
 export const sendUserToBackend = async (user: { id: string; email: string; firstName: string; lastName: string }) => {
   const res = await fetch("http://localhost:5001/api/users/login", {
