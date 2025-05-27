@@ -38,6 +38,8 @@ export function ConnectGoogleButton() {
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]); // selected calendar IDs from dropdown
   const { gcalEvents, setGcalEvents } = useGcalEvents();
   
+  const { user, isSignedIn, isLoaded: userLoaded } = useUser();
+
   const [message, setMessage] = useState("");
   // "http://localhost:5001/api/google/authorize"
 
@@ -63,9 +65,9 @@ export function ConnectGoogleButton() {
         setLoading(false);
       }
     };
-
+    if (!userLoaded || !isSignedIn || !user) return;
     checkAuthStatus();
-  }, []);
+  }, [userLoaded, isSignedIn, user]);
 
   useEffect(() => {
     // If we've finished loading and user is NOT connected, redirect to auth

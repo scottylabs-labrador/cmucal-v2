@@ -22,6 +22,7 @@ export default function Profile() {
   const [courses, setCourses] = useState<Course[]>(userCourses);
   const [clubs, setClubs] = useState<Club[]>(userClubs);
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
+  const [hasSynced, setHasSynced] = useState(false);
 
   const handleCourseSelect = (course: Course) => {
     // Check if course already exists
@@ -39,20 +40,24 @@ export default function Profile() {
 
   // handle clerk user and sync with backend
   const { user } = useUser();
+  
   useEffect(() => {
-    if (user) {
-      const emailAddress = user.primaryEmailAddress?.emailAddress ? user.primaryEmailAddress.emailAddress : "";
-      const firstName = user.firstName ? user.firstName : "";
-      const lastName = user.lastName ? user.lastName : "";
-      const userData = {
-        id: user.id,
-        email: emailAddress,
-        firstName: firstName,
-        lastName: lastName,
-      };
-      sendUserToBackend(userData);
-    }
-  }, [user]);
+  if (user && !hasSynced) {
+    const emailAddress = user.primaryEmailAddress?.emailAddress || "";
+    const firstName = user.firstName || "";
+    const lastName = user.lastName || "";
+
+    const userData = {
+      id: user.id,
+      email: emailAddress,
+      firstName,
+      lastName,
+    };
+
+    sendUserToBackend(userData);
+    setHasSynced(true);
+  }
+}, [user, hasSynced]);
 
 
   // Generic toggle function for options
