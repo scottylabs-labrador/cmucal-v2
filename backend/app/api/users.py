@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models.user import get_user_by_clerk_id, create_user
+from app.models.user import get_user_by_clerk_id, create_user, user_to_dict
 # from app.services.google_service import fetch_user_credentials
 # from app.models.user import User, update_user_calendar_id
 # from app.services.google_service import create_cmucal_calendar
@@ -21,11 +21,18 @@ def handle_login():
         if not clerk_id or not email:
             return jsonify({"error": "Missing clerk_id or email"}), 400
 
-        user = get_user_by_clerk_id(clerk_id)
+        user = get_user_by_clerk_id(db, clerk_id)
         if user is None:
-            create_user(clerk_id, email, first_name, last_name)
+            create_user(
+                db, clerk_id,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
             # re-fetch to get the DB-generated _id and calendar_id
-            user = get_user_by_clerk_id(clerk_id)
+            user = get_user_by_clerk_id(db, clerk_id)
+            # print("→ Created user:", user)
+            # print("→ Dict:", user_to_dict(user))
 
             # if not user.get("calendar_id"):
             #     # create a new calendar for the user
@@ -37,14 +44,16 @@ def handle_login():
             #     update_user_calendar_id(clerk_id, calendar_id)
             
             #     user["calendar_id"] = calendar_id  # Update response payload
-            print("User:", user)
-            print("Type:", type(user))
+            # print("User:", user)
+            # print("Type:", type(user))
 
-            return jsonify({"status": "created", "user": user.to_dict()}), 201
+            return jsonify({"status": "created", "user": user_to_dict(user)}), 201
 
-        return jsonify({"status": "exists", "user": user.to_dict()}), 200
+        return jsonify({"status": "exists", "user": user_to_dict(user)}), 200
     except Exception as e:
         db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
     finally:
         db.close()
