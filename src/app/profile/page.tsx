@@ -11,8 +11,6 @@ import {
   shouldShowCourseEvent, 
   shouldShowClubEvent 
 } from "../utils/helpers"; 
-import { useUser } from "@clerk/nextjs";
-import { sendUserToBackend } from "~/utils/authService";
 import Calendar from "../components/Calendar";
 
 /**
@@ -22,7 +20,6 @@ export default function Profile() {
   const [courses, setCourses] = useState<Course[]>(userCourses);
   const [clubs, setClubs] = useState<Club[]>(userClubs);
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
-  const [hasSynced, setHasSynced] = useState(false);
 
   const handleCourseSelect = (course: Course) => {
     // Check if course already exists
@@ -37,28 +34,6 @@ export default function Profile() {
       }]);
     }
   };
-
-  // handle clerk user and sync with backend
-  const { user } = useUser();
-  
-  useEffect(() => {
-  if (user && !hasSynced) {
-    const emailAddress = user.primaryEmailAddress?.emailAddress || "";
-    const firstName = user.firstName || "";
-    const lastName = user.lastName || "";
-
-    const userData = {
-      id: user.id,
-      email: emailAddress,
-      firstName,
-      lastName,
-    };
-
-    sendUserToBackend(userData);
-    setHasSynced(true);
-  }
-}, [user, hasSynced]);
-
 
   // Generic toggle function for options
   const toggleOption = <T extends { id: string, options: { id: string, selected: boolean }[] }>(
