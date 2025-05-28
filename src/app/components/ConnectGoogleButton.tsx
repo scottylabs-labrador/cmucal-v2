@@ -76,7 +76,7 @@ export function ConnectGoogleButton() {
     // }
   }, [loading, isConnected]);
 
-  function handleClick() {
+  function handleSelectOpen() {
     if (!loading && !isConnected) {
       authorizeGoogle();
     }
@@ -163,7 +163,7 @@ export function ConnectGoogleButton() {
       id="calendar-select"
       multiple
       value={selectedCalendarIds}
-      onClick={handleClick}
+      onOpen={handleSelectOpen}
       onChange={handleChange}
       input={<OutlinedInput />}
       renderValue={(selected) => getGoogleConnectionStatus()}

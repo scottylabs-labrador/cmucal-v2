@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 from app.models.user import get_user_by_clerk_id, create_user, user_to_dict
-# from app.services.google_service import fetch_user_credentials
-# from app.models.user import User, update_user_calendar_id
-# from app.services.google_service import create_cmucal_calendar
+from app.services.google_service import fetch_user_credentials
+from app.models.user import User, update_user_calendar_id
+from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
 
 users_bp = Blueprint("users", __name__)
@@ -34,18 +34,15 @@ def handle_login():
             # print("→ Created user:", user)
             # print("→ Dict:", user_to_dict(user))
 
-            # if not user.get("calendar_id"):
-            #     # create a new calendar for the user
-            #     creds = fetch_user_credentials()
-            #     if not creds:
-            #         return jsonify({"error": "Google account not authorized"}), 401
+        if not user.calendar_id:
+            # create a new calendar for the user
+            creds = fetch_user_credentials()
+            if not creds:
+                return jsonify({"error": "Google account not authorized"}), 401
 
-            #     calendar_id = create_cmucal_calendar(creds)
-            #     update_user_calendar_id(clerk_id, calendar_id)
-            
-            #     user["calendar_id"] = calendar_id  # Update response payload
-            # print("User:", user)
-            # print("Type:", type(user))
+            calendar_id = create_cmucal_calendar(creds)
+            update_user_calendar_id(db, clerk_id, calendar_id)
+            user = get_user_by_clerk_id(db, clerk_id)
 
             return jsonify({"status": "created", "user": user_to_dict(user)}), 201
 

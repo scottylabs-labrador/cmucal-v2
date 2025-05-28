@@ -51,12 +51,15 @@ def get_user_by_clerk_id(db, clerk_id):
     #     return jsonify({"error": "User not found"}), 404
 
 
-# def update_user_calendar_id(clerk_id, calendar_id):
-#     db = get_db()
-#     db["users"].update_one(
-#         { "clerk_id": clerk_id },
-#         { "$set": { "calendar_id": calendar_id } }
-    # )
+def update_user_calendar_id(db, clerk_id, calendar_id):
+    user = db.query(User).filter(User.clerk_id == clerk_id).first()
+    if not user:
+        raise ValueError(f"No user found with clerk_id {clerk_id}")
+
+    user.calendar_id = calendar_id
+    db.commit()
+    db.refresh(user)
+    return user
 
 # def get_user_by_clerk_id(clerk_id: str):
 #     db = get_db()
