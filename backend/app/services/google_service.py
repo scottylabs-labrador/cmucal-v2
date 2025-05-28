@@ -87,8 +87,12 @@ def add_event(credentials, data, calendar_id):
     return service.events().insert(calendarId=calendar_id, body=event_data).execute()
 
 def delete_event(credentials, event_id, calendar_id):
-    service = build_calendar_service(credentials)
-    service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    try:
+        service = build_calendar_service(credentials)
+        service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    except Exception as e:
+        print(f"❌ Google API error deleting event {event_id} from {calendar_id}:", e)
+        raise
 
 def create_cmucal_calendar(credentials):
     service = build("calendar", "v3", credentials=credentials)
@@ -108,4 +112,17 @@ def credentials_to_dict(credentials):
         "client_secret": credentials.client_secret,
         "scopes": credentials.scopes,
     }
+
+def synced_event_to_dict(event):
+    return {
+        "id": event.id,
+        "user_id": event.user_id,
+        "local_event_id": event.local_event_id,
+        "google_event_id": event.google_event_id,
+        "title": event.title,
+        "start": event.start,
+        "end": event.end,
+        "synced_at": event.synced_at.isoformat() if event.synced_at else None
+    }
+
 

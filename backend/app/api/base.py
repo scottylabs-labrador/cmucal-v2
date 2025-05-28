@@ -1,5 +1,3 @@
-print(">>> db.py is being executed")
-
 from flask import Blueprint, request, jsonify
 # from app.services.db import get_db
 # import os
