@@ -19,7 +19,6 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
@@ -38,9 +37,6 @@ def create_app():
     app.config["SUPABASE_DB_URL"] = os.getenv("SUPABASE_DB_URL")
 
     CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
-
-    # Bind the Flask app to mongo
-    # init_db(app)
 
 
     # Register blueprints (modular routing)
