@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 # from app.config.settings import Config
 from app.services.db import Base, SessionLocal
 from sqlalchemy import text
-from app.models.user import User 
+from app.models.models import User 
 
 
 base_bp = Blueprint("base", __name__)

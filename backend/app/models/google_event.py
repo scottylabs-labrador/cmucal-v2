@@ -1,6 +1,6 @@
 # # handles DB logic
 from datetime import datetime, timezone
-from app.models.synced_event import SyncedEvent
+from app.models.models import SyncedEvent
 
 def save_google_event(db, user_id, local_event_id, google_event_id, title, start, end):
     event = SyncedEvent(
