@@ -15,5 +15,11 @@ First, `cd` into the backend folder
 ## 2. Flask app
 Open a terminal (in the backend folder with virtual environment), run `python run.py` to start the Flask app.
 
+## 3. Supabase
+IF need to get the table schema from Supabase: in the terminal, run `sqlacodegen [SUPABASE_DB_URL] --outfile models.py`
+- comment out the `class Base` section in `models.py`
+- add `from app.services.db import Base` to the top of `models.py`
+- change all capitalized class names from plural to singular. i.e. class Events --> class Event. Don't change the lowercase names in quotes.
+
 ## Dev To-do
 - remove `os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"` after flask app has been deployed. This is only for developmet environment.

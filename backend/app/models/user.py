@@ -11,8 +11,8 @@ class User(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     clerk_id = Column(String, nullable=True)
     email = Column(String, nullable=True)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
+    fname = Column(String, nullable=True)
+    lname = Column(String, nullable=True)
     calendar_id = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -21,8 +21,8 @@ def user_to_dict(user):
         "id": user.id,
         "clerk_id": user.clerk_id,
         "email": user.email,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
+        "fname": user.fname,
+        "lname": user.lname,
         "calendar_id": user.calendar_id,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }

@@ -15,8 +15,8 @@ def handle_login():
         data = request.get_json()
         clerk_id = data.get("clerk_id")
         email = data.get("email")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
+        fname = data.get("fname")
+        lname = data.get("lname")
 
         if not clerk_id or not email:
             return jsonify({"error": "Missing clerk_id or email"}), 400
@@ -26,8 +26,8 @@ def handle_login():
             create_user(
                 db, clerk_id,
                 email=email,
-                first_name=first_name,
-                last_name=last_name
+                fname=fname,
+                lname=lname
             )
             # re-fetch to get the DB-generated _id and calendar_id
             user = get_user_by_clerk_id(db, clerk_id)
