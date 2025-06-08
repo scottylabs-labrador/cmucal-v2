@@ -1,4 +1,4 @@
-# handles API logic (Google Calendar)
+# # handles API logic (Google Calendar)
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -53,16 +53,25 @@ def fetch_events_for_calendars(credentials, calendar_ids):
 
     for cal_id in calendar_ids:
         try:
-            res = service.events().list(
-                calendarId=cal_id,
-                timeMin=time_min,
-                timeMax=time_max,
-                singleEvents=True,
-                orderBy="startTime"
-            ).execute()
-            for event in res.get("items", []):
-                start = event["start"]
-                end = event["end"]
+            events = []
+            page_token = None
+            while True:
+                res = service.events().list(
+                    calendarId=cal_id,
+                    timeMin=time_min,
+                    timeMax=time_max,
+                    singleEvents=True,
+                    orderBy="startTime",
+                    pageToken=page_token
+                ).execute()
+                events.extend(res.get("items", []))
+                page_token = res.get("nextPageToken")
+                if not page_token:
+                    break
+
+            for event in events:
+                start = event.get("start", {})
+                end = event.get("end", {})
                 is_all_day = "date" in start
                 all_events.append({
                     "title": event.get("summary", "No Title"),
@@ -87,8 +96,12 @@ def add_event(credentials, data, calendar_id):
     return service.events().insert(calendarId=calendar_id, body=event_data).execute()
 
 def delete_event(credentials, event_id, calendar_id):
-    service = build_calendar_service(credentials)
-    service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    try:
+        service = build_calendar_service(credentials)
+        service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    except Exception as e:
+        print(f"❌ Google API error deleting event {event_id} from {calendar_id}:", e)
+        raise
 
 def create_cmucal_calendar(credentials):
     service = build("calendar", "v3", credentials=credentials)
@@ -108,4 +121,17 @@ def credentials_to_dict(credentials):
         "client_secret": credentials.client_secret,
         "scopes": credentials.scopes,
     }
+
+def synced_event_to_dict(event):
+    return {
+        "id": event.id,
+        "user_id": event.user_id,
+        "local_event_id": event.local_event_id,
+        "google_event_id": event.google_event_id,
+        "title": event.title,
+        "start": event.start,
+        "end": event.end,
+        "synced_at": event.synced_at.isoformat() if event.synced_at else None
+    }
+
 

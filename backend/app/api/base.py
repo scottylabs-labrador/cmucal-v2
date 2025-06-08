@@ -1,34 +1,31 @@
-from flask import Blueprint, jsonify, current_app
-from app.services.db import get_db
-import os
+from flask import Blueprint, request, jsonify
+# from app.services.db import get_db
+# import os
 # from app.config.settings import Config
+from app.services.db import Base, SessionLocal
+from sqlalchemy import text
+from app.models.models import User 
+
 
 base_bp = Blueprint("base", __name__)
 
 @base_bp.route("/")
 def home():
-    # print(Config["JWT_SECRET_KEY"])
     print('hi')
     print('there')
-    print('key', os.getenv("JWT_SECRET_KEY"))
     return "Welcome to the CMUCal Flask API!"
 
 
-@base_bp.route("/test_mongo", methods=["GET"])
-def test_mongo():
-    """Check if MongoDB is accessible"""
+@base_bp.route("/test_db", methods=["GET"])
+def db_health_check():
+    db = SessionLocal()
     try:
-        db = get_db()
-        if db is None:
-            print("db is None!")
-            return jsonify({"error": "Mongo not initialized"}), 500
-        
-        collections = db.list_collection_names()
-
-        return jsonify({
-            "msg": "MongoDB connection successful",
-            "database": "CMUCal",
-            "collections": collections
-        }), 200
+        user = User(clerk_id="123456")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return jsonify({"status": "connected"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "details": str(e)}), 500
+    finally:
+        db.close()

@@ -1,17 +1,19 @@
-from flask_pymongo import PyMongo
-from flask import Flask
+# app/services/db.py
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
 
-mongo = PyMongo()
-_db = None
+load_dotenv()
 
-def init_db(app: Flask):
-    global _db
-    mongo.init_app(app)
-    _db = mongo.cx["CMUCal"]
-    _db.users.create_index("clerk_id", unique=True)
+DATABASE_URL = os.getenv("SUPABASE_DB_URL")
+print("Using DATABASE_URL:", DATABASE_URL)
 
+# Create SQLAlchemy engine
+engine = create_engine(DATABASE_URL, echo=True)
 
-def get_db():
-    if _db is None:
-        raise RuntimeError("Database not initialized. Call init_db(app) first.")
-    return _db
+# Session maker for DB sessions
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Base class for models
+Base = declarative_base()

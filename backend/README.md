@@ -10,18 +10,16 @@ First, `cd` into the backend folder
     - windows: `venv\Scripts\activate`
 
 - Once activated, you can install dependencies by `pip install -r requirements.txt`, and save them by running `pip freeze > requirements.txt`
+- If you encounter an error with psycogp2, run `brew install postgresql` first.
 
-## 2. MongoDB
-- (can ignore this) see app.services.db
-
-## 3. Flask app
+## 2. Flask app
 Open a terminal (in the backend folder with virtual environment), run `python run.py` to start the Flask app.
 
-## 4. ngrok
-(Ignore this section if you don't need access to clerk webhook)
-- Uses ngrok expose Flask server publicly, i.e. allows the server to receive webhooks from external services directly on the local machine for testing. 
-    - Create an account on ngrok, then run this in a separate terminal from the python app. You need both terminals (ngrok and the python app) open. 
-    - `ngrok http --url=foxhound-true-finally.ngrok-free.app 5001`
+## 3. Supabase
+IF need to get the table schema from Supabase: in the terminal, run `sqlacodegen [SUPABASE_DB_URL] --outfile models.py`
+- comment out the `class Base` section in `models.py`
+- add `from app.services.db import Base` to the top of `models.py`
+- change all capitalized class names from plural to singular. i.e. class Events --> class Event. Don't change the lowercase names in quotes.
 
 ## Dev To-do
 - remove `os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"` after flask app has been deployed. This is only for developmet environment.

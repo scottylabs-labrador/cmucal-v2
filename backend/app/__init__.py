@@ -5,10 +5,10 @@ from flask_cors import CORS
 from app.api.users import users_bp
 from app.api.base import base_bp
 from app.api.google_oauth import google_bp
+from app.services.db import SessionLocal, Base
 
 
 from dotenv import load_dotenv
-from app.services.db import init_db
 import os
 
 
@@ -22,7 +22,6 @@ def create_app():
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-    app.config["MONGO_URI"] = os.getenv("MONGO_URI")
     app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
     app.config["GOOGLE_CLIENT_SECRET"] = os.getenv("GOOGLE_CLIENT_SECRET")
     app.config["GOOGLE_REDIRECT_URI"] = os.getenv("GOOGLE_REDIRECT_URI")
@@ -33,10 +32,11 @@ def create_app():
     app.config["MONGO_URI"] = os.getenv("MONGO_URI")
     app.config["GOOGLE_CLIENT_SECRET_FILE"] = "client_secret.json" 
 
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+    app.config["SUPABASE_URL"] = os.getenv("SUPABASE_URL")
+    app.config["SUPABASE_API_KEY"] = os.getenv("SUPABASE_API_KEY")
+    app.config["SUPABASE_DB_URL"] = os.getenv("SUPABASE_DB_URL")
 
-    # Bind the Flask app to mongo
-    init_db(app)
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 
 
     # Register blueprints (modular routing)

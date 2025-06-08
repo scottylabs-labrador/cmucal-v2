@@ -26,7 +26,6 @@ const MenuProps = {
   },
 };
 
-// const cals = ['main', 'personal', 'work'];
 
 
 export function ConnectGoogleButton() {
@@ -38,7 +37,9 @@ export function ConnectGoogleButton() {
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]); // selected calendar IDs from dropdown
   const { gcalEvents, setGcalEvents } = useGcalEvents();
   
-  const [message, setMessage] = useState("");
+  // const { user, isSignedIn, isLoaded: userLoaded } = useUser();
+
+  // const [message, setMessage] = useState("");
   // "http://localhost:5001/api/google/authorize"
 
   useEffect(() => {
@@ -63,16 +64,16 @@ export function ConnectGoogleButton() {
         setLoading(false);
       }
     };
-
+    // if (!userLoaded || !isSignedIn || !user) return;
     checkAuthStatus();
   }, []);
 
-  useEffect(() => {
-    // If we've finished loading and user is NOT connected, redirect to auth
+
+  function handleSelectOpen() {
     if (!loading && !isConnected) {
       authorizeGoogle();
     }
-  }, [loading, isConnected]);
+  }
 
   useEffect(() => {
     console.log("Selected calendar IDs:", selectedCalendarIds);
@@ -155,6 +156,7 @@ export function ConnectGoogleButton() {
       id="calendar-select"
       multiple
       value={selectedCalendarIds}
+      onOpen={handleSelectOpen}
       onChange={handleChange}
       input={<OutlinedInput />}
       renderValue={(selected) => getGoogleConnectionStatus()}
