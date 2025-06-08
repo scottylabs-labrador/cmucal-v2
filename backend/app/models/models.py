@@ -2,12 +2,9 @@ from typing import List, Optional
 
 from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Date, DateTime, Double, Enum, ForeignKeyConstraint, Identity, Numeric, PrimaryKeyConstraint, Table, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import OID
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
 from app.services.db import Base
-
-# class Base(DeclarativeBase):
-#     pass
 
 
 class Academic(Base):

@@ -6,16 +6,6 @@ from app.services.db import Base, SessionLocal
 from flask import request, jsonify
 from app.models.models import User  
 
-# class User(Base):
-#     __tablename__ = "users"
-
-#     id = Column(BigInteger, primary_key=True, autoincrement=True)
-#     clerk_id = Column(String, nullable=True)
-#     email = Column(String, nullable=True)
-#     fname = Column(String, nullable=True)
-#     lname = Column(String, nullable=True)
-#     calendar_id = Column(String, nullable=True)
-#     created_at = Column(DateTime, default=datetime.utcnow)
 
 def user_to_dict(user):
     return {
