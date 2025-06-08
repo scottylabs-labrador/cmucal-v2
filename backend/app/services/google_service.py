@@ -53,16 +53,25 @@ def fetch_events_for_calendars(credentials, calendar_ids):
 
     for cal_id in calendar_ids:
         try:
-            res = service.events().list(
-                calendarId=cal_id,
-                timeMin=time_min,
-                timeMax=time_max,
-                singleEvents=True,
-                orderBy="startTime"
-            ).execute()
-            for event in res.get("items", []):
-                start = event["start"]
-                end = event["end"]
+            events = []
+            page_token = None
+            while True:
+                res = service.events().list(
+                    calendarId=cal_id,
+                    timeMin=time_min,
+                    timeMax=time_max,
+                    singleEvents=True,
+                    orderBy="startTime",
+                    pageToken=page_token
+                ).execute()
+                events.extend(res.get("items", []))
+                page_token = res.get("nextPageToken")
+                if not page_token:
+                    break
+
+            for event in events:
+                start = event.get("start", {})
+                end = event.get("end", {})
                 is_all_day = "date" in start
                 all_events.append({
                     "title": event.get("summary", "No Title"),
