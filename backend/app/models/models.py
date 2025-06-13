@@ -231,6 +231,7 @@ class Event(Base):
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
     resource_url: Mapped[Optional[str]] = mapped_column(Text)
+    last_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
     category: Mapped['Category'] = relationship('Category', back_populates='events')
     org: Mapped['Organization'] = relationship('Organization', back_populates='events')
