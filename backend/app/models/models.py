@@ -50,6 +50,7 @@ class Organization(Base):
     admins: Mapped[List['Admin']] = relationship('Admin', back_populates='org')
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
     events: Mapped[List['Event']] = relationship('Event', back_populates='org')
+    event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='org')
 
 
 t_pg_stat_statements = Table(
@@ -173,6 +174,7 @@ class Category(Base):
     org: Mapped['Organization'] = relationship('Organization', back_populates='categories')
     events: Mapped[List['Event']] = relationship('Event', back_populates='category')
     user_saved_categories: Mapped[List['UserSavedCategory']] = relationship('UserSavedCategory', back_populates='category')
+    event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='category')
 
 
 class Schedule(Base):
@@ -272,7 +274,9 @@ class Club(Event):
 class EventOccurrence(Base):
     __tablename__ = 'event_occurrences'
     __table_args__ = (
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='event_occurrences_category_id_fkey'),
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='event_occurrences_event_id_fkey'),
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='event_occurrences_org_id_fkey'),
         PrimaryKeyConstraint('id', name='event_occurrences_pkey')
     )
 
@@ -284,8 +288,18 @@ class EventOccurrence(Base):
     is_all_day: Mapped[bool] = mapped_column(Boolean)
     is_uploaded: Mapped[bool] = mapped_column(Boolean)
     event_id: Mapped[int] = mapped_column(BigInteger)
+    event_saved_at: Mapped[datetime.datetime] = mapped_column(DateTime(True))
+    title: Mapped[str] = mapped_column(Text)
+    org_id: Mapped[int] = mapped_column(BigInteger)
+    category_id: Mapped[int] = mapped_column(BigInteger)
+    recurrence: Mapped[str] = mapped_column(Enum('one-time', 'recurring', 'exception', name='recurrence_type'))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    source_url: Mapped[Optional[str]] = mapped_column(Text)
+    resource: Mapped[Optional[str]] = mapped_column(Text)
 
-    event: Mapped['Event'] = relationship('Event', back_populates='event_occurrences')
+    category: Mapped['Category'] = relationship('Categories', back_populates='event_occurrences')
+    event: Mapped['Event'] = relationship('Events', back_populates='event_occurrences')
+    org: Mapped['Organization'] = relationship('Organizations', back_populates='event_occurrences')
 
 
 class EventTag(Base):
