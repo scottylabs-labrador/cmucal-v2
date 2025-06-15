@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Date, DateTime, Double, Enum, ForeignKeyConstraint, Identity, Numeric, PrimaryKeyConstraint, Table, Text, UniqueConstraint, text
+from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Date, DateTime, Double, Enum, ForeignKeyConstraint, SmallInteger, Identity, Numeric, PrimaryKeyConstraint, Table, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import OID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
@@ -332,9 +332,9 @@ class RecurrenceRule(Base):
     interval: Mapped[Optional[int]] = mapped_column(BigInteger)
     count: Mapped[Optional[int]] = mapped_column(BigInteger)
     until: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    by_day: Mapped[Optional[str]] = mapped_column(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', name='day_type'))
-    by_month_day: Mapped[Optional[int]] = mapped_column(BigInteger)
-    by_month: Mapped[Optional[int]] = mapped_column(BigInteger)
+    by_month: Mapped[Optional[list]] = mapped_column(ARRAY(SmallInteger()))
+    by_month_day: Mapped[Optional[list]] = mapped_column(ARRAY(SmallInteger()))
+    by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', name='day_type', _create_events=False)))
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
 
