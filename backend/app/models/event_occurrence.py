@@ -38,4 +38,4 @@ def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, titl
     db.add(event_occurrence)
     db.commit()
     db.refresh(event_occurrence)
-    return f"Event occurrence (event_id: {event_id}, start_time: {start_time}, end_time: {end_time}) created"
+    return f"Event occurrence (event_id: {event_id}, start_time: {start_datetime}, end_time: {end_datetime}) created"
