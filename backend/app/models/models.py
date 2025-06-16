@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import OID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
 from app.services.db import Base
-
+from app.models.enums import FrequencyType, RecurrenceType
 
 class Academic(Base):
     __tablename__ = 'academics'
@@ -173,7 +173,7 @@ class Category(Base):
 
     org: Mapped['Organization'] = relationship('Organization', back_populates='categories')
     events: Mapped[List['Event']] = relationship('Event', back_populates='category')
-    user_saved_categories: Mapped[List['UserSavedCategory']] = relationship('UserSavedCategory', back_populates='category')
+    schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='category')
     event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='category')
 
 
@@ -190,7 +190,7 @@ class Schedule(Base):
     name: Mapped[Optional[str]] = mapped_column(Text)
 
     user: Mapped['User'] = relationship('User', back_populates='schedules')
-    user_saved_categories: Mapped[List['UserSavedCategory']] = relationship('UserSavedCategory', back_populates='schedule')
+    schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='schedule')
 
 
 class SyncedEvent(Base):
@@ -243,20 +243,20 @@ class Event(Base):
     user_saved_events: Mapped[List['UserSavedEvent']] = relationship('UserSavedEvent', back_populates='event')
 
 
-class UserSavedCategory(Base):
-    __tablename__ = 'user_saved_categories'
+class ScheduleCategory(Base):
+    __tablename__ = 'schedule_categories'
     __table_args__ = (
-        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='user_saved_categories_category_id_fkey'),
-        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='user_saved_categories_schedule_id_fkey'),
-        PrimaryKeyConstraint('schedule_id', 'category_id', name='user_saved_categories_pkey')
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='schedule_categories_category_id_fkey'),
+        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='schedule_categories_category_id_fkey'),
+        PrimaryKeyConstraint('schedule_id', 'category_id', name='schedule_categories_pkey')
     )
 
     schedule_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     category_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
-    category: Mapped['Category'] = relationship('Category', back_populates='user_saved_categories')
-    schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='user_saved_categories')
+    category: Mapped['Category'] = relationship('Category', back_populates='schedule_categories')
+    schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='schedule_categories')
 
 
 class Club(Event):
@@ -292,7 +292,7 @@ class EventOccurrence(Base):
     title: Mapped[str] = mapped_column(Text)
     org_id: Mapped[int] = mapped_column(BigInteger)
     category_id: Mapped[int] = mapped_column(BigInteger)
-    recurrence: Mapped[str] = mapped_column(Enum('one-time', 'recurring', 'exception', name='recurrence_type'))
+    recurrence: Mapped[str] = mapped_column(Enum(RecurrenceType, name='recurrence_type', create_type=False))
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
     resource: Mapped[Optional[str]] = mapped_column(Text)
@@ -328,13 +328,13 @@ class RecurrenceRule(Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     event_id: Mapped[int] = mapped_column(BigInteger)
-    frequency: Mapped[Optional[str]] = mapped_column(Enum('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', name='frequency_type'))
+    frequency: Mapped[Optional[str]] = mapped_column(Enum(FrequencyType, name='frequency_type', create_type=False))
     interval: Mapped[Optional[int]] = mapped_column(BigInteger)
     count: Mapped[Optional[int]] = mapped_column(BigInteger)
     until: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    by_month: Mapped[Optional[list]] = mapped_column(ARRAY(SmallInteger()))
-    by_month_day: Mapped[Optional[list]] = mapped_column(ARRAY(SmallInteger()))
-    by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', name='day_type', _create_events=False)))
+    by_month: Mapped[Optional[list]] = mapped_column(SmallInteger)
+    by_month_day: Mapped[Optional[list]] = mapped_column(SmallInteger)
+    by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
 
