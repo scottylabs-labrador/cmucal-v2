@@ -1,0 +1,25 @@
+// organizations
+curl -X POST http://localhost:5001/api/orgs/create_org \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "ScottyLabs", "description": "a community of passionate, interdisciplinary leaders that use design and technology to achieve more."}'
+
+// categories
+curl -X POST http://localhost:5001/api/orgs/create_category \
+  -H "Content-Type: application/json" \
+  -d '{"name": "CMUCal Events Dashboard", "org_id": 1}'
+
+// admins
+curl -X POST http://localhost:5001/api/orgs/create_admin \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 6, "org_id": 7, "role": "admin", "category_id": 8}'
+
+// schedules
+curl -X POST http://localhost:5001/api/users/create_schedule \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": 6, "name": "Fall25"}'
+
+// schedule_categories	
+curl -X POST http://localhost:5001/api/users/create_schedule_category \
+  -H "Content-Type: application/json" \
+  -d '{"schedule_id": 1, "category_id": 1}'
+

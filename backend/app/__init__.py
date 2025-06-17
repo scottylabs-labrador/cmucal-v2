@@ -3,8 +3,10 @@ from flask import Flask
 
 from flask_cors import CORS
 from app.api.users import users_bp
+from app.api.organizations import orgs_bp
 from app.api.base import base_bp
 from app.api.google_oauth import google_bp
+from app.api.events import events_bp
 from app.services.db import SessionLocal, Base
 
 
@@ -41,7 +43,9 @@ def create_app():
 
     # Register blueprints (modular routing)
     app.register_blueprint(users_bp, url_prefix="/api/users")
+    app.register_blueprint(orgs_bp, url_prefix="/api/orgs")
     app.register_blueprint(google_bp, url_prefix="/api/google")
+    app.register_blueprint(events_bp, url_prefix="/api/events")
     app.register_blueprint(base_bp)
 
     # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True, automatic_options=True)
