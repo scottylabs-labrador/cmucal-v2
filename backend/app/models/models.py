@@ -145,6 +145,7 @@ class User(Base):
 class Admin(Base):
     __tablename__ = 'admins'
     __table_args__ = (
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='admins_category_id_fkey'),
         ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='admins_org_id_fkey'),
         ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE', name='admins_user_id_fkey'),
         PrimaryKeyConstraint('user_id', 'org_id', name='admins_pkey')
@@ -154,7 +155,9 @@ class Admin(Base):
     org_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     role: Mapped[Optional[str]] = mapped_column(Text)
+    category_id: Mapped[Optional[int]] = mapped_column(BigInteger)
 
+    category: Mapped[Optional['Category']] = relationship('Category', back_populates='admins')
     org: Mapped['Organization'] = relationship('Organization', back_populates='admins')
     user: Mapped['User'] = relationship('User', back_populates='admins')
 
@@ -162,8 +165,8 @@ class Admin(Base):
 class Category(Base):
     __tablename__ = 'categories'
     __table_args__ = (
-        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='Categories_org_id_fkey'),
-        PrimaryKeyConstraint('id', name='Categories_pkey')
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='Category_org_id_fkey'),
+        PrimaryKeyConstraint('id', name='Category_pkey')
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
@@ -172,6 +175,7 @@ class Category(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
     org: Mapped['Organization'] = relationship('Organization', back_populates='categories')
+    admins: Mapped[List['Admin']] = relationship('Admin', back_populates='category')
     events: Mapped[List['Event']] = relationship('Event', back_populates='category')
     schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='category')
     event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='category')
@@ -297,9 +301,9 @@ class EventOccurrence(Base):
     source_url: Mapped[Optional[str]] = mapped_column(Text)
     resource: Mapped[Optional[str]] = mapped_column(Text)
 
-    category: Mapped['Category'] = relationship('Categories', back_populates='event_occurrences')
-    event: Mapped['Event'] = relationship('Events', back_populates='event_occurrences')
-    org: Mapped['Organization'] = relationship('Organizations', back_populates='event_occurrences')
+    category: Mapped['Category'] = relationship('Category', back_populates='event_occurrences')
+    event: Mapped['Event'] = relationship('Event', back_populates='event_occurrences')
+    org: Mapped['Organization'] = relationship('Organization', back_populates='event_occurrences')
 
 
 class EventTag(Base):

@@ -1,7 +1,7 @@
 from app.models.models import Admin
 from typing import List
 
-def create_admin(db, org_id: int, user_id: int, role: str = "admin"):
+def create_admin(db, org_id: int, user_id: int, role: str = "admin", category_id: int = None):
     """
     Create a new admin in the database.
 
@@ -13,11 +13,12 @@ def create_admin(db, org_id: int, user_id: int, role: str = "admin"):
     Returns:
         The created Admin object.
     """
-    admin = Admin(org_id=org_id, user_id=user_id, role=role)
+    admin = Admin(org_id=org_id, user_id=user_id, role=role, category_id=category_id)
     db.add(admin)
     db.commit()
     db.refresh(admin)
-    return f"Admin (user_id: {user_id}, org_id: {org_id}) created"
+    admin = db.query(Admin).filter(Admin.org_id == org_id, Admin.user_id == user_id).first()
+    return admin
 
 def get_admin_by_org_and_user(db, org_id: int, user_id: int):
     """

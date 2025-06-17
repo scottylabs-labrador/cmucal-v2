@@ -1,6 +1,6 @@
 from app.models.models import ScheduleCategory
 
-def save_schedule_category(db, schedule_id: int, category_id: int):
+def create_schedule_category(db, schedule_id: int, category_id: int):
     """
     Save a user-saved category in the database.
 
@@ -19,4 +19,4 @@ def save_schedule_category(db, schedule_id: int, category_id: int):
     db.add(schedule_category)
     db.commit()
     db.refresh(schedule_category)
-    return f"Schedule category (schedule_id: {schedule_id}, category_id: {category_id}) created"
+    return schedule_category

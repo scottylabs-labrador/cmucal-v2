@@ -16,4 +16,5 @@ def create_schedule(db, user_id: int, name: str):
     db.add(schedule)
     db.commit()
     db.refresh(schedule)
-    return f"Schedule {schedule.id} created"
+    schedule = db.query(Schedule).filter(Schedule.id == schedule.id).first()
+    return schedule

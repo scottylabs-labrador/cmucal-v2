@@ -4,6 +4,10 @@ from app.services.google_service import fetch_user_credentials
 from app.models.user import update_user_calendar_id
 from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
+from app.models.organization import create_organization
+from app.models.admin import create_admin
+from app.models.schedule import create_schedule
+from app.models.schedule_category import create_schedule_category
 
 users_bp = Blueprint("users", __name__)
 
@@ -55,3 +59,44 @@ def handle_login():
     finally:
         db.close()
 
+@users_bp.route("/create_schedule", methods=["POST"])
+def create_schedule_record():
+    db = SessionLocal()
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        name = data.get("name")
+        if not user_id or not name:
+            return jsonify({"error": "Missing user_id or name"}), 400
+        
+        schedule = create_schedule(db, user_id=user_id, name=name)
+
+        return jsonify({"status": "schedule created", "user_id": user_id, "schedule_id": schedule.id}), 201
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@users_bp.route("/create_schedule_category", methods=["POST"])
+def create_schedule_category_record():
+    db = SessionLocal()
+    try:
+        data = request.get_json()
+        schedule_id = data.get("schedule_id")
+        category_id = data.get("category_id")
+        if not schedule_id or not category_id:
+            return jsonify({"error": "Missing schedule_id or category_id"}), 400
+        
+        schedule_category = create_schedule_category(db, schedule_id=schedule_id, category_id=category_id)
+
+        return jsonify({"status": "schedule created", "schedule_id": schedule_id, "category_id": category_id}), 201
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()

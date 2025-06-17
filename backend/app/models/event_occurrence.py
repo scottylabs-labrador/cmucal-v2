@@ -4,7 +4,7 @@ from app.models.enums import RecurrenceType
 ### need to check type of event_saved_at, start_datetime, end_datetime before using them
 def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, title: str, 
                           start_datetime, end_datetime, recurrence: RecurrenceType,
-                          event_saved_at,
+                          event_saved_at: str,
                           is_all_day: bool, is_uploaded: bool, description: str = None, 
                           location: str = None, source_url: str = None, resource: str = None):
     """
