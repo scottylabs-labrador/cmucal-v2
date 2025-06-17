@@ -36,9 +36,10 @@ def create_event(db, org_id: int, category_id: int, title: str, start_datetime, 
         is_uploaded=is_uploaded
     )
     db.add(event)
-    db.commit()
+    db.flush()      # Allocate event.id without committing
     db.refresh(event)
-    return f"Event {event.id} created"
+
+    return event
 
 def get_event_by_id(db, event_id: int):
     """

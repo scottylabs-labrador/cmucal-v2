@@ -26,7 +26,12 @@ def parse_user_datetime(date_str: str, time_str: str, tz_str: str = "UTC") -> da
         tz = ZoneInfo(tz_str)
     except Exception:
         raise ValueError(f"Invalid timezone: {tz_str}")
+    
+    aware_dt = naive.replace(tzinfo=tz)
+    
+    # if want iso string:
+    # return aware_dt.isoformat()
 
-    return naive.replace(tzinfo=tz)
+    return aware_dt
 
-# print(parse_user_datetime("2025-09-07", "12:00", "America/New_York"))
+# print(parse_user_datetime("2025-06-17", "13:37", "America/New_York"))

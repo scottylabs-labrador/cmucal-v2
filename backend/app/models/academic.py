@@ -16,6 +16,6 @@ def save_academic(db, event_id: int, course_num: str, course_name: str, instruct
     academic = Academic(event_id=event_id, course_num=course_num, 
                         course_name=course_name, instructors=instructors)
     db.add(academic)
-    db.commit()
+    db.flush()  
     db.refresh(academic)
-    return f"Academic {academic.id} created"
+    return f"Academic event {event_id} created"

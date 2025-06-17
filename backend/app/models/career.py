@@ -15,6 +15,6 @@ def save_career(db, event_id: int, host: str = None, link: str = None, registrat
     career = Career(event_id=event_id, host=host, 
                     link=link, registration_required=registration_required)
     db.add(career)
-    db.commit()
+    db.flush()  
     db.refresh(career)
-    return f"Career {career.id} created"
+    return f"Career event {event_id} created"
