@@ -6,14 +6,14 @@ class FrequencyType(enum.Enum):
     MONTHLY = "MONTHLY"
     YEARLY = "YEARLY"
 
-class DayType(enum.Enum):
-    MO = "MO"
-    TU = "TU"
-    WE = "WE"
-    TH = "TH"
-    FR = "FR"
-    SA = "SA"
-    SU = "SU"
+# class DayType(enum.Enum):
+#     MO = "MO"
+#     TU = "TU"
+#     WE = "WE"
+#     TH = "TH"
+#     FR = "FR"
+#     SA = "SA"
+#     SU = "SU"
 
 class RecurrenceType(enum.Enum):
     ONETIME = "ONETIME"

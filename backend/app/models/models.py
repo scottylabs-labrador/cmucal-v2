@@ -10,25 +10,24 @@ from app.models.enums import FrequencyType, RecurrenceType
 class Academic(Base):
     __tablename__ = 'academics'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='academics_pkey'),
-        UniqueConstraint('event_id', name='academics_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='academics_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='academics_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     course_num: Mapped[str] = mapped_column(Text)
+    course_name: Mapped[str] = mapped_column(Text)
     instructors: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
 
 class Career(Base):
     __tablename__ = 'careers'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='careers_pkey'),
-        UniqueConstraint('event_id', name='careers_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='careers_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='careers_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     host: Mapped[Optional[str]] = mapped_column(Text)
     link: Mapped[Optional[str]] = mapped_column(Text)
     registration_required: Mapped[Optional[bool]] = mapped_column(Boolean)
@@ -46,6 +45,7 @@ class Organization(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     tags: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
     description: Mapped[Optional[str]] = mapped_column(Text)
+    crosslisted: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
     admins: Mapped[List['Admin']] = relationship('Admin', back_populates='org')
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
@@ -231,12 +231,12 @@ class Event(Base):
     end_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(True))
     is_all_day: Mapped[bool] = mapped_column(Boolean)
     location: Mapped[str] = mapped_column(Text)
-    is_uploaded: Mapped[bool] = mapped_column(Boolean)
+    user_edited: Mapped[Optional[list]] = mapped_column(ARRAY(BigInteger()))
     org_id: Mapped[int] = mapped_column(BigInteger)
     category_id: Mapped[int] = mapped_column(BigInteger)
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
-    resource_url: Mapped[Optional[str]] = mapped_column(Text)
+    event_type: Mapped[Optional[str]] = mapped_column(Text)
     last_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
     category: Mapped['Category'] = relationship('Category', back_populates='events')
@@ -263,16 +263,14 @@ class ScheduleCategory(Base):
     schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='schedule_categories')
 
 
-class Club(Event):
+class Club(Base):
     __tablename__ = 'clubs'
     __table_args__ = (
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='clubs_event_id_fkey'),
-        PrimaryKeyConstraint('event_id', name='clubs_pkey'),
-        UniqueConstraint('event_id', name='clubs_event_id_key')
+        PrimaryKeyConstraint('event_id', name='clubs_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
 
 class EventOccurrence(Base):
@@ -290,7 +288,7 @@ class EventOccurrence(Base):
     end_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(True))
     location: Mapped[str] = mapped_column(Text)
     is_all_day: Mapped[bool] = mapped_column(Boolean)
-    is_uploaded: Mapped[bool] = mapped_column(Boolean)
+    user_edited: Mapped[Optional[list]] = mapped_column(ARRAY(BigInteger()))
     event_id: Mapped[int] = mapped_column(BigInteger)
     event_saved_at: Mapped[datetime.datetime] = mapped_column(DateTime(True))
     title: Mapped[str] = mapped_column(Text)
@@ -299,7 +297,6 @@ class EventOccurrence(Base):
     recurrence: Mapped[str] = mapped_column(Enum(RecurrenceType, name='recurrence_type', create_type=False))
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
-    resource: Mapped[Optional[str]] = mapped_column(Text)
 
     category: Mapped['Category'] = relationship('Category', back_populates='event_occurrences')
     event: Mapped['Event'] = relationship('Event', back_populates='event_occurrences')
@@ -332,10 +329,11 @@ class RecurrenceRule(Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     event_id: Mapped[int] = mapped_column(BigInteger)
-    frequency: Mapped[Optional[str]] = mapped_column(Enum(FrequencyType, name='frequency_type', create_type=False))
-    interval: Mapped[Optional[int]] = mapped_column(BigInteger)
+    frequency: Mapped[str] = mapped_column(Enum(FrequencyType, name='frequency_type', create_type=False))
+    interval: Mapped[int] = mapped_column(BigInteger)
+    start_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     count: Mapped[Optional[int]] = mapped_column(BigInteger)
-    until: Mapped[Optional[datetime.date]] = mapped_column(Date)
+    until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True))
     by_month: Mapped[Optional[list]] = mapped_column(SmallInteger)
     by_month_day: Mapped[Optional[list]] = mapped_column(SmallInteger)
     by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))

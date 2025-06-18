@@ -19,4 +19,4 @@ def save_user_saved_event(db, user_id: int, event_id: int, google_event_id: str)
     db.add(user_saved_event)
     db.commit()
     db.refresh(user_saved_event)
-    return f"User saved event (user_id: {user_id}, event_id: {event_id}) created"
+    return user_saved_event

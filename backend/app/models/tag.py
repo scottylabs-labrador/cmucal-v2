@@ -13,6 +13,17 @@ def save_tag(db, name: str):
     """
     tag = Tag(name=name)
     db.add(tag)
-    db.commit()
+    db.flush() 
     db.refresh(tag)
-    return f"Tag {tag.id} created"
+    return tag
+
+def get_tag_by_name(db, name: str):
+    """
+    Retrieve a tag by its name.
+    Args:
+        db: Database session.
+        name: Name of the tag.
+    Returns:
+        The Tag object if found, otherwise None.
+    """
+    return db.query(Tag).filter(Tag.name == name).first()

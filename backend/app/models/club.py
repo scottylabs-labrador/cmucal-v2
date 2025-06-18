@@ -17,4 +17,4 @@ def save_club(db, event_id: int):
     db.add(club)
     db.flush()  
     db.refresh(club)
-    return f"Club event {event_id} created"
+    return club

@@ -17,7 +17,6 @@ def create_admin(db, org_id: int, user_id: int, role: str = "admin", category_id
     db.add(admin)
     db.commit()
     db.refresh(admin)
-    admin = db.query(Admin).filter(Admin.org_id == org_id, Admin.user_id == user_id).first()
     return admin
 
 def get_admin_by_org_and_user(db, org_id: int, user_id: int):
