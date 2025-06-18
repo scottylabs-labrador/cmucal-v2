@@ -58,7 +58,7 @@ def parse_by_day_array(by_day_list):
 
     return byweekday if byweekday else None
 
-def get_rrule_from_db_rule(event, rule):
+def get_rrule_from_db_rule(rule):
     freq_map = {
         'DAILY': DAILY,
         'WEEKLY': WEEKLY,
@@ -66,7 +66,7 @@ def get_rrule_from_db_rule(event, rule):
         'YEARLY': YEARLY
     }
 
-    freq = freq_map[rule.frequency]
+    freq = freq_map[rule.frequency.value]
     interval = rule.interval or 1
     start_datetime = rule.start_datetime
     count = rule.count

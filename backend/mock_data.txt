@@ -34,7 +34,6 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "location": "Virtual",
     "source_url": "https://cmu.joinhandshake.com/stu/events/1759474?ref=events-search",
     "event_type": "CAREER",
-    "is_uploaded": true,
     "org_id": 4,
     "category_id": 5,
     "host": "IBM",
@@ -54,7 +53,6 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "location": "Virtual",
     "source_url": "https://www.cs.cmu.edu/~mgormley/courses/10601/officehours.html",
     "event_type": "ACADEMIC",
-    "is_uploaded": true,
     "org_id": 6,
     "category_id": 7,
     "course_num": "10-301",
@@ -74,7 +72,6 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "location": "Virtual",
     "source_url": "",
     "event_type": "CLUB",
-    "is_uploaded": true,
     "org_id": 7,
     "category_id": 8
 }'
@@ -90,8 +87,6 @@ curl -X POST http://localhost:5001/api/events/create_single_event_occurrence \
       "is_all_day": false,
       "location": "5000 Forbes Avenue, Pittsburgh, Pennsylvania 15213, United States",
       "source_url": "https://cmu.joinhandshake.com/stu/career_fairs/56853?ref=events-search",
-      "resource": "Handshake",
-      "is_uploaded": true, 
       "org_id": 4,
       "category_id": 4,
       "recurrence": "EXCEPTION"
@@ -99,12 +94,12 @@ curl -X POST http://localhost:5001/api/events/create_single_event_occurrence \
 
 
 // recurrence rules + event_occurrences
-curl -X POST http://localhost:5001/api/events/create_recurrence_rules \
+curl -X POST http://localhost:5001/api/events/create_recurrence_rule \
   -H "Content-Type: application/json" \
-  -d '{"event_id": 17,
-    "start_datetime": "2025-06-30T15:00:00-04:00",
-    "frequency": "WEEKLY",
+  -d '{"event_id": 19,
+    "start_datetime": "2025-06-15T17:00:00-04:00",
+    "frequency": "MONTHLY",
     "interval": 1,
     "until": "2025-08-02T12:00:00-04:00",
-    "by_day": ["MO","TU"]
+    "by_day": ["3FR"]
   }'

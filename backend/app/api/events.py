@@ -36,7 +36,7 @@ def create_event_record():
         location = data.get("location", None)
         source_url = data.get("source_url", None)
         event_type= data.get("event_type", None)
-        is_uploaded = data.get("is_uploaded", False)
+        user_edited = data.get("user_edited", None)
         org_id = data.get("org_id")
         category_id = data.get("category_id")
         event_tags = data.get("event_tags", None)
@@ -60,7 +60,7 @@ def create_event_record():
                              location=location,
                              source_url=source_url,
                              event_type=event_type,
-                             is_uploaded=is_uploaded)
+                             user_edited=user_edited)
         
         if not event:
             db.rollback()
@@ -112,7 +112,7 @@ def create_event_record():
     finally:
         db.close()
 
-@events_bp.route("/create_recurrence_rules", methods=["POST"])
+@events_bp.route("/create_recurrence_rule", methods=["POST"])
 def create_recurrence_rules():
     db = SessionLocal()
     try:
@@ -166,11 +166,10 @@ def create_single_event_occurrence():
         end_datetime = data.get("end_datetime")
         recurrence = data.get("recurrence")
         is_all_day = data.get("is_all_day", False)
-        is_uploaded = data.get("is_uploaded", False)
+        user_edited = data.get("user_edited", None)
         description = data.get("description", None)
         location = data.get("location", None)
         source_url = data.get("source_url", None)
-        resource = data.get("resource", None)
 
         if not event_id or not org_id or not category_id or not title or not start_datetime or not end_datetime or not recurrence:
             db.rollback()
@@ -195,11 +194,10 @@ def create_single_event_occurrence():
                                                recurrence=recurrence,
                                                event_saved_at=event_saved_at,
                                                is_all_day=is_all_day,
-                                               is_uploaded=is_uploaded,
+                                               user_edited=user_edited,
                                                description=description,
                                                location=location,
-                                               source_url=source_url,
-                                               resource=resource)
+                                               source_url=source_url)
         
         db.commit()  # Only commit if all succeeded
         return jsonify({"status": f"event occurrence {event_occurrence.id} created."}), 201
