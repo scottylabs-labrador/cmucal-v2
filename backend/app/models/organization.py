@@ -16,7 +16,6 @@ def create_organization(db, name: str, description: str = None):
     db.add(org)
     db.commit()
     db.refresh(org)
-    org = db.query(Organization).filter(Organization.id == org.id).first()
     return org
 
 def get_organization_by_id(db, org_id: int):

@@ -23,3 +23,21 @@ curl -X POST http://localhost:5001/api/users/create_schedule_category \
   -H "Content-Type: application/json" \
   -d '{"schedule_id": 1, "category_id": 1}'
 
+// club Event
+curl -X POST http://localhost:5001/api/events/create_event \
+  -H "Content-Type: application/json" \
+  -d '{"title": "STEM Career Fair 2025",
+    "description": "The STEM Career Fair, organized by the Career and Professional Development Center, the Society of Women Engineers, and the College of Engineering, extends its invitation to all students across campus pursuing technical studies. Students from diverse academic backgrounds such as the School of Computer Science, Mellon College of Science, Dietrich College of Humanities and Social Science, Tepper School of Business, Heinz College of Information Systems and Public Policy, and College of Fine Arts, alongside those from the College of Engineering, are welcomed. This inclusivity ensures a broad representation of interests and disciplines.",
+    "start_datetime": "2025-09-09T12:00:00-04:00",
+    "end_datetime": "2025-09-09T19:00:00-04:00",
+    "is_all_day": false,
+    "location": "5000 Forbes Avenue, Pittsburgh, Pennsylvania 15213, United States",
+    "source_url": "https://cmu.joinhandshake.com/stu/career_fairs/56853?ref=events-search",
+    "event_type": "CAREER",
+    "is_uploaded": true,
+    "org_id": 4,
+    "category_id": 4,
+    "host": "CPDC",
+    "link": "https://cmu.joinhandshake.com/stu/career_fairs/56853?ref=events-search",
+    "registration_required": true
+}'

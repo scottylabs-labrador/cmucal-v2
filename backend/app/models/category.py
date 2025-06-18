@@ -17,7 +17,6 @@ def create_category(db, org_id: int, name: str):
     db.add(category)
     db.commit()
     db.refresh(category)
-    category = db.query(Category).filter(Category.id == category.id).first()
     return category
 
 def get_category_by_id(db, category_id: int):

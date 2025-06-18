@@ -30,8 +30,9 @@ def parse_user_datetime(date_str: str, time_str: str, tz_str: str = "UTC") -> da
     aware_dt = naive.replace(tzinfo=tz)
     
     # if want iso string:
-    # return aware_dt.isoformat()
+    return aware_dt.isoformat()
 
-    return aware_dt
+    # if want datetime object:
+    # return aware_dt
 
 # print(parse_user_datetime("2025-06-17", "13:37", "America/New_York"))

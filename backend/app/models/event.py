@@ -1,9 +1,9 @@
 from app.models.models import Event 
 
 ### need to check type of start_datetime, end_datetime before using them
-def create_event(db, org_id: int, category_id: int, title: str, start_datetime, end_datetime, 
+def save_event(db, org_id: int, category_id: int, title: str, start_datetime, end_datetime, 
                  is_all_day: bool, is_uploaded: bool, description: str = None, 
-                 location: str = None, source_url: str = None, resource: str = None):
+                 location: str = None, source_url: str = None, event_type: str = None):
     """
     Create a new event in the database.
     Args:
@@ -32,13 +32,12 @@ def create_event(db, org_id: int, category_id: int, title: str, start_datetime, 
         is_all_day=is_all_day,
         location=location,
         source_url=source_url,
-        resource=resource,
+        event_type=event_type,
         is_uploaded=is_uploaded
     )
     db.add(event)
     db.flush()      # Allocate event.id without committing
     db.refresh(event)
-
     return event
 
 def get_event_by_id(db, event_id: int):
