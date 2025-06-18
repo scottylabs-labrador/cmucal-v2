@@ -1,7 +1,7 @@
 from app.models.models import Event 
 
 ### need to check type of start_datetime, end_datetime before using them
-def save_event(db, org_id: int, category_id: int, title: str, start_datetime, end_datetime, 
+def save_event(db, org_id: int, category_id: int, title: str, start_datetime: str, end_datetime: str, 
                  is_all_day: bool, is_uploaded: bool, description: str = None, 
                  location: str = None, source_url: str = None, event_type: str = None):
     """

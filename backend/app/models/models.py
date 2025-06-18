@@ -15,8 +15,8 @@ class Academic(Base):
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     course_num: Mapped[str] = mapped_column(Text)
+    course_name: Mapped[str] = mapped_column(Text)
     instructors: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
 
@@ -28,7 +28,6 @@ class Career(Base):
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     host: Mapped[Optional[str]] = mapped_column(Text)
     link: Mapped[Optional[str]] = mapped_column(Text)
     registration_required: Mapped[Optional[bool]] = mapped_column(Boolean)
@@ -46,6 +45,7 @@ class Organization(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     tags: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
     description: Mapped[Optional[str]] = mapped_column(Text)
+    crosslisted: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
     admins: Mapped[List['Admin']] = relationship('Admin', back_populates='org')
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
@@ -236,7 +236,6 @@ class Event(Base):
     category_id: Mapped[int] = mapped_column(BigInteger)
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
-    resource_url: Mapped[Optional[str]] = mapped_column(Text)
     event_type: Mapped[Optional[str]] = mapped_column(Text)
     last_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
@@ -273,7 +272,6 @@ class Club(Event):
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
 
 class EventOccurrence(Base):

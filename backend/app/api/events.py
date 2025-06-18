@@ -4,7 +4,7 @@ from app.services.google_service import fetch_user_credentials
 from app.models.user import update_user_calendar_id
 from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
-from app.models.event import create_event
+from app.models.event import save_event
 from app.models.career import save_career
 from app.models.academic import save_academic
 from app.models.club import save_club
@@ -13,6 +13,7 @@ from app.models.event_tag import save_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
 from app.models.models import Event
+import pprint
 
 
 events_bp = Blueprint("events", __name__)
@@ -22,6 +23,10 @@ def create_event_record():
     db = SessionLocal()
     try:
         data = request.get_json()
+        pprint.pprint(data)
+        
+        if not request.is_json:
+            return jsonify({"error": "Invalid JSON body"}), 400
         title = data.get("title")
         description = data.get("description", None)
         start_datetime = data.get("start_datetime")
@@ -44,7 +49,7 @@ def create_event_record():
             return jsonify({"error": "Missing required fields: title, start_datetime, end_datetime"}), 400
 
         # Assuming you have a function to create an event
-        event = create_event(db, org_id=org_id, 
+        event = save_event(db, org_id=org_id, 
                              category_id=category_id,
                              title=title,
                              description=description,
@@ -55,6 +60,10 @@ def create_event_record():
                              source_url=source_url,
                              event_type=event_type,
                              is_uploaded=is_uploaded)
+        
+        if not event:
+            db.rollback()
+            return jsonify({"error": "Event creation failed"}), 500
         
         if event_tags:
             for tag_name in event_tags:
@@ -97,6 +106,7 @@ def create_event_record():
         db.rollback()
         import traceback
         print("❌ Exception:", traceback.format_exc())
+
         return jsonify({"error": str(e)}), 500
     finally:
         db.close()
@@ -107,8 +117,8 @@ def create_recurrence_rules():
     try:
         data = request.get_json()
         event_id = data.get("event_id")
-        frequency = data.get("frequency", None)
-        interval = data.get("interval", 1)
+        frequency = data.get("frequency")
+        interval = data.get("interval")
         start_datetime = data.get("start_datetime")
         count = data.get("count", None)
         until = data.get("until", None)

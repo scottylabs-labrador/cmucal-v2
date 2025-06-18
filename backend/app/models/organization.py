@@ -1,6 +1,7 @@
 from app.models.models import Organization 
+from typing import List
 
-def create_organization(db, name: str, description: str = None):
+def create_organization(db, name: str, description: str = None, crosslisted: List[str] = None):
     """
     Create a new organization in the database.
 
@@ -12,7 +13,7 @@ def create_organization(db, name: str, description: str = None):
     Returns:
         The created Organization object.
     """
-    org = Organization(name=name, description=description)
+    org = Organization(name=name, description=description, crosslisted=crosslisted)
     db.add(org)
     db.commit()
     db.refresh(org)

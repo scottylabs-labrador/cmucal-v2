@@ -1,6 +1,6 @@
 from app.models.models import Tag
 
-def create_tag(db, name: str):
+def save_tag(db, name: str):
     """
     Save a new tag in the database.
 
