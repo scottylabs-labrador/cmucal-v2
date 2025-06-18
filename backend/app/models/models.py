@@ -10,8 +10,8 @@ from app.models.enums import FrequencyType, RecurrenceType
 class Academic(Base):
     __tablename__ = 'academics'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='academics_pkey'),
-        UniqueConstraint('event_id', name='academics_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='academics_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='academics_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -23,8 +23,8 @@ class Academic(Base):
 class Career(Base):
     __tablename__ = 'careers'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='careers_pkey'),
-        UniqueConstraint('event_id', name='careers_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='careers_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='careers_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -263,12 +263,11 @@ class ScheduleCategory(Base):
     schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='schedule_categories')
 
 
-class Club(Event):
+class Club(Base):
     __tablename__ = 'clubs'
     __table_args__ = (
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='clubs_event_id_fkey'),
-        PrimaryKeyConstraint('event_id', name='clubs_pkey'),
-        UniqueConstraint('event_id', name='clubs_event_id_key')
+        PrimaryKeyConstraint('event_id', name='clubs_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

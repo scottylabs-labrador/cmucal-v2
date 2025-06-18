@@ -54,9 +54,9 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
     temp_rule = rule
     temp_rule.until = min(rule.until, six_months_later)
 
-    recurrence = get_rrule_from_db_rule(temp_rule)
+    rrule = get_rrule_from_db_rule(temp_rule)
 
-    for occ_start in recurrence:
+    for occ_start in rrule:
         occ_end = occ_start + duration
 
         occurrence = EventOccurrence(
@@ -67,7 +67,7 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
             start_datetime=occ_start,
             end_datetime=occ_end,
             event_saved_at=event.event_saved_at,
-            recurrence=recurrence,
+            recurrence=RecurrenceType.RECURRING,
             is_all_day=event.is_all_day,
             is_uploaded=event.is_uploaded,
             description=event.description,

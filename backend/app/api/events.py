@@ -14,6 +14,7 @@ from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
 from app.models.models import Event
 import pprint
+from datetime import datetime
 
 
 events_bp = Blueprint("events", __name__)
@@ -24,7 +25,7 @@ def create_event_record():
     try:
         data = request.get_json()
         pprint.pprint(data)
-        
+
         if not request.is_json:
             return jsonify({"error": "Invalid JSON body"}), 400
         title = data.get("title")
@@ -163,6 +164,7 @@ def create_single_event_occurrence():
         title = data.get("title")
         start_datetime = data.get("start_datetime")
         end_datetime = data.get("end_datetime")
+        recurrence = data.get("recurrence")
         is_all_day = data.get("is_all_day", False)
         is_uploaded = data.get("is_uploaded", False)
         description = data.get("description", None)
@@ -170,15 +172,19 @@ def create_single_event_occurrence():
         source_url = data.get("source_url", None)
         resource = data.get("resource", None)
 
-        if not event_id or not org_id or not category_id or not title or not start_datetime or not end_datetime:
+        if not event_id or not org_id or not category_id or not title or not start_datetime or not end_datetime or not recurrence:
             db.rollback()
             return jsonify({"error": "Missing required fields"}), 400
         
         event = db.query(Event).filter(Event.id == event_id).first()
-        event_saved_at = event.last_updated_at
+        if not recurrence == "EXCEPTION":
+            event_saved_at = event.last_updated_at
+        else:
+            event_saved_at = datetime.utcnow()
         if not event:
             db.rollback()
             return jsonify({"error": "Event not found"}), 404
+
         event_occurrence = save_event_occurrence(db, 
                                                event_id=event_id, 
                                                org_id=org_id, 
@@ -186,6 +192,7 @@ def create_single_event_occurrence():
                                                title=title,
                                                start_datetime=start_datetime,
                                                end_datetime=end_datetime,
+                                               recurrence=recurrence,
                                                event_saved_at=event_saved_at,
                                                is_all_day=is_all_day,
                                                is_uploaded=is_uploaded,

@@ -23,7 +23,7 @@ curl -X POST http://localhost:5001/api/users/create_schedule_category \
   -H "Content-Type: application/json" \
   -d '{"schedule_id": 1, "category_id": 8}'
 
-// career Event
+// career Event + event tags
 curl -X POST http://localhost:5001/api/events/create_event \
   -H "Content-Type: application/json" \
   -d '{"title": "Preparing for Careers in an AI-Driven World with Tina Huang",
@@ -43,7 +43,7 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "event_tags": ["computer science", "Artificial Intelligence"]
 }'
 
-// academic Event
+// academic Event + event tags
 curl -X POST http://localhost:5001/api/events/create_event \
   -H "Content-Type: application/json" \
   -d '{"title": "Office Hours: 10-301/10-601 Introduction to Machine Learning",
@@ -63,7 +63,7 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "event_tags": ["computer science"]
 }'
 
-// club Event 
+// club Event + event tags
 curl -X POST http://localhost:5001/api/events/create_event \
   -H "Content-Type: application/json" \
   -d '{"title": "Summer GBM",
@@ -79,10 +79,29 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "category_id": 8
 }'
 
-// recurrence rules
+// if only add event_occurrence (no recurrence)
+curl -X POST http://localhost:5001/api/events/create_single_event_occurrence \
+  -H "Content-Type: application/json" \
+  -d '{"event_id": 15,
+      "title": "STEM Career Fair 2025",
+      "description": "The STEM Career Fair, organized by the Career and Professional Development Center, the Society of Women Engineers, and the College of Engineering, extends its invitation to all students across campus pursuing technical studies. Students from diverse academic backgrounds such as the School of Computer Science, Mellon College of Science, Dietrich College of Humanities and Social Science, Tepper School of Business, Heinz College of Information Systems and Public Policy, and College of Fine Arts, alongside those from the College of Engineering, are welcomed. This inclusivity ensures a broad representation of interests and disciplines.",
+      "start_datetime": "2025-09-11T12:00:00-04:00",
+      "end_datetime": "2025-09-11T19:00:00-04:00",
+      "is_all_day": false,
+      "location": "5000 Forbes Avenue, Pittsburgh, Pennsylvania 15213, United States",
+      "source_url": "https://cmu.joinhandshake.com/stu/career_fairs/56853?ref=events-search",
+      "resource": "Handshake",
+      "is_uploaded": true, 
+      "org_id": 4,
+      "category_id": 4,
+      "recurrence": "EXCEPTION"
+  }'
+
+
+// recurrence rules + event_occurrences
 curl -X POST http://localhost:5001/api/events/create_recurrence_rules \
   -H "Content-Type: application/json" \
-  -d '{"event_id": 3,
+  -d '{"event_id": 17,
     "start_datetime": "2025-06-30T15:00:00-04:00",
     "frequency": "WEEKLY",
     "interval": 1,

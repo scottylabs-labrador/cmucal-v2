@@ -1,5 +1,5 @@
 from app.models.models import RecurrenceRule
-from app.models.enums import FrequencyType, DayType
+from app.models.enums import FrequencyType
 from typing import List
 from datetime import date
 from dateutil.rrule import rrule, MONTHLY, WEEKLY, DAILY, YEARLY, FR, MO, TU, WE, TH, SA, SU
