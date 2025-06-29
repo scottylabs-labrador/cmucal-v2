@@ -5,12 +5,33 @@ from app.models.user import update_user_calendar_id
 from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
 from app.models.organization import create_organization
-from app.models.admin import create_admin
+from app.models.admin import create_admin, get_categories_for_admin_user
 from app.models.schedule import create_schedule
 from app.models.schedule_category import create_schedule_category
+from app.models.category import join_org_and_to_dict
 
 users_bp = Blueprint("users", __name__)
 
+@users_bp.route("/get_user_id", methods=["GET"])
+def get_user_id():
+    db = SessionLocal()
+    try:
+        clerk_id = request.args.get("clerk_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing clerk_id"}), 400
+        
+        user = get_user_by_clerk_id(db, clerk_id)
+        if user is None:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify({"user_id": user.id}), 200
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 
 @users_bp.route("/login", methods=["POST"])
 def handle_login():
@@ -93,6 +114,25 @@ def create_schedule_category_record():
         schedule_category = create_schedule_category(db, schedule_id=schedule_id, category_id=category_id)
 
         return jsonify({"status": "schedule created", "schedule_id": schedule_id, "category_id": category_id}), 201
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@users_bp.route("/get_admin_categories", methods=["GET"])
+def get_admin_categories():
+    db = SessionLocal()
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        
+        categories = get_categories_for_admin_user(db, user_id)
+
+        return jsonify([join_org_and_to_dict(db, category.id) for category in categories]), 200
     except Exception as e:
         db.rollback()
         import traceback

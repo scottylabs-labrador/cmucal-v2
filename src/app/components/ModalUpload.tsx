@@ -1,12 +1,13 @@
+"use client";
 import { useRef } from "react";
 
-type ModalProps = {
+interface ModalProps {
   show: boolean;
   onClose: () => void;
-};
+}
 
 export default function ModalUpload({ show, onClose }: ModalProps) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   if (!show) return null;
 
@@ -24,41 +25,83 @@ export default function ModalUpload({ show, onClose }: ModalProps) {
         onClick={onClose}
       >
         <div
-          className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl max-w-xl w-full relative"
+          ref={containerRef}
+          className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-auto relative"
           onClick={(e) => e.stopPropagation()}
         >
-          <h2 className="text-xl font-semibold mb-2">
+          <h2 className="text-xl font-semibold mb-4">
             Upload to CMUCal Events Dashboard
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Either upload a file or paste your Google Calendar link below
-          </p>
 
-          {/* Dropzone */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md h-40 cursor-pointer text-center hover:bg-gray-50 dark:hover:bg-gray-800 transition mb-4"
-          >
-            <img
-              src="/placeholder-upload-icon.png" // Use your own placeholder if needed
-              alt="upload icon"
-              className="w-10 h-10 mb-2"
-            />
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Click to select file or drag and drop it here
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              .ICS, JPEG, PNG, and PDF formats
-            </p>
-            <input
-              type="file"
-              accept=".ics,.jpeg,.jpg,.png,.pdf"
-              className="hidden"
-              ref={fileInputRef}
-            />
+          {/* Tags */}
+          <div className="flex space-x-2 mb-4">
+            {['Academic', 'Career', 'Club'].map((tag) => (
+              <button
+                key={tag}
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+              >
+                {tag}
+              </button>
+            ))}
           </div>
 
-          {/* Link Input */}
+          {/* Title */}
+          <input
+            className="w-full border px-3 py-2 mb-3 rounded"
+            placeholder="Add event title"
+          />
+
+          {/* Host */}
+          <select className="w-full border px-3 py-2 mb-3 rounded">
+            <option>Select a host</option>
+          </select>
+
+          {/* Date & Time */}
+          <div className="flex space-x-2 mb-3 items-center">
+            <input type="date" className="border px-3 py-2 rounded w-full" />
+            <input type="time" className="border px-3 py-2 rounded w-full" />
+            <span>-</span>
+            <input type="time" className="border px-3 py-2 rounded w-full" />
+            <label className="ml-2 text-sm">
+              <input type="checkbox" className="mr-1" /> All day
+            </label>
+          </div>
+
+          {/* Repeats */}
+          <select className="w-full border px-3 py-2 mb-3 rounded">
+            <option>Does not repeat</option>
+          </select>
+
+          {/* Location */}
+          <input
+            className="w-full border px-3 py-2 mb-3 rounded"
+            placeholder="Add location"
+          />
+
+          {/* Category */}
+          <select className="w-full border px-3 py-2 mb-3 rounded">
+            <option>example</option>
+          </select>
+
+          {/* Source URL */}
+          <input
+            className="w-full border px-3 py-2 mb-3 rounded"
+            placeholder="Add source URL (optional)"
+          />
+
+          {/* Description */}
+          <textarea
+            className="w-full border px-3 py-2 mb-3 rounded"
+            placeholder="Add description"
+          />
+
+          {/* Require Registration */}
+          <label className="flex items-center space-x-2 mb-3">
+            <input type="checkbox" />
+            <span>require registration</span>
+          </label>
+
+          {/* Google Calendar Link */}
           <input
             type="text"
             placeholder="https://calendar.google.com/"
@@ -79,6 +122,7 @@ export default function ModalUpload({ show, onClose }: ModalProps) {
             </button>
           </div>
 
+          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white"
