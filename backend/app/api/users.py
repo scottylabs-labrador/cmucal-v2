@@ -83,45 +83,42 @@ def handle_login():
 
 @users_bp.route("/create_schedule", methods=["POST"])
 def create_schedule_record():
-    db = SessionLocal()
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        name = data.get("name")
-        if not user_id or not name:
-            return jsonify({"error": "Missing user_id or name"}), 400
-        
-        schedule = create_schedule(db, user_id=user_id, name=name)
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            user_id = data.get("user_id")
+            name = data.get("name")
+            if not user_id or not name:
+                return jsonify({"error": "Missing user_id or name"}), 400
+            
+            schedule = create_schedule(db, user_id=user_id, name=name)
 
-        return jsonify({"status": "schedule created", "user_id": user_id, "schedule_id": schedule.id}), 201
-    except Exception as e:
-        db.rollback()
-        import traceback
-        print("❌ Exception:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+            return jsonify({"status": "schedule created", "user_id": user_id, "schedule_id": schedule.id}), 201
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
 
 @users_bp.route("/create_schedule_category", methods=["POST"])
 def create_schedule_category_record():
-    db = SessionLocal()
-    try:
-        data = request.get_json()
-        schedule_id = data.get("schedule_id")
-        category_id = data.get("category_id")
-        if not schedule_id or not category_id:
-            return jsonify({"error": "Missing schedule_id or category_id"}), 400
-        
-        schedule_category = create_schedule_category(db, schedule_id=schedule_id, category_id=category_id)
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            schedule_id = data.get("schedule_id")
+            category_id = data.get("category_id")
+            if not schedule_id or not category_id:
+                return jsonify({"error": "Missing schedule_id or category_id"}), 400
+            
+            schedule_category = create_schedule_category(db, schedule_id=schedule_id, category_id=category_id)
 
-        return jsonify({"status": "schedule created", "schedule_id": schedule_id, "category_id": category_id}), 201
-    except Exception as e:
-        db.rollback()
-        import traceback
-        print("❌ Exception:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+            return jsonify({"status": "schedule created", "schedule_id": schedule_id, "category_id": category_id}), 201
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+        
 
 @users_bp.route("/get_admin_categories", methods=["GET"])
 def get_admin_categories():
@@ -132,13 +129,13 @@ def get_admin_categories():
             clerk_id = request.args.get("clerk_id")
             print("🧩 clerk_id =", clerk_id)
 
-            user_id = get_user_by_clerk_id(db, clerk_id)
-            print("🧩 user_id =", user_id)
+            user = get_user_by_clerk_id(db, clerk_id)
+            print("🧩 user_id =", user.id)
 
-            if not user_id:
+            if not user:
                 return jsonify({"error": "Missing user_id"}), 400
 
-            categories = get_categories_for_admin_user(db, user_id)
+            categories = get_categories_for_admin_user(db, user.id)
             print(f"🧩 categories fetched: {len(categories)}")
 
             results = [join_org_and_to_dict(db, category.id) for category in categories]
