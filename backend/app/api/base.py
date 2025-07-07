@@ -18,14 +18,12 @@ def home():
 
 @base_bp.route("/test_db", methods=["GET"])
 def db_health_check():
-    db = SessionLocal()
-    try:
-        user = User(clerk_id="123456")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return jsonify({"status": "connected"})
-    except Exception as e:
-        return jsonify({"status": "error", "details": str(e)}), 500
-    finally:
-        db.close()
+    with SessionLocal() as db:
+        try:
+            user = User(clerk_id="123456")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return jsonify({"status": "connected"})
+        except Exception as e:
+            return jsonify({"status": "error", "details": str(e)}), 500
