@@ -15,71 +15,68 @@ users_bp = Blueprint("users", __name__)
 
 @users_bp.route("/get_user_id", methods=["GET"])
 def get_user_id():
-    db = SessionLocal()
-    try:
-        clerk_id = request.args.get("clerk_id")
-        if not clerk_id:
-            return jsonify({"error": "Missing clerk_id"}), 400
-        
-        user = get_user_by_clerk_id(db, clerk_id)
-        if user is None:
-            return jsonify({"error": "User not found"}), 404
-        
-        return jsonify({"user_id": user.id}), 200
-    except Exception as e:
-        db.rollback()
-        import traceback
-        print("❌ Exception:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+    with SessionLocal() as db:
+        try:
+            clerk_id = request.args.get("clerk_id")
+            if not clerk_id:
+                return jsonify({"error": "Missing clerk_id"}), 400
+            
+            user = get_user_by_clerk_id(db, clerk_id)
+            if user is None:
+                return jsonify({"error": "User not found"}), 404
+            
+            return jsonify({"user_id": user.id}), 200
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
 
 @users_bp.route("/login", methods=["POST"])
 def handle_login():
-    db = SessionLocal()
-    try:
-        data = request.get_json()
-        clerk_id = data.get("clerk_id")
-        email = data.get("email")
-        fname = data.get("fname")
-        lname = data.get("lname")
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            clerk_id = data.get("clerk_id")
+            email = data.get("email")
+            fname = data.get("fname")
+            lname = data.get("lname")
 
-        if not clerk_id or not email:
-            return jsonify({"error": "Missing clerk_id or email"}), 400
+            if not clerk_id or not email:
+                return jsonify({"error": "Missing clerk_id or email"}), 400
 
-        user = get_user_by_clerk_id(db, clerk_id)
-        if user is None:
-            create_user(
-                db, clerk_id,
-                email=email,
-                fname=fname,
-                lname=lname
-            )
-            # re-fetch to get the DB-generated _id and calendar_id
             user = get_user_by_clerk_id(db, clerk_id)
-            # print("→ Created user:", user)
-            # print("→ Dict:", user_to_dict(user))
+            if user is None:
+                create_user(
+                    db, clerk_id,
+                    email=email,
+                    fname=fname,
+                    lname=lname
+                )
+                # re-fetch to get the DB-generated _id and calendar_id
+                user = get_user_by_clerk_id(db, clerk_id)
+                # print("→ Created user:", user)
+                # print("→ Dict:", user_to_dict(user))
 
-        if not user.calendar_id:
-            # create a new calendar for the user
-            creds = fetch_user_credentials()
-            if not creds:
-                return jsonify({"error": "Google account not authorized"}), 401
+            if not user.calendar_id:
+                # create a new calendar for the user
+                creds = fetch_user_credentials()
+                if not creds:
+                    return jsonify({"error": "Google account not authorized"}), 401
 
-            calendar_id = create_cmucal_calendar(creds)
-            update_user_calendar_id(db, clerk_id, calendar_id)
-            user = get_user_by_clerk_id(db, clerk_id)
+                calendar_id = create_cmucal_calendar(creds)
+                update_user_calendar_id(db, clerk_id, calendar_id)
+                user = get_user_by_clerk_id(db, clerk_id)
 
-            return jsonify({"status": "created", "user": user_to_dict(user)}), 201
+                return jsonify({"status": "created", "user": user_to_dict(user)}), 201
 
-        return jsonify({"status": "exists", "user": user_to_dict(user)}), 200
-    except Exception as e:
-        db.rollback()
-        import traceback
-        print("❌ Exception:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+            return jsonify({"status": "exists", "user": user_to_dict(user)}), 200
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
 
 @users_bp.route("/create_schedule", methods=["POST"])
 def create_schedule_record():
@@ -123,7 +120,6 @@ def create_schedule_category_record():
 @users_bp.route("/get_admin_categories", methods=["GET"])
 def get_admin_categories():
     print("✅ Route /get_admin_categories was called")
-
     with SessionLocal() as db:
         try:
             clerk_id = request.args.get("clerk_id")
