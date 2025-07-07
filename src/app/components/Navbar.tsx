@@ -9,8 +9,8 @@ import { FaRegUser } from "react-icons/fa"; // User icon
 import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
 
-// import ModalCalendars from "./ModalCalendars"; 
-import ModalUpload from "./ModalUpload"; 
+// import ModalUploadOne from "./ModalUploadOne"; 
+import ModalUploadTwo from "./ModalUploadTwo"; 
 import { useUser } from "@clerk/clerk-react";
 
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
@@ -21,8 +21,8 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import axios from 'axios';
 
 import dynamic from 'next/dynamic';
-// Dynamically import ModalCalendars
-const ModalCalendars = dynamic(() => import('./ModalCalendars'), {
+// Dynamically import ModalUploadOne
+const ModalUploadOne = dynamic(() => import('./ModalUploadOne'), {
   ssr: false,
 });
 
@@ -36,8 +36,8 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [showCalendarsModal, setShowCalendarsModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);  
+  const [showUploadModalOne, setShowUploadModalOne] = useState(false);
+  const [showUploadModalTwo, setShowUploadModalTwo] = useState(false);  
   const [userId, setUserId] = useState<string>("n/a");
   const pathname = usePathname();
 
@@ -89,7 +89,6 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   return (
     <>
-      {userId ?  (
       <nav className="flex items-center justify-between p-3 border-b bg-white dark:bg-gray-800">
         {/* Left Section: User & Search */}
         <div className="flex items-center space-x-2">
@@ -163,7 +162,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </FormControl>
           
           <button
-            onClick={() => setShowCalendarsModal(true)}
+            onClick={() => setShowUploadModalOne(true)}
             className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500"
           >
             Upload
@@ -209,21 +208,24 @@ export default function Navbar({ UserButton }: NavBarProps) {
         </div>
 
       {/* Modal component */}
-      
-      {userId && (
-        <ModalCalendars
-          showCalendarsModal={showCalendarsModal}
-          setShowCalendarsModal={setShowCalendarsModal}
-          showUploadModal={showUploadModal}
-          setShowUploadModal={setShowUploadModal}
-          onClose={() => setShowCalendarsModal(false)}
-          userId={userId}
+      {showUploadModalOne && (
+        <ModalUploadOne
+          showUploadModalOne={showUploadModalOne}
+          setShowUploadModalOne={setShowUploadModalOne}
+          showUploadModalTwo={showUploadModalTwo}
+          setShowUploadModalTwo={setShowUploadModalTwo}
+          onClose={() => setShowUploadModalOne(false)}
         />
       )}
 
-        <ModalUpload show={showUploadModal} onClose={() => setShowUploadModal(false)} />
+      {showUploadModalTwo && (
+        <ModalUploadTwo
+          show={showUploadModalTwo}
+          onClose={() => setShowUploadModalTwo(false)}
+        />
+      )}
 
-      </nav> ) : (<div></div>)}
+      </nav>
     </>
   );
 }

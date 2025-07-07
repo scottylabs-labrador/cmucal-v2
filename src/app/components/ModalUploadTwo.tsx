@@ -6,7 +6,7 @@ interface ModalProps {
   onClose: () => void;
 }
 
-export default function ModalUpload({ show, onClose }: ModalProps) {
+export default function ModalUploadTwo({ show, onClose }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   if (!show) return null;

@@ -9,6 +9,7 @@ from app.models.admin import create_admin, get_categories_for_admin_user
 from app.models.schedule import create_schedule
 from app.models.schedule_category import create_schedule_category
 from app.models.category import join_org_and_to_dict
+from contextlib import contextmanager
 
 users_bp = Blueprint("users", __name__)
 
@@ -124,19 +125,29 @@ def create_schedule_category_record():
 
 @users_bp.route("/get_admin_categories", methods=["GET"])
 def get_admin_categories():
-    db = SessionLocal()
-    try:
-        user_id = request.args.get("user_id")
-        if not user_id:
-            return jsonify({"error": "Missing user_id"}), 400
-        
-        categories = get_categories_for_admin_user(db, user_id)
+    print("✅ Route /get_admin_categories was called")
 
-        return jsonify([join_org_and_to_dict(db, category.id) for category in categories]), 200
-    except Exception as e:
-        db.rollback()
-        import traceback
-        print("❌ Exception:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
-    finally:
-        db.close()
+    with SessionLocal() as db:
+        try:
+            clerk_id = request.args.get("clerk_id")
+            print("🧩 clerk_id =", clerk_id)
+
+            user_id = get_user_by_clerk_id(db, clerk_id)
+            print("🧩 user_id =", user_id)
+
+            if not user_id:
+                return jsonify({"error": "Missing user_id"}), 400
+
+            categories = get_categories_for_admin_user(db, user_id)
+            print(f"🧩 categories fetched: {len(categories)}")
+
+            results = [join_org_and_to_dict(db, category.id) for category in categories]
+            print("🧩 results ready:", results)
+
+            return jsonify(results), 200
+
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
