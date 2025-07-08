@@ -19,6 +19,7 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
   
   const [selectedOption, setSelectedOption] = useState<any | null>(null);
   const { user } = useUser();  // clerk user object
+  const [loading, setLoading] = useState<boolean>(true);
   const [adminCategories, setAdminCategories] = useState<any[]>([]); 
 
   if (!user) return null;
@@ -27,7 +28,7 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
     const fetchAdminCategories = async () => {
       if (!user?.id) return;
 
-      console.log("Fetching admin categories for Clerk ID:", user.id);
+      // console.log("Fetching admin categories for Clerk ID:", user.id);
 
       try {
         const response = await axios.get('http://localhost:5001/api/users/get_admin_categories', {
@@ -41,29 +42,15 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
     };
 
     fetchAdminCategories();
+    setLoading(false);
   }, [user]);
 
-
-  if (adminCategories.length === 0) {  
+  if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40"
-          onClick={onClose}
-        />
-        {/* Modal */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h2 className="text-lg font-semibold mb-4">No Calendars Available</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            You do not have permission to manage any calendars.
-          </p>
-          <button
-
-            onClick={onClose}
-          >
-            &times;
-          </button>
+          <h2 className="text-lg font-semibold mb-4">Loading Calendars...</h2>
+          <p className="text-gray-600 dark:text-gray-400">Please wait while we fetch your authorized calendars.</p>
         </div>
       </div>
     );

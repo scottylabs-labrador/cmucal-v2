@@ -8,7 +8,7 @@ from app.models.event import save_event
 from app.models.career import save_career
 from app.models.academic import save_academic
 from app.models.club import save_club
-from app.models.tag import get_tag_by_name, save_tag
+from app.models.tag import get_tag_by_name, save_tag, get_all_tags
 from app.models.event_tag import save_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
@@ -201,4 +201,15 @@ def create_single_event_occurrence():
             db.rollback()
             import traceback
             print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+        
+@events_bp.route("/tags", methods=["GET"])
+def get_tags():
+    with SessionLocal() as db:
+        try: 
+            tags = get_all_tags(db)
+            return jsonify([{"name": tag.name, "id": tag.id} for tag in tags]), 200
+        except Exception as e:
+            db.rollback()
+            print("❌ Exception:", e)
             return jsonify({"error": str(e)}), 500
