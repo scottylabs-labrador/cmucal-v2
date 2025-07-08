@@ -38,6 +38,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
   const [mounted, setMounted] = useState(false);
   const [showUploadModalOne, setShowUploadModalOne] = useState(false);
   const [showUploadModalTwo, setShowUploadModalTwo] = useState(false);  
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [userId, setUserId] = useState<string>("n/a");
   const pathname = usePathname();
 
@@ -214,6 +215,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
           setShowUploadModalOne={setShowUploadModalOne}
           showUploadModalTwo={showUploadModalTwo}
           setShowUploadModalTwo={setShowUploadModalTwo}
+          setSelectedCategory={setSelectedCategory}
           onClose={() => setShowUploadModalOne(false)}
         />
       )}
@@ -222,6 +224,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
         <ModalUploadTwo
           show={showUploadModalTwo}
           onClose={() => setShowUploadModalTwo(false)}
+          selectedCategory={selectedCategory}
         />
       )}
 

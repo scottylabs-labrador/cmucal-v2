@@ -4,12 +4,13 @@ import { useRef } from "react";
 interface ModalProps {
   show: boolean;
   onClose: () => void;
+  selectedCategory?: any; // Optional prop for selected category
 }
 
-export default function ModalUploadTwo({ show, onClose }: ModalProps) {
+export default function ModalUploadTwo({ show, onClose, selectedCategory }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  if (!show) return null;
+  if (!show || !selectedCategory) return null;
 
   return (
     <>
@@ -30,7 +31,7 @@ export default function ModalUploadTwo({ show, onClose }: ModalProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <h2 className="text-xl font-semibold mb-4">
-            Upload to CMUCal Events Dashboard
+            Upload to {selectedCategory.organization_name} — {selectedCategory.name}
           </h2>
 
           {/* Tags */}

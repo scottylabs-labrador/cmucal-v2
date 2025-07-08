@@ -10,11 +10,14 @@ type ModalProps = {
   setShowUploadModalOne: React.Dispatch<React.SetStateAction<boolean>>; 
   showUploadModalTwo: boolean;
   setShowUploadModalTwo: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedCategory: React.Dispatch<React.SetStateAction<any>>;
   onClose: () => void;
 };
 
 export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalOne, 
-                                        showUploadModalTwo, setShowUploadModalTwo, onClose}: ModalProps) {
+                                        showUploadModalTwo, setShowUploadModalTwo, setSelectedCategory, onClose}: ModalProps) {
+  
+  const [selectedOption, setSelectedOption] = useState<any | null>(null);
   const { user } = useUser();  // clerk user object
   const [adminCategories, setAdminCategories] = useState<any[]>([]); 
 
@@ -85,17 +88,31 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
           onClick={(e) => e.stopPropagation()}
         >
           <h2 className="text-lg font-semibold mb-4">Choose a calendar</h2>
-        <select className="w-full border rounded-md p-2 mb-4">
+        <select
+          className="w-full border rounded-md p-2 mb-4"
+          value={selectedOption?.id ?? ""}
+          onChange={(e) => {
+            const selected = adminCategories.find((cat) => String(cat.id) === e.target.value);
+            setSelectedOption(selected || null);
+          }}
+        >
+          <option value="" disabled>Select a calendar</option>
           {adminCategories.map((category) => (
-            <option key={category.id} value={category.id}>{category.organization_name} — {category.name}</option> 
+            <option key={category.id} value={category.id}>
+              {category.organization_name} — {category.name}
+            </option>
           ))}
-
         </select>
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded-md w-full"
+          disabled={!selectedOption}
           onClick={() => {
-            setShowUploadModalOne(false);
-            setShowUploadModalTwo(true);
+            if (selectedOption) {
+              setSelectedCategory(selectedOption);
+              console.log("Selected category:", selectedOption);
+              setShowUploadModalOne(false);
+              setShowUploadModalTwo(true);
+            }
           }}
         >
           Next
