@@ -12,6 +12,11 @@ import {
   InputLabel,
   Typography,
   Box,
+  Button,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  SelectChangeEvent,
 } from "@mui/material";
 import {
   DatePicker,
@@ -23,6 +28,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
+import { set } from "lodash";
 
 
 interface ModalProps {
@@ -33,6 +39,12 @@ interface ModalProps {
 
 type Tag = { id?: string; name: string };
 
+const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
+
+
+
+
+
 export default function ModalUploadTwo({ show, onClose, selectedCategory }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();  // clerk user object
@@ -40,8 +52,17 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [selectedEventType, setSelectedEventType] = useState<string | null>(null);
   const [eventTypeError, setEventTypeError] = useState(false);
 
+  const [gcalLink, setGcalLink] = useState("");
+  const [gcalLinkError, setGcalLinkError] = useState(false);
+
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
+  const [location, setLocation] = useState("");
+  const [locationError, setLocationError] = useState(false);
+  const [sourceURL, setSourceURL] = useState("");
+  const [sourceURLError, setSourceURLError] = useState(false);
+  const [description, setDescription] = useState("");
+
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [predefinedTags, setPredefinedTags] = useState<Tag[]>([]);
 
@@ -51,29 +72,84 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [allDay, setAllDay] = useState(false);
   const [repeat, setRepeat] = useState("none");
 
+  // recurrence settings
+  const [interval, setInterval] = useState(1);
+  const [frequency, setFrequency] = useState("week");
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // M-F
+  const [ends, setEnds] = useState("never");
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+  const [occurrences, setOccurrences] = useState(13);
+
+  // Career
+  const [requireRegistration, setRequireRegistration] = useState(false);
+  const [host, setHost] = useState("");
+
+  // Academic
+  const [course, setCourse] = useState("none");
+  const [courseNum, setCourseNum] = useState("");
+  const [courseName, setCourseName] = useState("");
+
+  const [courseError, setCourseError] = useState(false);
+  const courses = [
+    "15-112: Fundamentals of Programming",
+    "15-213: Intro to Computer Systems",
+    "15-251: Great Theoretical Ideas",
+    "15-281: Artificial Intelligence",
+    "15-410: Operating Systems",
+    // Manual for now...
+  ];
+  const [instructors, setInstructors] = useState<string[]>([]);
+  const [instructorStr, setInstructorStr] = useState("");
+
+  const toggleDay = (index: number) => {
+    setSelectedDays((prev) =>
+      prev.includes(index)
+        ? prev.filter((d) => d !== index)
+        : [...prev, index]
+    );
+  };
+
+
   const [dateError, setDateError] = useState(false);
   const [startError, setStartError] = useState(false);
   const [endError, setEndError] = useState(false);
 
   const validate = () => {
-    if (!selectedEventType) {
-      setEventTypeError(true);
-      alert("Please select an event type: Academic, Career, or Club.");
-      return;
-    }
-    if (!title.trim()) {
-      setTitleError(true);
-    }
-    setDateError(!date);
-    setStartError(!allDay && !startTime);
-    setEndError(!allDay && !endTime);
+    const isEventTypeInvalid = !selectedEventType;
+    const isCourseInvalid = selectedEventType === "Academic" && course === "none";
+    const isTitleInvalid = !gcalLink.trim() && !title.trim();
+    const isDateInvalid = !gcalLink.trim() && !date;
+    const isStartInvalid = !gcalLink.trim() && !allDay && !startTime;
+    const isEndInvalid = !gcalLink.trim() && !allDay && !endTime;
+    const isLocationInvalid = !gcalLink.trim() && !location.trim();
+
+    setEventTypeError(isEventTypeInvalid);
+    setCourseError(isCourseInvalid);
+    setTitleError(isTitleInvalid);
+    setDateError(isDateInvalid);
+    setStartError(isStartInvalid);
+    setEndError(isEndInvalid);
+    setLocationError(isLocationInvalid);
+
+    return !(
+      isEventTypeInvalid ||
+      isCourseInvalid ||
+      isTitleInvalid ||
+      isDateInvalid ||
+      isStartInvalid ||
+      isEndInvalid ||
+      isLocationInvalid
+    );
   };
 
   const handleSubmit = async () => {
-    validate();
-    if (eventTypeError || titleError || dateError || startError || endError) return;
-    // Submit the form
-    onClose();
+    const isValid = validate();
+    if (!isValid) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    onClose(); // only called if validation passed
   };
 
   if (!show || !selectedCategory || !user) return null;
@@ -100,6 +176,26 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
     fetchTags();
   }, []);
 
+  const handleCourseChange = (e: SelectChangeEvent) => {
+    const value = e.target.value;
+    setCourse(value);
+    if (value === "") {
+      setCourseError(true);
+    } else {
+      const [num, ...nameParts] = value.split(": ");
+      setCourseNum(num? num.trim() : "");
+      setCourseName(nameParts.join("").trim());
+      setCourseError(false);
+      console.log("courseNum:", courseNum, "courseName:", courseName);
+    }
+  };
+
+  const handleInstructorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const instructorsList = value.split(",").map((name) => name.trim());
+    setInstructors(instructorsList);
+    setInstructorStr(value);
+  };
 
   return (
     <>
@@ -124,7 +220,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           </h2>
 
           {/* Event Type */}
-          <div className="flex space-x-2 mb-4">
+          <div className="flex space-x-2 mb-3">
             {['Academic', 'Career', 'Club'].map((eventType) => (
               <button
                 key={eventType}
@@ -138,12 +234,19 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             ))}
           </div>
 
+          {eventTypeError && (
+            <p className="text-red-500 text-sm mb-4">
+              Please select an event type.
+            </p>
+          )}
+
           {/* Title */}
           <TextField
             label="Event Title"
             variant="standard"
             required
             fullWidth
+            size="medium"
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
@@ -151,7 +254,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             }}
             error={titleError}
             helperText={titleError ? "Title is required" : ""}
-            className="mb-3"
+            className="mb-6"
           />
 
           {/* Host */}
@@ -161,7 +264,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
 
           {/* Date & Time */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <Box display="flex" alignItems="center" gap={2} mt={2}>
               <DatePicker
                 label="Date"
                 value={date}
@@ -225,41 +328,142 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 }
                 label="All day"
               />
-              <Typography color="primary" fontSize="0.875rem">
-                Time zone
-              </Typography>
+
+              {selectedEventType == "Career" && 
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={requireRegistration}
+                      onChange={(e) => setRequireRegistration(e.target.checked)}
+                    />
+                  }
+                  label="Require registration"
+                />
+              }
             </Box>
 
-            <FormControl fullWidth>
+            <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Repeats</InputLabel>
               <Select
                 value={repeat}
                 label="Repeats"
                 onChange={(e) => setRepeat(e.target.value)}
+                size="small"
               >
                 <MenuItem value="none">Does not repeat</MenuItem>
                 <MenuItem value="daily">Daily</MenuItem>
                 <MenuItem value="weekly">Weekly</MenuItem>
                 <MenuItem value="monthly">Monthly</MenuItem>
+                <MenuItem value="weekdays">Every weekday (Monday to Friday)</MenuItem>
               </Select>
+
             </FormControl>
           </LocalizationProvider>
 
+          {/* Course */}
+          {selectedEventType === "Academic" && (
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Course</InputLabel>
+              <Select
+                value={course}
+                label="Course"
+                onChange={(e) => handleCourseChange(e)}
+                size="small"
+                required={selectedEventType === "Academic"}
+                error={courseError}
+              >
+                <MenuItem value="none">xx-xxx: course_name</MenuItem>
+                {courses.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+              </Select>
+              {courseError && (
+                <p className="text-red-500 text-xs mt-1 ml-4">
+                  Please select a course.
+                </p>
+              )}
+
+            </FormControl>
+          )}
+
+          {/* Instructors */}
+          {selectedEventType === "Academic" && (
+            <TextField
+              label="Add Instructors (separate names by ,)"
+              variant="outlined"
+              fullWidth
+              value={instructorStr}
+              onChange={handleInstructorChange}
+              // need to add error message if wrong format
+              size="small"
+              sx={{ mb: 2 }}
+            />
+          )}
+
           {/* Location */}
-          <input
-            className="w-full border px-3 py-2 mb-3 rounded"
-            placeholder="Add location"
+          <TextField
+            label="Add location"
+            variant="outlined"
+            required
+            fullWidth
+            value={location}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              if (locationError) setLocationError(false); // clear error on change
+            }}
+            error={locationError}
+            helperText={locationError ? "Location is required" : ""}
+            className="my-4"
+            size="small"
           />
 
-          {/* Tags */}
-          
+          {/* Source URL */}
+          <TextField
+            label="Add Source/Registration URL"
+            variant="outlined"
+            sx={{ mb: 2, mt: 2 }}
+            required={requireRegistration} // Only required for Career
+            fullWidth
+            size="small"
+            value={sourceURL}
+            onChange={(e) => {
+              setSourceURL(e.target.value);
+              if (sourceURLError) setSourceURLError(false);
+            }}
+            error={requireRegistration && sourceURLError}
+            helperText={
+              requireRegistration && sourceURLError
+                ? "Source URL is required if registration is required"
+                : ""
+            }
+          />
 
+          {/* Host */}
+          {selectedEventType === "Career" && (
+            <TextField
+              label="Add host"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={host}
+              sx={{ mb: 2 }}
+              onChange={(e) => {
+                setHost(e.target.value);
+              }}
+            />
+          )}
+
+
+          {/* Tags */}
           <Autocomplete
             multiple
             freeSolo
             options={predefinedTags}
             getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
             filterSelectedOptions
+            size="small"
             value={selectedTags}
             onChange={(event, newValue) => {
               const normalized = newValue.map((tag) =>
@@ -274,10 +478,10 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
 
                 return (
                   <Chip
-                    key={key} // ✅ explicitly pass the key
+                    key={key} // explicitly pass the key
                     label={option.name}
                     variant="outlined"
-                    {...rest} // ✅ spread the remaining props
+                    {...rest} // spread the remaining props
                   />
                 );
               })
@@ -290,42 +494,44 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 placeholder="Add or select a tag"
               />
             )}
-            className="w-full mb-4"
-          />
-
-          {/* Source URL */}
-          <input
-            className="w-full border px-3 py-2 mb-3 rounded"
-            placeholder="Add source URL (optional)"
+            sx={{ mb: 2 }}
           />
 
           {/* Description */}
-          <textarea
-            className="w-full border px-3 py-2 mb-3 rounded"
-            placeholder="Add description"
+          <TextField
+            label="Add description"
+            variant="outlined"
+            fullWidth
+            size="small"
+            value={description}
+            sx={{ mb: 2 }}
+            onChange={(e) => {
+              setDescription(e.target.value);
+            }}
           />
-
-          {/* Require Registration */}
-          <label className="flex items-center space-x-2 mb-3">
-            <input type="checkbox" />
-            <span className="text-xs">require registration</span>
-          </label>
-
           
+          
+          <hr className="my-4" />
+
 
           {/* Google Calendar Link */}
-          <hr className="my-4" />
-          <p className="text-sm  mb-4">Or paste your Google Calendar link below</p>
+          <p className="text-sm">Or paste your Google Calendar link below</p>
 
           <input
             type="text"
-            placeholder="https://calendar.google.com/"
+            placeholder="https://calendar.google.com/..."
+            value={gcalLink}
+            onChange={(e) => {
+              setGcalLink(e.target.value);
+            }}
             className="w-full p-2 border rounded-md mb-2 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600"
           />
 
           <p className="text-xs text-gray-400 mb-4">
             Need help? Go to Calendar Settings &gt; Get Sharable Link
           </p>
+
+    
 
           {/* Buttons */}
           <div className="flex justify-end gap-4">
