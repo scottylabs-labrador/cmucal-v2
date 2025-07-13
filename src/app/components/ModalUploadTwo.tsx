@@ -29,6 +29,7 @@ import dayjs, { Dayjs } from "dayjs";
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
 import { set } from "lodash";
+import { start } from "repl";
 
 
 interface ModalProps {
@@ -39,9 +40,31 @@ interface ModalProps {
 
 type Tag = { id?: string; name: string };
 
+const eventTypesDict = {"Academic": "ACADEMIC", "Career": "CAREER", "Club": "CLUB"};
+type EventTypeLabel = keyof typeof eventTypesDict;
+type EventTypeValue = typeof eventTypesDict[EventTypeLabel];
+
 const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
-
+interface PayloadType {
+  title: string;
+  description?: string;
+  start_datetime?: string | null;
+  end_datetime?: string | null;
+  is_all_day?: boolean;
+  location: string;
+  source_url?: string;
+  event_type: string;
+  category_id: number;
+  org_id: string;
+  event_tags?: string[];
+  course_num?: string;
+  course_name?: string;
+  instructors?: string[];
+  host?: string;
+  link?: string;
+  registration_required?: boolean;
+}
 
 
 
@@ -49,11 +72,10 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();  // clerk user object
 
-  const [selectedEventType, setSelectedEventType] = useState<string | null>(null);
+  const [selectedEventType, setSelectedEventType] = useState<string>("");
   const [eventTypeError, setEventTypeError] = useState(false);
 
   const [gcalLink, setGcalLink] = useState("");
-  const [gcalLinkError, setGcalLinkError] = useState(false);
 
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
@@ -114,6 +136,31 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [startError, setStartError] = useState(false);
   const [endError, setEndError] = useState(false);
 
+  const reset = () => {
+    setSelectedEventType("");
+    setGcalLink("");
+    setTitle("");
+    setLocation("");
+    setSourceURL("");
+    setDescription(""); 
+    setDate(null);
+    setStartTime(null);
+    setEndTime(null);
+    setAllDay(false);
+    setRepeat("none");
+    setInterval(1);
+    setFrequency("week");
+    // the rest of the recurrence settings
+    setRequireRegistration(false);
+    setHost("");
+    setCourse("none");
+    setCourseNum("");
+    setCourseName("");
+    setInstructors([]);
+    setInstructorStr("");
+    setSelectedTags([]);
+  }
+
   const validate = () => {
     const isEventTypeInvalid = !selectedEventType;
     const isCourseInvalid = selectedEventType === "Academic" && course === "none";
@@ -149,8 +196,66 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
       return;
     }
 
-    onClose(); // only called if validation passed
+    try {
+      if (gcalLink.trim()) {
+        // If gcalLink is provided, we can skip other fields
+        // create a payload with just the gcalLink
+      } else {
+
+          const payload : PayloadType = {
+            title: title,
+            description: description,
+            start_datetime: startTime ? startTime.toISOString() : null,
+            end_datetime: endTime ? endTime.toISOString() : null,
+            is_all_day: allDay,
+            location: location,
+            source_url: sourceURL,
+            event_type: selectedEventType in eventTypesDict
+                        ? eventTypesDict[selectedEventType as keyof typeof eventTypesDict]
+                        : "",
+            category_id: selectedCategory.id,
+            org_id: selectedCategory.org_id,
+            event_tags: selectedTags.map(tag => tag.name),
+          };
+
+          if (allDay && !startTime && !endTime) {
+            payload.start_datetime = date ? dayjs(date).startOf('day').toISOString() : null;
+            payload.end_datetime = date ? dayjs(date).endOf('day').toISOString() : null;
+          }
+
+          if (selectedEventType === "Academic") {
+            payload.course_num = courseNum;
+            payload.course_name = courseName;
+            payload.instructors = instructors;
+          } else if (selectedEventType === "Career") {
+            payload.host = host;
+            payload.link = sourceURL;
+            payload.registration_required = requireRegistration;
+          } else if (selectedEventType === "Club") {
+            // Add any specific fields for Club events if needed
+          }
+
+          // need to add the recurrence settings!
+
+          console.log("Submitting payload:", payload);
+          
+          const res = await axios.post("http://localhost:5001/api/events/create_event", {
+            withCredentials: true,
+            data: payload,
+          });
+
+          if (res.status === 200) {
+            onClose(); // ✅ only close modal if backend call succeeds
+          } else {
+            alert("Something went wrong while submitting.");
+          }
+        }
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert("Failed to submit. Please try again.");
+    }
   };
+
 
   if (!show || !selectedCategory || !user) return null;
 
@@ -537,10 +642,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           <div className="flex justify-end gap-4">
             <button
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
-              onClick={() => {
-                setSelectedEventType(null);
-                // Reset other fields if needed
-              }}
+              onClick={reset}
             >
               Reset
             </button>

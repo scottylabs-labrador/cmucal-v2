@@ -119,23 +119,21 @@ def create_schedule_category_record():
 
 @users_bp.route("/get_admin_categories", methods=["GET"])
 def get_admin_categories():
-    print("✅ Route /get_admin_categories was called")
+    print("Route /get_admin_categories was called")
     with SessionLocal() as db:
         try:
             clerk_id = request.args.get("clerk_id")
-            print("🧩 clerk_id =", clerk_id)
 
             user = get_user_by_clerk_id(db, clerk_id)
-            print("🧩 user_id =", user.id)
 
             if not user:
                 return jsonify({"error": "Missing user_id"}), 400
 
             categories = get_categories_for_admin_user(db, user.id)
-            print(f"🧩 categories fetched: {len(categories)}")
+            print(f"categories fetched: {len(categories)}")
 
             results = [join_org_and_to_dict(db, category.id) for category in categories]
-            print("🧩 results ready:", results)
+            print("results ready:", results)
 
             return jsonify(results), 200
 

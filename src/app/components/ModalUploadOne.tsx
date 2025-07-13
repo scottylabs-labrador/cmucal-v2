@@ -14,13 +14,21 @@ type ModalProps = {
   onClose: () => void;
 };
 
+interface Category {
+  id: number;
+  name: string;
+  org_id: string;
+  organization_name: string;
+  created_at: Date | null;
+}
+
 export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalOne, 
                                         showUploadModalTwo, setShowUploadModalTwo, setSelectedCategory, onClose}: ModalProps) {
-  
-  const [selectedOption, setSelectedOption] = useState<any | null>(null);
+
+  const [selectedOption, setSelectedOption] = useState<Category | null>(null);
   const { user } = useUser();  // clerk user object
   const [loading, setLoading] = useState<boolean>(true);
-  const [adminCategories, setAdminCategories] = useState<any[]>([]); 
+  const [adminCategories, setAdminCategories] = useState<Category[]>([]);
 
   if (!user) return null;
 
