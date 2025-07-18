@@ -239,12 +239,15 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
 
           console.log("Submitting payload:", payload);
           
-          const res = await axios.post("http://localhost:5001/api/events/create_event", {
-            withCredentials: true,
-            data: payload,
+          const res = await axios.post("http://localhost:5001/api/events/create_event", payload, {
+            headers: {
+              "Content-Type": "application/json"
+            },
+            withCredentials: true
           });
 
-          if (res.status === 200) {
+          if (res.status === 201) {
+            alert("Event created successfully!");
             onClose(); // ✅ only close modal if backend call succeeds
           } else {
             alert("Something went wrong while submitting.");
