@@ -28,8 +28,11 @@ import dayjs, { Dayjs } from "dayjs";
 
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
+import CustomRecurrenceModal from "./CustomRecurrenceModal"; 
 import { set } from "lodash";
 import { start } from "repl";
+import { RecurrenceInput } from "../utils/types";
+import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency } from "../utils/dateService";
 
 
 interface ModalProps {
@@ -95,8 +98,11 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [repeat, setRepeat] = useState("none");
 
   // recurrence settings
+  const [showCustomRecurrence, setShowCustomRecurrence] = useState(false);
+  const [customRecurrenceSummary, setCustomRecurrenceSummary] = useState<string | null>(null);
+
   const [interval, setInterval] = useState(1);
-  const [frequency, setFrequency] = useState("week");
+  const [frequency, setFrequency] = useState("WEEKLY"); // default to weekly
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // M-F
   const [ends, setEnds] = useState("never");
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
@@ -305,6 +311,40 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
     setInstructorStr(value);
   };
 
+  const handleCustomRecurrenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+      setRepeat(value);
+      if (value === "custom") {
+        setShowCustomRecurrence(true); // <-- show modal when "Custom..." selected
+      } else {
+        setShowCustomRecurrence(false);
+        // Reset recurrence settings if not custom
+      }
+  };
+
+  const onCustomRecurrenceClose = () => {
+    
+
+    const current: RecurrenceInput = {
+      frequency: toRRuleFrequency(frequency),
+      interval,
+      selectedDays,
+      ends: toDBRecurrenceEnds(ends),
+      endDate,
+      occurrences,
+      startDatetime: date ?? dayjs(), // fallback
+      eventId: -1 // placeholder
+    };
+
+    const { dbRecurrence, summary } = formatRecurrence(current);
+    setCustomRecurrenceSummary(summary);
+    
+    setShowCustomRecurrence(false);
+  };
+
+  
+    
+
   return (
     <>
       {/* Backdrop */}
@@ -364,11 +404,6 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             helperText={titleError ? "Title is required" : ""}
             className="mb-6"
           />
-
-          {/* Host */}
-          {/* <select className="w-full border px-3 py-2 mb-3 rounded">
-            <option>Select a host</option>
-          </select> */}
 
           {/* Date & Time */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -455,7 +490,14 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
               <Select
                 value={repeat}
                 label="Repeats"
-                onChange={(e) => setRepeat(e.target.value)}
+                
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setRepeat(value);
+                  if (value === "custom") {
+                    setShowCustomRecurrence(true); // <-- show modal when "Custom..." selected
+                  }
+                }}
                 size="small"
               >
                 <MenuItem value="none">Does not repeat</MenuItem>
@@ -463,6 +505,18 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 <MenuItem value="weekly">Weekly</MenuItem>
                 <MenuItem value="monthly">Monthly</MenuItem>
                 <MenuItem value="weekdays">Every weekday (Monday to Friday)</MenuItem>
+                <MenuItem
+                  value="custom"
+                  onClick={() => {
+                    if (repeat === "custom") {
+                      setShowCustomRecurrence(true); // manually trigger modal even if already selected
+                    }
+                  }}
+                >
+                  {customRecurrenceSummary
+                    ? `Custom: ${customRecurrenceSummary}`
+                    : "Custom..."}
+                </MenuItem>
               </Select>
 
             </FormControl>
@@ -639,7 +693,25 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             Need help? Go to Calendar Settings &gt; Get Sharable Link
           </p>
 
-    
+          {/* Custom Recurrence Modal */}
+          {showCustomRecurrence && (
+            <CustomRecurrenceModal
+              open={showCustomRecurrence}
+              onClose={onCustomRecurrenceClose}
+              interval={interval}
+              setInterval={setInterval}
+              frequency={frequency}
+              setFrequency={setFrequency}
+              selectedDays={selectedDays}
+              toggleDay={toggleDay}
+              ends={ends}
+              setEnds={setEnds}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              occurrences={occurrences}
+              setOccurrences={setOccurrences}
+            />
+          )}
 
           {/* Buttons */}
           <div className="flex justify-end gap-4">
