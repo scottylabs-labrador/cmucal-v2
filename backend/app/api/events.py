@@ -12,7 +12,7 @@ from app.models.tag import get_tag_by_name, save_tag
 from app.models.event_tag import save_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
-from app.models.models import Event
+from app.models.models import Event, UserSavedEvent, Organization
 import pprint
 from datetime import datetime
 
@@ -201,6 +201,172 @@ def create_single_event_occurrence():
         
         db.commit()  # Only commit if all succeeded
         return jsonify({"status": f"event occurrence {event_occurrence.id} created."}), 201
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("/", methods=["GET"])
+def get_all_events():
+    db = SessionLocal()
+    try:
+        # get user
+        clerk_id = request.args.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+
+        # only select some columns to save loading cost
+        events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime, 
+            Event.location, Event.org_id, Event.category_id)
+
+        # check for saved events
+        if user:
+            added_ids = db.query(UserSavedEvent.event_id).filter_by(user_id=user.id).all()
+            added_ids = set(row[0] for row in added_ids)
+        else:
+            added_ids = set()
+
+        return [
+            {
+                "id": e[0],
+                "title": e[1],
+                "start_datetime": e[2],
+                "end_datetime": e[3],
+                "location": e[4],
+                "org_id": e[5],
+                "category_id": e[6],
+                "user_saved": e[0] in added_ids
+            }
+            for e in events
+        ]
+
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("/<event_id>", methods=["GET"])
+def get_specific_events(event_id):
+    db = SessionLocal()
+    try:
+        # get user
+        clerk_id = request.args.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+        
+        event = db.query(Event).filter_by(id=event_id).first()
+        event_dict = event.as_dict()
+        
+        org = db.query(Organization).filter_by(id=event.org_id).first()
+        event_dict["org"] = org.name
+
+        # check if saved
+        if user:
+            saved = db.query(UserSavedEvent.event_id).filter_by(user_id=user.id, event_id=event_id).first()
+            event_dict["user_saved"] = (saved is not None)
+        else:
+            event_dict["user_saved"] = False
+
+        return jsonify(event_dict)
+
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("user_saved_events", methods=["GET"])
+def get_all_saved_events():
+    db = SessionLocal()
+    try:
+        # get user
+        clerk_id = request.args.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+
+        # only columns required for calendar view
+        events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime)\
+            .join(UserSavedEvent).filter(
+                UserSavedEvent.user_id == user.id
+            ).all()
+
+        return [
+            {
+                "id": e[0],
+                "title": e[1],
+                "start": e[2].isoformat(),
+                "end": e[3].isoformat(),
+            }
+            for e in events
+        ]
+
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("/user_saved_events", methods=["POST"])
+def user_save_event():
+    db = SessionLocal()
+    try:
+        data = request.get_json()
+        # get user
+        clerk_id = data.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+
+        new_entry = UserSavedEvent(
+            user_id = user.id,
+            event_id = data["event_id"],
+            google_event_id = data["google_event_id"],
+            saved_at = datetime.utcnow(),
+        )
+        db.add(new_entry)
+        db.commit()
+        return jsonify({"message": "Event added to user's saved events."}), 200
+        
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("/user_saved_events/<event_id>", methods=["DELETE"])
+def user_unsave_event(event_id):
+    db = SessionLocal()
+    try:
+        data = request.get_json()
+        # get user
+        clerk_id = data.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+
+        user_id = user.id
+        entry = db.query(UserSavedEvent).filter_by(user_id=user_id, event_id=event_id).first()
+
+        if entry:
+            db.delete(entry)
+            db.commit()
+        return jsonify({"message": "Event removed from user's saved events."}), 200 
+               
     except Exception as e:
         db.rollback()
         import traceback

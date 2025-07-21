@@ -58,6 +58,12 @@ def bulk_events():
     calendar_ids = request.get_json().get("calendarIds", [])
     return jsonify(fetch_events_for_calendars(creds, calendar_ids))
 
+import traceback
+from datetime import datetime
+def convert_to_iso8601(dt_str):
+    return datetime.strptime(dt_str, "%a, %d %b %Y %H:%M:%S %Z").isoformat() + "Z"
+    # will move this somewhere else when refactoring
+
 @google_bp.route("/calendar/events/add", methods=["POST"])
 def add_event_route():
     db = SessionLocal()
@@ -77,6 +83,8 @@ def add_event_route():
             return jsonify({"error": "User or calendar not found"}), 400
 
         calendar_id = user.calendar_id
+        data["start"] = convert_to_iso8601(data["start"]) # data["start"].isoformat()
+        data["end"] = convert_to_iso8601(data["end"]) # data["end"].isoformat()
 
         event = add_event(creds, data, calendar_id)
 
