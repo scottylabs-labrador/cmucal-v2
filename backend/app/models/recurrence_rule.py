@@ -2,7 +2,8 @@ from app.models.models import RecurrenceRule
 from app.models.enums import FrequencyType
 from typing import List
 from datetime import date
-from dateutil.rrule import rrule, MONTHLY, WEEKLY, DAILY, YEARLY, FR, MO, TU, WE, TH, SA, SU
+from dateutil.rrule import rrule, MONTHLY, weekday, WEEKLY, DAILY, YEARLY, FR, MO, TU, WE, TH, SA, SU
+from dateutil.parser import parse
 
 def add_recurrence_rule(db, event_id: int, frequency: FrequencyType,  
                         interval: int, start_datetime: str, count: int = None, until: str = None, 
@@ -33,6 +34,13 @@ WEEKDAY_MAP = {
     'FR': FR,
     'SA': SA,
     'SU': SU
+}
+
+FREQ_MAP = {
+    "DAILY": DAILY,
+    "WEEKLY": WEEKLY,
+    "MONTHLY": MONTHLY,
+    "YEARLY": YEARLY,
 }
 
 def parse_by_day_array(by_day_list):

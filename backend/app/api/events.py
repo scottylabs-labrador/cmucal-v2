@@ -40,14 +40,15 @@ def create_event_record():
             org_id = data.get("org_id")
             category_id = data.get("category_id")
             event_tags = data.get("event_tags", None)
+            recurrence = data.get("recurrence", None)
 
             if not org_id or not category_id:
                 db.rollback()
                 return jsonify({"error": "Missing org_id or category_id"}), 400
-            
-            if not title or not start_datetime or not end_datetime:
+
+            if not title or not start_datetime or not end_datetime or not recurrence:
                 db.rollback()
-                return jsonify({"error": "Missing required fields: title, start_datetime, end_datetime"}), 400
+                return jsonify({"error": "Missing required fields: title, start_datetime, end_datetime, recurrence"}), 400
 
             # Assuming you have a function to create an event
             event = save_event(db, org_id=org_id, 
@@ -101,6 +102,42 @@ def create_event_record():
             elif event_type == "CLUB":
                 club = save_club(db, event_id=event.id)
             
+            if recurrence and recurrence != "ONETIME":
+                recurrence_data = data.get("recurrence_data", {})
+                if not recurrence_data:
+                    db.rollback()
+                    return jsonify({"error": "Missing recurrence data"}), 400
+                rule = add_recurrence_rule(db,  
+                                    event_id=event.id, 
+                                    frequency=recurrence_data.get("frequency"),
+                                    interval=recurrence_data.get("interval"),
+                                    start_datetime=recurrence_data.get("start_datetime"),
+                                    count=recurrence_data.get("count", None),
+                                    until=recurrence_data.get("until", None),
+                                    by_day=recurrence_data.get("by_day", None),
+                                    by_month_day=recurrence_data.get("by_month_day", None),
+                                    by_month=recurrence_data.get("by_month", None))
+                occurrence_msg = populate_event_occurrences(db, event=event, rule=rule)
+            else:
+                if not recurrence == "EXCEPTION":
+                    event_saved_at = event.last_updated_at
+                else:
+                    event_saved_at = datetime.utcnow()
+                
+                event_occurrence = save_event_occurrence(db, 
+                                                    event_id=event.id, 
+                                                    org_id=org_id, 
+                                                    category_id=category_id, 
+                                                    title=title,
+                                                    start_datetime=start_datetime,
+                                                    end_datetime=end_datetime,
+                                                    recurrence=recurrence,
+                                                    event_saved_at=event_saved_at,
+                                                    is_all_day=is_all_day,
+                                                    user_edited=user_edited,
+                                                    description=description,
+                                                    location=location,
+                                                    source_url=source_url)
             db.commit()  # Only commit if all succeeded
             return jsonify({"status": "event created", "event_id": event.id}), 201
         except Exception as e:
@@ -110,6 +147,8 @@ def create_event_record():
 
             return jsonify({"error": str(e)}), 500
 
+
+# should only be used for testing purposes
 @events_bp.route("/create_recurrence_rule", methods=["POST"])
 def create_recurrence_rules():
     with SessionLocal() as db:
@@ -149,6 +188,7 @@ def create_recurrence_rules():
             print("❌ Exception:", traceback.format_exc())
             return jsonify({"error": str(e)}), 500
 
+# should only be used for testing purposes
 @events_bp.route("/create_single_event_occurrence", methods=["POST"])
 def create_single_event_occurrence():
     with SessionLocal() as db:

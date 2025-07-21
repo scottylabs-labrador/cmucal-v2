@@ -227,8 +227,20 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           const payload : PayloadType = {
             title: title,
             description: description,
-            start_datetime: startTime ? startTime.toISOString() : null,
-            end_datetime: endTime ? endTime.toISOString() : null,
+            start_datetime: date && startTime
+                            ? dayjs(date)
+                                .hour(startTime.hour())
+                                .minute(startTime.minute())
+                                .utc()
+                                .toISOString()
+                            : null,
+            end_datetime: date && endTime
+                          ? dayjs(date)
+                              .hour(endTime.hour())
+                              .minute(endTime.minute())
+                              .utc()
+                              .toISOString()
+                          : null,
             is_all_day: allDay,
             location: location,
             source_url: sourceURL,
@@ -241,8 +253,8 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           };
 
           if (allDay && !startTime && !endTime) {
-            payload.start_datetime = date ? dayjs(date).startOf('day').toISOString() : null;
-            payload.end_datetime = date ? dayjs(date).endOf('day').toISOString() : null;
+            payload.start_datetime = date ? dayjs(date).startOf('day').utc().toISOString() : null;
+            payload.end_datetime = date ? dayjs(date).endOf('day').utc().toISOString() : null;
           }
 
           if (selectedEventType === "Academic") {
@@ -270,9 +282,9 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 interval,
                 selectedDays,
                 ends: toDBRecurrenceEnds(ends),
-                endDate,
+                endDate: endDate ? dayjs(endDate).endOf('day').utc() : null,
                 occurrences,
-                startDatetime: date ?? dayjs(),
+                startDatetime: payload.start_datetime ? dayjs(payload.start_datetime) : dayjs(),
                 eventId: -1,
                 nthWeek
               };
@@ -313,7 +325,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 ends: "never",
                 endDate: null,
                 occurrences: 0,
-                startDatetime: date,
+                startDatetime: payload.start_datetime ? dayjs(payload.start_datetime) : dayjs(),
                 eventId: -1,
                 nthWeek: localNthWeek
               };
@@ -322,8 +334,8 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             const { dbRecurrence, summary } = formatRecurrence(recurrenceInput);
             console.log("Recurrence settings:", dbRecurrence, summary);
 
-            //   setCustomRecurrenceSummary(summary);
-            //   payload.recurrence_settings = dbRecurrence;
+            payload.recurrence_data = dbRecurrence;
+            setCustomRecurrenceSummary(summary);
 
             // call endpoint to create a recurring event
           } else {
@@ -332,21 +344,21 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           }
 
 
-          // console.log("Submitting payload:", payload);
+          console.log("Submitting payload:", payload);
           
-          // const res = await axios.post("http://localhost:5001/api/events/create_event", payload, {
-          //   headers: {
-          //     "Content-Type": "application/json"
-          //   },
-          //   withCredentials: true
-          // });
+          const res = await axios.post("http://localhost:5001/api/events/create_event", payload, {
+            headers: {
+              "Content-Type": "application/json"
+            },
+            withCredentials: true
+          });
 
-          // if (res.status === 201) {
-          //   alert("Event created successfully!");
-          //   onClose(); // ✅ only close modal if backend call succeeds
-          // } else {
-          //   alert("Something went wrong while submitting.");
-          // }
+          if (res.status === 201) {
+            alert("Event created successfully!");
+            onClose(); // ✅ only close modal if backend call succeeds
+          } else {
+            alert("Something went wrong while submitting.");
+          }
         }
     } catch (err) {
       console.error("Submission error:", err);

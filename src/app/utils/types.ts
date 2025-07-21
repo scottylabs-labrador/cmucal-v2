@@ -82,7 +82,7 @@ export interface PayloadType {
   link?: string;
   registration_required?: boolean;
   recurrence?: string; // "RECURRING" or "ONETIME" or "EXCEPTION"
-  recurrence_summary?: RecurrenceOutput["dbRecurrence"] | null; // Only if recurrence is "RECURRING"
+  recurrence_data?: RecurrenceOutput["dbRecurrence"] | null; // Only if recurrence is "RECURRING"
 }
 
 export interface RecurrenceInput {

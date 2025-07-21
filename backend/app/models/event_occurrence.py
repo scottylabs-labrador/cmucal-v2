@@ -45,14 +45,19 @@ def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, titl
 def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
     count = 0
     duration = event.end_datetime - event.start_datetime
-
-    # Set cutoff to 6 months from now
     six_months_later = datetime.now(timezone.utc) + timedelta(days=180)
 
-    # Override rule.until if needed
+    # Copy rule and clamp `until` only if `count` is not set
     temp_rule = rule
-    temp_rule.until = min(rule.until, six_months_later)
 
+    if rule.count is None:
+        if rule.until is None:
+            temp_rule.until = six_months_later
+        else:
+            temp_rule.until = min(rule.until, six_months_later)
+    # Else: count is set → no need to modify `until`
+
+    # Generate RRULE
     rrule = get_rrule_from_db_rule(temp_rule)
 
     for occ_start in rrule:
@@ -77,5 +82,4 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
         count += 1
 
     db.flush()
-    # db.commit()
-    return f"Populated {count} occurrences for event {event.id} within 6 months"
+    return f"Populated {count} occurrences for event {event.id}"
