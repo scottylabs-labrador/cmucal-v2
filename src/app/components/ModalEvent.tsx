@@ -1,5 +1,5 @@
 import Modal from './Modal';
-import { formatDate } from "~/utils/dateService";
+import { formatDate } from "~/app/utils/dateService";
 import { EventType } from '../types/EventType';
 import axios from "axios";
 import { User } from 'lucide-react';
