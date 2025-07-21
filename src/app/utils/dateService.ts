@@ -100,18 +100,21 @@ export function formatRecurrence(input: RecurrenceInput): RecurrenceOutput {
     YEARLY: "year"
   };
 
-  let by_day: string | null = null;
+  let by_day: string[] | null = null;
   let by_month_day: number | null = null;
   let by_month: number | null = null;
 
   if (frequency === "WEEKLY") {
-    by_day = selectedDays.sort((a, b) => a - b).map(i => weekdayMap[i]).join(",");
+    by_day = selectedDays
+      .filter((i): i is number => typeof i === "number" && i >= 0 && i <= 6)
+      .sort((a, b) => a - b)
+      .map(i => weekdayMap[i]!);
   }
 
   if (frequency === "MONTHLY") {
     if (nthWeek !== null && nthWeek !== undefined) {
       const weekday = weekdayMap[startDatetime.day()];
-      by_day = `${nthWeek}${weekday}`;
+      by_day = [`${nthWeek}${weekday}`]; // e.g. "-1FR"
     } else {
       by_month_day = startDatetime.date();
     }
@@ -135,8 +138,7 @@ export function formatRecurrence(input: RecurrenceInput): RecurrenceOutput {
   } else if (frequency === "MONTHLY") {
     if (nthWeek !== null && nthWeek !== undefined) {
       const dayName = dayNames[startDatetime.day()];
-      const nth =
-        nthWeek === -1 ? "last" : ordinal(nthWeek);
+      const nth = nthWeek === -1 ? "last" : ordinal(nthWeek);
       onPart = `on the ${nth} ${dayName}`;
     } else {
       onPart = `on the ${ordinal(startDatetime.date())}`;
@@ -163,6 +165,7 @@ export function formatRecurrence(input: RecurrenceInput): RecurrenceOutput {
 
   return { dbRecurrence, summary };
 }
+
 
 
 // Helper to convert 1 -> "1st", 2 -> "2nd", etc.

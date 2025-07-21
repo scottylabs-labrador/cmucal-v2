@@ -337,6 +337,7 @@ class RecurrenceRule(Base):
     by_month: Mapped[Optional[list]] = mapped_column(SmallInteger)
     by_month_day: Mapped[Optional[list]] = mapped_column(SmallInteger)
     by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
+    orig_until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
 

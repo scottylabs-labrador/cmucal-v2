@@ -1,6 +1,6 @@
 from app.models.models import RecurrenceRule
 from app.models.enums import FrequencyType
-from datetime import date, datetime
+from datetime import datetime, timedelta, timezone
 from dateutil.rrule import (
     rrule,
     DAILY, WEEKLY, MONTHLY, YEARLY,
@@ -8,11 +8,31 @@ from dateutil.rrule import (
     weekday,
 )
 from typing import List, Optional, Union
-from dateutil.parser import parse
+from dateutil.parser import parse as parse_datetime
 
 def add_recurrence_rule(db, event_id: int, frequency: FrequencyType,  
                         interval: int, start_datetime: str, count: int = None, until: str = None, 
                         by_month: int = None, by_month_day: int = None, by_day: List[str] = None):
+    """
+    Adds a recurrence rule to the database. If count is set, it will respect the count.
+    If count is not set and until is set, it will respect the until date with a 6-month cap, and add orig_until to the database.
+    If both count and until are not set, it will use a 6-month cap from now, and add orig_until to the database.
+
+    when rendering the rule, it will use the count or until date to determine the end of the recurrence (regenerate if count is NULL).
+    """
+    six_months_later = datetime.now(timezone.utc) + timedelta(days=180)
+    orig_until = None
+
+    if isinstance(until, str):
+        until = parse_datetime(until)
+
+    if count is None:
+        orig_until = until
+        if until is None:
+            until = six_months_later
+        else:
+            until = min(until, six_months_later)
+
     new_rule = RecurrenceRule(
         frequency=frequency,
         interval=interval,
@@ -22,7 +42,8 @@ def add_recurrence_rule(db, event_id: int, frequency: FrequencyType,
         event_id=event_id,  
         by_month=by_month,
         by_month_day=by_month_day,
-        by_day=by_day
+        by_day=by_day,
+        orig_until=orig_until  # Store the original until date if applicable
     )
 
     db.add(new_rule)

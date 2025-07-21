@@ -123,7 +123,7 @@ export default function CustomRecurrenceModal({ open, onClose, interval, setInte
           onChange={(e) => setEnds(e.target.value)}
         >
           <FormControlLabel value="never" control={<Radio />} label="Never" />
-          <FormControlLabel value="on" control={<Radio />} label="On" />
+          <FormControlLabel value="on" control={<Radio />} label="On (inclusive end date)" />
           {ends === "on" && (
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker

@@ -104,7 +104,7 @@ export interface RecurrenceOutput {
     count: number | null;
     until: string | null;
     event_id: number;
-    by_day: string | null;
+    by_day: string[] | null;
     by_month: number | null;
     by_month_day: number | null;
     start_datetime: string;

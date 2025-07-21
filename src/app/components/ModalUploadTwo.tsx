@@ -24,7 +24,13 @@ import {
   LocalizationProvider,
 } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezonePlugin from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezonePlugin);
 
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
@@ -83,6 +89,13 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   // recurrence settings
   const [showCustomRecurrence, setShowCustomRecurrence] = useState(false);
   const [customRecurrenceSummary, setCustomRecurrenceSummary] = useState<string | null>(null);
+
+  // const [timezone, setTimezone] = useState("America/New_York");
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timezones = Intl.supportedValuesOf?.('timeZone') || [
+    "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+    "UTC", "Europe/London", "Asia/Tokyo", "Asia/Qatar"
+  ];
 
   const [interval, setInterval] = useState(1);
   const [frequency, setFrequency] = useState("WEEKLY"); // default to weekly
@@ -228,19 +241,11 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             title: title,
             description: description,
             start_datetime: date && startTime
-                            ? dayjs(date)
-                                .hour(startTime.hour())
-                                .minute(startTime.minute())
-                                .utc()
-                                .toISOString()
-                            : null,
+              ? dayjs.tz(date.format("YYYY-MM-DD") + "T" + startTime.format("HH:mm"), timezone).utc().toISOString()
+              : null,
             end_datetime: date && endTime
-                          ? dayjs(date)
-                              .hour(endTime.hour())
-                              .minute(endTime.minute())
-                              .utc()
-                              .toISOString()
-                          : null,
+              ? dayjs.tz(date.format("YYYY-MM-DD") + "T" + endTime.format("HH:mm"), timezone).utc().toISOString()
+              : null,
             is_all_day: allDay,
             location: location,
             source_url: sourceURL,
@@ -254,7 +259,8 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
 
           if (allDay && !startTime && !endTime) {
             payload.start_datetime = date ? dayjs(date).startOf('day').utc().toISOString() : null;
-            payload.end_datetime = date ? dayjs(date).endOf('day').utc().toISOString() : null;
+            payload.end_datetime = date ? dayjs(date).add(1, 'day').startOf('day').utc().toISOString() : null;
+
           }
 
           if (selectedEventType === "Academic") {
@@ -511,6 +517,50 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             helperText={titleError ? "Title is required" : ""}
             className="mb-6"
           />
+
+            {/* time zone */}
+          <FormControl variant="standard" fullWidth >
+            <InputLabel
+              shrink={false}
+              sx={{
+                color: "blue",
+                fontWeight: 500,
+                fontSize: "0.875rem", // Small text (14px)
+                '&.Mui-focused': { color: "grey" },
+              }}
+            >
+              {timezone}
+            </InputLabel>
+
+            <Select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              disableUnderline
+              displayEmpty
+              sx={{
+                color: "blue",
+                fontWeight: 500,
+                fontSize: "0.875rem", // Small text (14px)
+                "& .MuiSelect-icon": {
+                  color: "grey",
+                },
+                "& fieldset": {
+                  border: "none",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
+                },
+              }}
+              renderValue={(selected) => selected || "Timezone"}
+            >
+              {timezones.map((tz) => (
+                <MenuItem key={tz} value={tz}>
+                  {tz}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
 
           {/* Date & Time */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
