@@ -24,6 +24,7 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@headlessui/react": "^2.2.4",
     "@mui/material": "^6.4.7",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@types/fullcalendar": "^3.8.0",

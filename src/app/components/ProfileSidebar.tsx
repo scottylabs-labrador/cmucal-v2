@@ -1,60 +1,53 @@
 "use client";
 
-import { FiFilter } from "react-icons/fi";
+import { useState } from "react";
+import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 import Accordion from "./Accordion";
 import ToggleItem from "./ToggleItem";
-import EventCard from "./EventCard";
-import CourseSearch from "./CourseSearch";
-import { sampleEvent } from "../profile/data/mockData";
 import { Course, Club } from "../utils/types";
 
 interface ProfileSidebarProps {
   courses: Course[];
   clubs: Club[];
-  onToggleCourse: (courseId: string, optionId: string) => void;
-  onToggleClub: (clubId: string, optionId: string) => void;
-  onCourseSelect: (course: Course) => void;
+  onRemoveCategory: (categoryId: number) => void;
 }
 
-/**
- * ProfileSidebar - Sidebar for the profile page that shows courses, clubs, and upcoming events
- */
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ 
   courses, 
   clubs, 
-  onToggleCourse, 
-  onToggleClub,
-  onCourseSelect
+  onRemoveCategory
 }) => {
+  const [toggledCategories, setToggledCategories] = useState<Record<number, boolean>>({});
+  const [isCoursesOpen, setIsCoursesOpen] = useState(true);
+  const [isClubsOpen, setIsClubsOpen] = useState(true);
+
+  const handleToggle = (categoryId: number) => {
+    setToggledCategories(prev => ({...prev, [categoryId]: !prev[categoryId]}));
+  };
+
   return (
-    <div className="h-full dark:bg-gray-700 dark:text-gray-200">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">My Schedule</h2>
-        <button className="text-blue-600 text-sm flex items-center dark:text-blue-300">
-          <FiFilter size={14} className="mr-1" /> Filter
-        </button>
-      </div>
-
+    <div className="h-full dark:bg-gray-700 dark:text-gray-200 p-4">
       <div className="mb-6">
-        <div className="mb-2">
-          <h3 className="text-md font-medium mb-2">My Courses</h3>
-          <CourseSearch onCourseSelect={onCourseSelect} />
+        <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={() => setIsCoursesOpen(!isCoursesOpen)}>
+          <h3 className="text-gray-600 dark:text-gray-400">My Courses</h3>
+          {isCoursesOpen ? <FiChevronUp className="w-5 h-5 text-gray-600" /> : <FiChevronDown className="w-5 h-5 text-gray-600" />}
         </div>
 
-        {courses.map(course => (
+        {isCoursesOpen && courses.map(course => (
           <Accordion 
-            key={course.id} 
-            title={`${course.courseId} ${course.name}`}
-            subtitle={`SECTION ${course.section}`}
-            color="bg-red-400"
-            badge="Spring 2025"
+            key={course.org_id} 
+            title={course.course_num}
+            subtitle={course.course_name}
+            onRemove={() => course.categories.forEach(cat => onRemoveCategory(cat.id))}
+            color="red"
           >
-            {course.options.map(option => (
+            {course.categories.map(category => (
               <ToggleItem
-                key={option.id}
-                checked={option.selected}
-                onChange={() => onToggleCourse(course.id, option.id)}
-                label={option.type}
+                key={category.id}
+                label={category.name}
+                checked={toggledCategories[category.id] !== false}
+                onChange={() => handleToggle(category.id)}
+                color="red"
               />
             ))}
           </Accordion>
@@ -62,34 +55,29 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       </div>
 
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-md font-medium">My Clubs</h3>
-          <button className="text-blue-600 text-sm flex items-center">
-            <FiFilter size={14} className="mr-1" /> Add
-          </button>
+        <div className="flex justify-between items-center mb-4 cursor-pointer" onClick={() => setIsClubsOpen(!isClubsOpen)}>
+          <h3 className="text-gray-600 dark:text-gray-400">My Clubs</h3>
+          {isClubsOpen ? <FiChevronUp className="w-5 h-5 text-gray-600" /> : <FiChevronDown className="w-5 h-5 text-gray-600" />}
         </div>
 
-        {clubs.map(club => (
+        {isClubsOpen && clubs.map(club => (
           <Accordion 
-            key={club.id} 
+            key={club.org_id} 
             title={club.name}
-            color="bg-green-400"
+            onRemove={() => club.categories.forEach(cat => onRemoveCategory(cat.id))}
+            color="green"
           >
-            {club.options.map(option => (
+            {club.categories.map(category => (
               <ToggleItem
-                key={option.id}
-                checked={option.selected}
-                onChange={() => onToggleClub(club.id, option.id)}
-                label={option.type}
+                key={category.id}
+                label={category.name}
+                checked={toggledCategories[category.id] !== false}
+                onChange={() => handleToggle(category.id)}
+                color="green"
               />
             ))}
           </Accordion>
         ))}
-      </div>
-
-      <div>
-        <h3 className="text-md font-medium mb-2">Upcoming Events</h3>
-        <EventCard event={sampleEvent} />
       </div>
     </div>
   );
