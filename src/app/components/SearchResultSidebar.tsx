@@ -1,6 +1,6 @@
 "use client";
-import { formatDate } from "~/utils/dateService";
-import { useState, useEffect } from "react";
+import { formatDate } from "~/app/utils/dateService";
+import { useState, useEffect  } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 

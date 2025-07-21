@@ -39,7 +39,8 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "host": "IBM",
     "link": "https://cmu.joinhandshake.com/stu/events/1759474?ref=events-search",
     "registration_required": true,
-    "event_tags": ["computer science", "Artificial Intelligence"]
+    "event_tags": ["computer science", "Artificial Intelligence"],
+    "recurrence": "ONETIME"
 }'
 
 // academic Event + event tags
@@ -58,7 +59,8 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "course_num": "10-301",
     "course_name": "Introduction to Machine Learning",
     "instructors": [],
-    "event_tags": ["computer science"]
+    "event_tags": ["computer science"],
+    "recurrence": "ONETIME"
 }'
 
 // club Event + event tags
@@ -73,7 +75,8 @@ curl -X POST http://localhost:5001/api/events/create_event \
     "source_url": "",
     "event_type": "CLUB",
     "org_id": 7,
-    "category_id": 8
+    "category_id": 8,
+    "recurrence": "ONETIME"
 }'
 
 // if only add event_occurrence (no recurrence)

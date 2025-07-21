@@ -3,6 +3,7 @@ from app.models.enums import RecurrenceType
 from app.models.recurrence_rule import get_rrule_from_db_rule
 from datetime import datetime, timedelta, timezone
 from typing import List
+import copy
 
 ### need to check type of event_saved_at, start_datetime, end_datetime before using them
 def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, title: str, 
@@ -43,17 +44,38 @@ def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, titl
 
 
 def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
+    """
+    Populate occurrences for a recurring event based on the recurrence rule.
+    If count is set, respects the count -> No limit from until or 6-month cap.
+    If count is not set and until is set, respects the until date with a 6-month cap, and stores the orig until date in the rule. (see add_recurrence_rule)
+    If both count and until are not set, uses a 6-month cap from now, and stores the orig until date in the rule. (see add_recurrence_rule)
+    Args:
+        db: Database session.
+        event: The Event object for which occurrences are to be populated.
+        rule: The RecurrenceRule object defining the recurrence pattern.
+    Returns:
+        A message indicating the number of occurrences populated.
+    """
     count = 0
     duration = event.end_datetime - event.start_datetime
-
-    # Set cutoff to 6 months from now
     six_months_later = datetime.now(timezone.utc) + timedelta(days=180)
 
-    # Override rule.until if needed
-    temp_rule = rule
-    temp_rule.until = min(rule.until, six_months_later)
+    temp_rule = rule # Create a copy of the rule to avoid modifying the original
+
+    # ✅ Fallback for `until`
+    if not rule.count:
+        if not rule.until:
+            temp_rule.until = six_months_later
+        else:
+            # ❗ make sure both are timezone-aware
+            temp_rule.until = min(rule.until, six_months_later)
+
+    print("➡️ rule.start_datetime =", rule.start_datetime)
+    print("➡️ rule.until =", rule.until)
+    print("➡️ temp_rule.until =", temp_rule.until)
 
     rrule = get_rrule_from_db_rule(temp_rule)
+    print("➡️ FIRST OCCURRENCE:", next(iter(rrule), "None"))
 
     for occ_start in rrule:
         occ_end = occ_start + duration
@@ -77,5 +99,4 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
         count += 1
 
     db.flush()
-    # db.commit()
-    return f"Populated {count} occurrences for event {event.id} within 6 months"
+    return f"Populated {count} occurrences for event {event.id}"
