@@ -16,13 +16,15 @@ import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import FullCalendarCard from "./FullCalendarCard";
 
+import { EventType } from "../types/EventType";
 
 type Props = {
   events: EventInput[];
   setEvents: React.Dispatch<React.SetStateAction<any[]>>;
+  setEventId: (eventId: string) => void;
 };
 
-const Calendar: FC<Props> = ({ events, setEvents }) => {
+const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
   // Define state with EventInput type
   const { gcalEvents } = useGcalEvents();
 
@@ -45,37 +47,10 @@ const Calendar: FC<Props> = ({ events, setEvents }) => {
 
 
   console.log("Merged Events:", mergedEvents);
-  // const [mergedEvents, setMergedEvents] = useState(events);
-  const { user } = useUser();
 
-  
   const handleEventClick = async (info: EventClickArg) => {
-    const confirmed = confirm(`Remove "${info.event.title}" from your calendar?`);
-    if (!confirmed) return;
-
-    try {
-      // Delete from Google Calendar via backend
-      await axios.delete(`http://localhost:5001/api/google/calendar/events/${info.event.id}`, {
-        data: {
-          user_id: user?.id,
-        },
-        withCredentials: true,
-      });
-      
-
-      // Remove from calendar UI immediately
-      info.event.remove();
-
-      // Update local state so sidebar reflects it
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.id === info.event.id ? { ...e, added: false } : e
-        )
-      );
-    } catch (error) {
-      console.error("Failed to delete event:", error);
-      alert("Something went wrong deleting this event.");
-    }
+    console.log(info.event.extendedProps);
+    setEventId(info.event.id)
   };
 
   return (

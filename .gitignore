@@ -52,3 +52,6 @@ backend/venv
 .idea
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/

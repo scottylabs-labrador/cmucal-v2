@@ -58,6 +58,12 @@ def bulk_events():
     calendar_ids = request.get_json().get("calendarIds", [])
     return jsonify(fetch_events_for_calendars(creds, calendar_ids))
 
+import traceback
+from datetime import datetime
+def convert_to_iso8601(dt_str):
+    return datetime.strptime(dt_str, "%a, %d %b %Y %H:%M:%S %Z").isoformat() + "Z"
+    # will move this somewhere else when refactoring
+
 @google_bp.route("/calendar/events/add", methods=["POST"])
 def add_event_route():
     with SessionLocal() as db:
@@ -95,7 +101,6 @@ def add_event_route():
         except Exception as e:
             db.rollback()
             return jsonify({ "error": str(e) }), 500
-    
 
 @google_bp.route("/calendar/events/<local_event_id>", methods=["DELETE"])
 def delete_event_route(local_event_id):

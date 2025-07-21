@@ -1,76 +1,129 @@
 "use client";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import axios from "axios";
+
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import Calendar from "@components/Calendar";
-import { useState } from "react";
 import SearchResultsSidebar from "@components/SearchResultSidebar";
+import { EventType } from "../types/EventType";
+import ModalEvent from "../components/ModalEvent";
 
-
-// const initialSearchResults = [
-//   { id: "1", title: "TartanHacks Hackathon", date: "Feb 2, 10:00AM - Feb 3, 5:00PM", location: "Rangos Auditorium" , added: false },
-//   { id: "2", title: "CMU AI Conference", date: "Apr 16, 9:00AM - 4:00PM", location: "Gates 6115", added: false },
-//   { id: "3", title: "ScottySpark", date: "Apr 19, 5:00PM - 8:00PM", location: "Swartz Center, Tepper", added: false },
-// ];
-
-
-const initialEvents = [
-  {
-    id: "TartanHacks Hackathon-2025-02-02T10:00:00",
-    title: "TartanHacks Hackathon",
-    start: "2025-05-02T10:00:00",
-    end: "2025-05-03T17:00:00",
-    location: "Rangos Auditorium",
-    added: false,
-    classNames: ["cmucal-event"],
-  },
-  {
-    id: "CMU AI Conference-2025-04-16T09:00:00",
-    title: "CMU AI Conference",
-    start: "2025-05-16T09:00:00",
-    end: "2025-05-16T16:00:00",
-    location: "Gates 6115",
-    added: false,
-    classNames: ["cmucal-event"],
-  },
-  {
-    id: "ScottySpark-2025-04-19T17:00:00",
-    title: "ScottySpark",
-    start: "2025-05-19T17:00:00",
-    end: "2025-05-19T20:00:00",
-    location: "Swartz Center, Tepper",
-    added: false,
-    classNames: ["cmucal-event"],
-  },
-];
-
-// interface ExplorePageProps {
-//   gcalEvents: any[];
-//   setGcalEvents: React.Dispatch<React.SetStateAction<any[]>>;
-// }
 
 export default function ExplorePage() {
-  const [events, setEvents] = useState(initialEvents);
+  const { user } = useUser();
+  const [events, setEvents] = useState<EventType[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [eventId, setEventId] = useState<string>("");
 
-  const calendarEvents = events
-    .filter((event) => event.added)
-    .map((event) => ({
-      id: event.id,
-      title: event.title,
-      start: event.start,
-      end: event.end,
-      classNames: event.classNames,
-    }));
-
-  const handleEventDelete = (id: string) => {
-    const updated = events.map((event) =>
-      event.id === id ? { ...event, added: false } : event
-    );
-    setEvents(updated);
+  async function fetchCalendarEvents() {
+    // get user saved events
+    const savedResponse = await axios.get("http://localhost:5001/api/events/user_saved_events", {
+      params: {
+        user_id: user?.id,
+      },
+      withCredentials: true,
+    })
+    setCalendarEvents(savedResponse.data)
   };
 
+  useEffect(() => {
+    async function fetchEvents() {
+      // get all events
+      const allResponse = await axios.get("http://localhost:5001/api/events", {
+        params: {
+          user_id: user?.id,
+        }, 
+        withCredentials: true,         
+      });
+      setEvents(allResponse.data)
+    };
+    fetchEvents()
+    fetchCalendarEvents()
+  }, []); 
+
+
+  const toggleAdded = async (thisId: string) => {
+    const updatedEvents = [...events];
+    const index = updatedEvents.findIndex((e) => e.id === thisId);
+    const event = updatedEvents[index];
+
+    if (!event) return;
+
+    // 1. Toggle locally - update attribute
+    event.user_saved = !event.user_saved;
+    setEvents(updatedEvents);
+
+    // 2. Update the User_saved_events table in database
+    try {
+      if (event.user_saved) {
+        // Add the event to current user's calendar
+        await axios.post("http://localhost:5001/api/events/user_saved_events", {
+          user_id: user?.id,
+          event_id: event.id,
+          google_event_id: event.id, // [Q|TODO] is google event id needed in this table
+        }, {
+          withCredentials: true,
+        }); 
+      } else {
+        // Remove the event from current user's calendar
+        await axios.delete(`http://localhost:5001/api/events/user_saved_events/${event.id}`, {
+          data: {
+          user_id: user?.id,
+          google_event_id: event.id, // [Q|TODO] is google event id needed in this table
+        },
+          withCredentials: true,
+        });
+      }
+    } catch (err) {
+      console.error("Error saving / unsaving the event, ", err);
+    }
+
+    // 3. Update calendar view
+    fetchCalendarEvents();
+
+    // 4. Sync with Google Calendar
+    try {
+      if (event.user_saved) {
+        // Add to Google Calendar via backend
+        await axios.post("http://localhost:5001/api/google/calendar/events/add", {
+          user_id: user?.id,
+          local_event_id: event.id,
+          title: event.title,
+          start: event.start_datetime,
+          end: event.end_datetime,
+        }, {
+          withCredentials: true,
+        });        
+      } else {
+        // Remove from Google Calendar via backend
+        await axios.delete(`http://localhost:5001/api/google/calendar/events/${event.id}`, {
+          data: {
+            user_id: user?.id,
+          },
+          withCredentials: true,
+        });
+        
+      }
+    } catch (err) {
+      console.error("Error syncing with Google Calendar:", err);
+    }
+  };
+
+
   return (
+    <div>
     <TwoColumnLayout
-      leftContent={<SearchResultsSidebar events={events} setEvents={setEvents} />}
-      rightContent={<Calendar events={calendarEvents}  setEvents={setEvents}/>}
+      leftContent={<SearchResultsSidebar events={events} setEvents={setEvents} toggleAdded={toggleAdded} setEventId={setEventId}/>}
+      rightContent={<Calendar events={calendarEvents}  setEvents={setEvents} setEventId={setEventId}/>}
     />
+    
+    <ModalEvent 
+      show={eventId ? true : false} 
+      onClose={() => setEventId("")}  
+      eventId={eventId}
+      toggleAdded={toggleAdded}>
+    </ModalEvent>
+    </div>
   );
 }

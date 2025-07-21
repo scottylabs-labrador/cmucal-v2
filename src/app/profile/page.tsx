@@ -1,122 +1,87 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@clerk/nextjs";
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import { EventInput } from "@fullcalendar/core";
 import ProfileSidebar from "../components/ProfileSidebar";
-import { sampleEvent, mockCalendarEvents, userCourses, userClubs } from "./data/mockData";
 import { Course, Club } from "../utils/types";
-import { 
-  calculateMatchScore, 
-  parseEventTitle, 
-  shouldShowCourseEvent, 
-  shouldShowClubEvent 
-} from "../utils/helpers"; 
+import { getSchedule, removeCategoryFromSchedule } from "../../utils/api/schedule";
 import Calendar from "../components/Calendar";
 
 /**
  * Profile page with personalized calendar view
  */
 export default function Profile() {
-  const [courses, setCourses] = useState<Course[]>(userCourses);
-  const [clubs, setClubs] = useState<Club[]>(userClubs);
+  const { getToken, isLoaded, userId } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCourseSelect = (course: Course) => {
-    // Check if course already exists
-    if (!courses.some(c => c.courseId === course.courseId)) {
-      setCourses(prev => [...prev, {
-        ...course,
-        options: [
-          { id: `${course.id}-1`, type: "Lecture and recitation", selected: true },
-          { id: `${course.id}-2`, type: "Office hours", selected: true },
-          { id: `${course.id}-3`, type: "Supplemental instruction sessions", selected: true }
-        ]
-      }]);
-    }
-  };
-
-  // Generic toggle function for options
-  const toggleOption = <T extends { id: string, options: { id: string, selected: boolean }[] }>(
-    itemId: string,
-    optionId: string,
-    items: T[],
-    setItems: React.Dispatch<React.SetStateAction<T[]>>
-  ) => {
-    setItems(prevItems => 
-      prevItems.map(item => 
-        item.id === itemId
-          ? {
-              ...item,
-              options: item.options.map(option => 
-                option.id === optionId
-                  ? { ...option, selected: !option.selected }
-                  : option
-              )
-            }
-          : item
-      )
-    );
-  };
-
-  const toggleCourseOption = (courseId: string, optionId: string) => {
-    toggleOption(courseId, optionId, courses, setCourses);
-  };
-
-  const toggleClubOption = (clubId: string, optionId: string) => {
-    toggleOption(clubId, optionId, clubs, setClubs);
-  };
-
-  // Determine if an event should be visible based on user selections
-  const shouldShowEvent = (eventId: string, title: string) => {
-    // Sample event is always visible
-    if (eventId === sampleEvent._id.$oid) return true;
-
-    // Parse the event title
-    const { entityId, eventType } = parseEventTitle(title, clubs);
-
-    // Handle course events
-    if (entityId) {
-      const course = courses.find(c => c.courseId === entityId);
-      if (course) return shouldShowCourseEvent(course, eventType);
-    }
-
-    // Handle club events
-    for (const club of clubs) {
-      if (title.includes(club.name)) {
-        return shouldShowClubEvent(club, eventType);
+  const fetchSchedule = useCallback(async () => {
+    if (!isLoaded || !userId) return;
+    setLoading(true);
+    try {
+      const data = await getSchedule(userId);
+      if (data) {
+        setCourses(data.courses || []);
+        setClubs(data.clubs || []);
       }
+    } catch (error) {
+      console.error("Failed to fetch schedule", error);
+    } finally {
+      setLoading(false);
     }
+  }, [isLoaded, getToken, userId]);
 
-    return true; // Default visibility
+  useEffect(() => {
+    fetchSchedule();
+  }, [fetchSchedule]);
+
+  useEffect(() => {
+    const newCalendarEvents: EventInput[] = [];
+    
+    courses.forEach(course => {
+      Object.values(course.events).flat().forEach((event) => {
+        newCalendarEvents.push({
+          id: event.id.toString(),
+          title: event.title,
+          start: event.start_datetime,
+          end: event.end_datetime,
+          allDay: event.is_all_day,
+          extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
+        });
+      });
+    });
+
+    clubs.forEach(club => {
+        Object.values(club.events).flat().forEach((event) => {
+          newCalendarEvents.push({
+            id: event.id.toString(),
+            title: event.title,
+            start: event.start_datetime,
+            end: event.end_datetime,
+            allDay: event.is_all_day,
+            extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
+          });
+        });
+      });
+
+    setCalendarEvents(newCalendarEvents);
+  }, [courses, clubs]);
+
+  const handleRemoveCategory = async (categoryId: number) => {
+    try {
+      await removeCategoryFromSchedule(categoryId, userId);
+      fetchSchedule();
+    } catch (error) {
+      console.error("Failed to remove category", error);
+    }
   };
 
-  // Update displayed events when selections change
-  useEffect(() => {
-    const allEvents = [
-      { 
-        id: sampleEvent._id.$oid,
-        title: `${sampleEvent.course_id}: ${sampleEvent.resource_type}`, 
-        start: sampleEvent.start_datetime,
-        end: sampleEvent.end_datetime,
-        extendedProps: {
-          location: sampleEvent.location,
-          instructor: sampleEvent.instructor,
-          course_name: sampleEvent.course_name
-        },
-        color: "#f87171",
-        // need these fields for the calendar component. 
-        // feel free to change the calendar component as long as it doesn't break the explore page
-        classNames: ["cmucal-event"],
-        allDay: false,
-        added: true,
-      },
-      ...mockCalendarEvents
-    ];
-
-    setCalendarEvents(
-      allEvents.filter(event => shouldShowEvent(event.id as string, event.title as string))
-    );
-  }, [courses, clubs]);
+  if (loading || !isLoaded) {
+    return <div>Loading your schedule...</div>;
+  }
 
   return (
     <TwoColumnLayout 
@@ -124,9 +89,7 @@ export default function Profile() {
         <ProfileSidebar 
           courses={courses} 
           clubs={clubs} 
-          onToggleCourse={toggleCourseOption} 
-          onToggleClub={toggleClubOption}
-          onCourseSelect={handleCourseSelect}
+          onRemoveCategory={handleRemoveCategory}
         />
       } 
       rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents}/>} 
