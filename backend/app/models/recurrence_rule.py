@@ -1,8 +1,13 @@
 from app.models.models import RecurrenceRule
 from app.models.enums import FrequencyType
-from typing import List
-from datetime import date
-from dateutil.rrule import rrule, MONTHLY, weekday, WEEKLY, DAILY, YEARLY, FR, MO, TU, WE, TH, SA, SU
+from datetime import date, datetime
+from dateutil.rrule import (
+    rrule,
+    DAILY, WEEKLY, MONTHLY, YEARLY,
+    MO, TU, WE, TH, FR, SA, SU,
+    weekday,
+)
+from typing import List, Optional, Union
 from dateutil.parser import parse
 
 def add_recurrence_rule(db, event_id: int, frequency: FrequencyType,  
@@ -43,22 +48,27 @@ FREQ_MAP = {
     "YEARLY": YEARLY,
 }
 
-def parse_by_day_array(by_day_list):
+def parse_by_day_array(by_day_list: Optional[List[str]]) -> Optional[List[Union[weekday]]]:
     """
-    Converts a list like ["MO", "3FR", "-1TU"] into rrule.byweekday objects.
+    Converts a list like ["MO", "3FR", "-1TU"] into dateutil.rrule weekday objects.
     """
+    if not by_day_list:
+        return None
+
     byweekday = []
     for item in by_day_list:
-        if item is None:
+        if not item:
             continue
         item = item.strip().upper()
 
-        if len(item) >= 3 and item[:-2].lstrip("-").isdigit():
-            # Positional day, e.g. "3FR" or "-1TU"
+        if len(item) > 2 and item[:-2].lstrip("-").isdigit():
             pos = int(item[:-2])
             day = item[-2:]
             if day in WEEKDAY_MAP:
-                byweekday.append(WEEKDAY_MAP[day](pos))
+                day_const = WEEKDAY_MAP[day]
+                byweekday.append(weekday(day_const.weekday, pos)) 
+            else:
+                print(f"Skipping unrecognized day: {item}")
         elif item in WEEKDAY_MAP:
             byweekday.append(WEEKDAY_MAP[item])
         else:
@@ -66,7 +76,15 @@ def parse_by_day_array(by_day_list):
 
     return byweekday if byweekday else None
 
-def get_rrule_from_db_rule(rule):
+
+
+
+def get_rrule_from_db_rule(rule) -> rrule:
+    """
+    Constructs a dateutil.rrule object from a database recurrence rule.
+    Assumes `rule` has attributes: frequency, interval, start_datetime, count, until,
+    by_day (List[str]), by_month (int or List[int]), by_month_day (int or List[int]).
+    """
     freq_map = {
         'DAILY': DAILY,
         'WEEKLY': WEEKLY,
@@ -74,18 +92,20 @@ def get_rrule_from_db_rule(rule):
         'YEARLY': YEARLY
     }
 
-    freq = freq_map[rule.frequency.value]
+    # Fix: allow either Enum or string
+    raw_freq = rule.frequency.value if hasattr(rule.frequency, "value") else rule.frequency
+    freq = freq_map[raw_freq]
+    if freq is None:
+        raise ValueError(f"Unsupported frequency: {rule.frequency.value}")
+
     interval = rule.interval or 1
     start_datetime = rule.start_datetime
     count = rule.count
     until = rule.until
 
-    # Parse by_day
     by_day_array = parse_by_day_array(rule.by_day or [])
-
     by_month = rule.by_month
     by_month_day = rule.by_month_day
-
 
     kwargs = {
         "freq": freq,
@@ -104,3 +124,4 @@ def get_rrule_from_db_rule(rule):
         kwargs["bymonthday"] = [by_month_day] if isinstance(by_month_day, int) else by_month_day
 
     return rrule(**kwargs)
+
