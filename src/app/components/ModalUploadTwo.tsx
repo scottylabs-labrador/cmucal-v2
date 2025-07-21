@@ -90,7 +90,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [showCustomRecurrence, setShowCustomRecurrence] = useState(false);
   const [customRecurrenceSummary, setCustomRecurrenceSummary] = useState<string | null>(null);
 
-  // const [timezone, setTimezone] = useState("America/New_York");
+  // by default timezone is set to the user's current local time zone as detected by the browser.
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const timezones = Intl.supportedValuesOf?.('timeZone') || [
     "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
