@@ -63,6 +63,28 @@ export interface AccordionProps {
   badge?: string;
 }
 
+export interface PayloadType {
+  title: string;
+  description?: string;
+  start_datetime?: string | null;
+  end_datetime?: string | null;
+  is_all_day?: boolean;
+  location: string;
+  source_url?: string;
+  event_type: string;
+  category_id: number;
+  org_id: string;
+  event_tags?: string[];
+  course_num?: string;
+  course_name?: string;
+  instructors?: string[];
+  host?: string;
+  link?: string;
+  registration_required?: boolean;
+  recurrence?: string; // "RECURRING" or "ONETIME" or "EXCEPTION"
+  recurrence_summary?: RecurrenceOutput["dbRecurrence"] | null; // Only if recurrence is "RECURRING"
+}
+
 export interface RecurrenceInput {
   frequency: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
   interval: number;
@@ -72,6 +94,7 @@ export interface RecurrenceInput {
   occurrences: number;
   startDatetime: Dayjs;
   eventId: number;
+  nthWeek?: number | null;    // For monthly recurrence: 1-5 or -1 for last week
 }
 
 export interface RecurrenceOutput {

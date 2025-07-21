@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import {
   TextField,
   Autocomplete,
@@ -31,8 +31,9 @@ import { useUser } from "@clerk/nextjs";
 import CustomRecurrenceModal from "./CustomRecurrenceModal"; 
 import { set } from "lodash";
 import { start } from "repl";
-import { RecurrenceInput } from "../utils/types";
-import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency } from "../utils/dateService";
+import { RecurrenceInput, PayloadType } from "../utils/types";
+import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency, getNthDayOfWeekInMonth, isLastWeekdayInMonth } from "../utils/dateService";
+import { el } from "node_modules/@fullcalendar/core/internal-common";
 
 
 interface ModalProps {
@@ -49,25 +50,7 @@ type EventTypeValue = typeof eventTypesDict[EventTypeLabel];
 
 const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
-interface PayloadType {
-  title: string;
-  description?: string;
-  start_datetime?: string | null;
-  end_datetime?: string | null;
-  is_all_day?: boolean;
-  location: string;
-  source_url?: string;
-  event_type: string;
-  category_id: number;
-  org_id: string;
-  event_tags?: string[];
-  course_num?: string;
-  course_name?: string;
-  instructors?: string[];
-  host?: string;
-  link?: string;
-  registration_required?: boolean;
-}
+
 
 
 
@@ -104,9 +87,42 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
   const [interval, setInterval] = useState(1);
   const [frequency, setFrequency] = useState("WEEKLY"); // default to weekly
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // M-F
+  const [nthWeek, setNthWeek] = useState<number | null>(null);
   const [ends, setEnds] = useState("never");
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
-  const [occurrences, setOccurrences] = useState(13);
+  const [occurrences, setOccurrences] = useState<number>(13);
+
+  const recurrenceOptions = useMemo(() => {
+    if (!date) return [];
+
+    const nth = getNthDayOfWeekInMonth(date);
+    const nthSuffix = ['th', 'st', 'nd', 'rd'][((nth % 10 > 3) || (nth >= 11 && nth <= 13)) ? 0 : nth % 10];
+
+    return [
+      { value: "none", label: "Does not repeat" },
+      { value: "daily", label: "Daily" },
+      { value: "weekly", label: `Weekly on ${date.format('dddd')}` },
+      {
+        value: "monthly_nth",
+        label: `Monthly on the ${nth}${nthSuffix} ${date.format('dddd')}`,
+      },
+      {
+        value: "monthly_last",
+        label: `Monthly on the last ${date.format('dddd')}`,
+        hidden: !isLastWeekdayInMonth(date),
+      },
+      {
+        value: "yearly",
+        label: `Annually on ${date.format('MMMM D')}`,
+      },
+      { value: "weekdays", label: "Every weekday (Monday to Friday)" },
+      {
+        value: "custom",
+        label: customRecurrenceSummary ? `Custom: ${customRecurrenceSummary}` : "Custom...",
+      }
+    ];
+  }, [date, customRecurrenceSummary]);
+
 
   // Career
   const [requireRegistration, setRequireRegistration] = useState(false);
@@ -124,7 +140,7 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
     "15-251: Great Theoretical Ideas",
     "15-281: Artificial Intelligence",
     "15-410: Operating Systems",
-    // Manual for now...
+    // Manual for now... perhaps get the data from cmucourses later
   ];
   const [instructors, setInstructors] = useState<string[]>([]);
   const [instructorStr, setInstructorStr] = useState("");
@@ -241,23 +257,96 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
             // Add any specific fields for Club events if needed
           }
 
-          // need to add the recurrence settings!
+          // add the recurrence settings
+          if (repeat !== "none") {
+            payload.recurrence = "RECURRING";
 
-          console.log("Submitting payload:", payload);
-          
-          const res = await axios.post("http://localhost:5001/api/events/create_event", payload, {
-            headers: {
-              "Content-Type": "application/json"
-            },
-            withCredentials: true
-          });
+            let recurrenceInput: RecurrenceInput;
 
-          if (res.status === 201) {
-            alert("Event created successfully!");
-            onClose(); // ✅ only close modal if backend call succeeds
+            if (repeat === "custom") {
+              // Use current state values
+              recurrenceInput = {
+                frequency: toRRuleFrequency(frequency),
+                interval,
+                selectedDays,
+                ends: toDBRecurrenceEnds(ends),
+                endDate,
+                occurrences,
+                startDatetime: date ?? dayjs(),
+                eventId: -1,
+                nthWeek
+              };
+            } else {
+              // Use computed local values for predefined repeat patterns
+              if (!date) throw new Error("Date is not defined");
+
+              let localFrequency: RecurrenceInput["frequency"] = "DAILY";
+              let localSelectedDays: number[] = [];
+              let localNthWeek: number | null = null;
+              let localInterval = 1;
+
+              if (repeat === "daily") {
+                localFrequency = "DAILY";
+                localSelectedDays = [0, 1, 2, 3, 4, 5, 6];
+              } else if (repeat === "weekly") {
+                localFrequency = "WEEKLY";
+                localSelectedDays = [date.day()];
+              } else if (repeat === "monthly_nth") {
+                localFrequency = "MONTHLY";
+                localSelectedDays = [date.day()];
+                localNthWeek = getNthDayOfWeekInMonth(date);
+              } else if (repeat === "monthly_last") {
+                localFrequency = "MONTHLY";
+                localSelectedDays = [date.day()];
+                localNthWeek = -1;
+              } else if (repeat === "yearly") {
+                localFrequency = "YEARLY";
+              } else if (repeat === "weekdays") {
+                localFrequency = "WEEKLY";
+                localSelectedDays = [1, 2, 3, 4, 5];
+              }
+
+              recurrenceInput = {
+                frequency: localFrequency,
+                interval: localInterval,
+                selectedDays: localSelectedDays,
+                ends: "never",
+                endDate: null,
+                occurrences: 0,
+                startDatetime: date,
+                eventId: -1,
+                nthWeek: localNthWeek
+              };
+            }
+
+            const { dbRecurrence, summary } = formatRecurrence(recurrenceInput);
+            console.log("Recurrence settings:", dbRecurrence, summary);
+
+            //   setCustomRecurrenceSummary(summary);
+            //   payload.recurrence_settings = dbRecurrence;
+
+            // call endpoint to create a recurring event
           } else {
-            alert("Something went wrong while submitting.");
+            payload.recurrence = "ONETIME";
+            // call endpoint to create a one-time event
           }
+
+
+          // console.log("Submitting payload:", payload);
+          
+          // const res = await axios.post("http://localhost:5001/api/events/create_event", payload, {
+          //   headers: {
+          //     "Content-Type": "application/json"
+          //   },
+          //   withCredentials: true
+          // });
+
+          // if (res.status === 201) {
+          //   alert("Event created successfully!");
+          //   onClose(); // ✅ only close modal if backend call succeeds
+          // } else {
+          //   alert("Something went wrong while submitting.");
+          // }
         }
     } catch (err) {
       console.error("Submission error:", err);
@@ -317,13 +406,18 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
       if (value === "custom") {
         setShowCustomRecurrence(true); // <-- show modal when "Custom..." selected
       } else {
+        
         setShowCustomRecurrence(false);
         // Reset recurrence settings if not custom
       }
   };
 
   const onCustomRecurrenceClose = () => {
-    
+
+    if (!date) {
+      setDateError(true);
+      return;
+    }
 
     const current: RecurrenceInput = {
       frequency: toRRuleFrequency(frequency),
@@ -333,7 +427,8 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
       endDate,
       occurrences,
       startDatetime: date ?? dayjs(), // fallback
-      eventId: -1 // placeholder
+      eventId: -1, // placeholder
+      nthWeek
     };
 
     const { dbRecurrence, summary } = formatRecurrence(current);
@@ -500,23 +595,22 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
                 }}
                 size="small"
               >
-                <MenuItem value="none">Does not repeat</MenuItem>
-                <MenuItem value="daily">Daily</MenuItem>
-                <MenuItem value="weekly">Weekly</MenuItem>
-                <MenuItem value="monthly">Monthly</MenuItem>
-                <MenuItem value="weekdays">Every weekday (Monday to Friday)</MenuItem>
-                <MenuItem
-                  value="custom"
-                  onClick={() => {
-                    if (repeat === "custom") {
-                      setShowCustomRecurrence(true); // manually trigger modal even if already selected
-                    }
-                  }}
-                >
-                  {customRecurrenceSummary
-                    ? `Custom: ${customRecurrenceSummary}`
-                    : "Custom..."}
-                </MenuItem>
+                {recurrenceOptions
+                  .filter(option => !option.hidden)
+                  .map(option => (
+                    <MenuItem
+                      key={option.value}
+                      value={option.value}
+                      onClick={() => {
+                        if (option.value === "custom" && repeat === "custom") {
+                          setShowCustomRecurrence(true);
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </MenuItem>
+                ))}
+
               </Select>
 
             </FormControl>
