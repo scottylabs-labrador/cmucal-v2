@@ -17,7 +17,7 @@ def event_occurrence_to_dict(occurrence: EventOccurrence):
         "location": occurrence.location,
         "is_all_day": occurrence.is_all_day,
         "source_url": occurrence.source_url,
-        "recurrence": occurrence.recurrence,
+        "recurrence": occurrence.recurrence.name if occurrence.recurrence else None,
         "event_id": occurrence.event_id,
         "org_id": occurrence.org_id,
         "category_id": occurrence.category_id,
