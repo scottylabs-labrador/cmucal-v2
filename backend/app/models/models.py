@@ -1,34 +1,33 @@
 from typing import List, Optional
 
-from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Date, DateTime, Double, Enum, ForeignKeyConstraint, Identity, Numeric, PrimaryKeyConstraint, Table, Text, UniqueConstraint, text
+from sqlalchemy import ARRAY, BigInteger, Boolean, Column, Date, DateTime, Double, Enum, ForeignKeyConstraint, SmallInteger, Identity, Numeric, PrimaryKeyConstraint, Table, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import OID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import datetime
 from app.services.db import Base
-
+from app.models.enums import FrequencyType, RecurrenceType
 
 class Academic(Base):
     __tablename__ = 'academics'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='academics_pkey'),
-        UniqueConstraint('event_id', name='academics_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='academics_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='academics_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     course_num: Mapped[str] = mapped_column(Text)
+    course_name: Mapped[str] = mapped_column(Text)
     instructors: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
 
 class Career(Base):
     __tablename__ = 'careers'
     __table_args__ = (
-        PrimaryKeyConstraint('event_id', name='careers_pkey'),
-        UniqueConstraint('event_id', name='careers_id_key')
+        ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='careers_event_id_fkey'),
+        PrimaryKeyConstraint('event_id', name='careers_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     host: Mapped[Optional[str]] = mapped_column(Text)
     link: Mapped[Optional[str]] = mapped_column(Text)
     registration_required: Mapped[Optional[bool]] = mapped_column(Boolean)
@@ -46,10 +45,12 @@ class Organization(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     tags: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
     description: Mapped[Optional[str]] = mapped_column(Text)
+    crosslisted: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
     admins: Mapped[List['Admin']] = relationship('Admin', back_populates='org')
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
     events: Mapped[List['Event']] = relationship('Event', back_populates='org')
+    event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='org')
 
 
 t_pg_stat_statements = Table(
@@ -144,6 +145,7 @@ class User(Base):
 class Admin(Base):
     __tablename__ = 'admins'
     __table_args__ = (
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='admins_category_id_fkey'),
         ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='admins_org_id_fkey'),
         ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE', name='admins_user_id_fkey'),
         PrimaryKeyConstraint('user_id', 'org_id', name='admins_pkey')
@@ -153,7 +155,9 @@ class Admin(Base):
     org_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     role: Mapped[Optional[str]] = mapped_column(Text)
+    category_id: Mapped[Optional[int]] = mapped_column(BigInteger)
 
+    category: Mapped[Optional['Category']] = relationship('Category', back_populates='admins')
     org: Mapped['Organization'] = relationship('Organization', back_populates='admins')
     user: Mapped['User'] = relationship('User', back_populates='admins')
 
@@ -161,8 +165,8 @@ class Admin(Base):
 class Category(Base):
     __tablename__ = 'categories'
     __table_args__ = (
-        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='Categories_org_id_fkey'),
-        PrimaryKeyConstraint('id', name='Categories_pkey')
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='Category_org_id_fkey'),
+        PrimaryKeyConstraint('id', name='Category_pkey')
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
@@ -171,8 +175,10 @@ class Category(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
     org: Mapped['Organization'] = relationship('Organization', back_populates='categories')
+    admins: Mapped[List['Admin']] = relationship('Admin', back_populates='category')
     events: Mapped[List['Event']] = relationship('Event', back_populates='category')
-    user_saved_categories: Mapped[List['UserSavedCategory']] = relationship('UserSavedCategory', back_populates='category')
+    schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='category')
+    event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='category')
 
 
 class Schedule(Base):
@@ -188,7 +194,7 @@ class Schedule(Base):
     name: Mapped[Optional[str]] = mapped_column(Text)
 
     user: Mapped['User'] = relationship('User', back_populates='schedules')
-    user_saved_categories: Mapped[List['UserSavedCategory']] = relationship('UserSavedCategory', back_populates='schedule')
+    schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='schedule')
 
 
 class SyncedEvent(Base):
@@ -225,12 +231,13 @@ class Event(Base):
     end_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(True))
     is_all_day: Mapped[bool] = mapped_column(Boolean)
     location: Mapped[str] = mapped_column(Text)
-    is_uploaded: Mapped[bool] = mapped_column(Boolean)
+    user_edited: Mapped[Optional[list]] = mapped_column(ARRAY(BigInteger()))
     org_id: Mapped[int] = mapped_column(BigInteger)
     category_id: Mapped[int] = mapped_column(BigInteger)
     description: Mapped[Optional[str]] = mapped_column(Text)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
-    resource_url: Mapped[Optional[str]] = mapped_column(Text)
+    event_type: Mapped[Optional[str]] = mapped_column(Text)
+    last_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
     category: Mapped['Category'] = relationship('Category', back_populates='events')
     org: Mapped['Organization'] = relationship('Organization', back_populates='events')
@@ -239,39 +246,41 @@ class Event(Base):
     recurrence_rules: Mapped[List['RecurrenceRule']] = relationship('RecurrenceRule', back_populates='event')
     user_saved_events: Mapped[List['UserSavedEvent']] = relationship('UserSavedEvent', back_populates='event')
 
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-class UserSavedCategory(Base):
-    __tablename__ = 'user_saved_categories'
+class ScheduleCategory(Base):
+    __tablename__ = 'schedule_categories'
     __table_args__ = (
-        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='user_saved_categories_category_id_fkey'),
-        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='user_saved_categories_schedule_id_fkey'),
-        PrimaryKeyConstraint('schedule_id', 'category_id', name='user_saved_categories_pkey')
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='schedule_categories_category_id_fkey'),
+        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='schedule_categories_category_id_fkey'),
+        PrimaryKeyConstraint('schedule_id', 'category_id', name='schedule_categories_pkey')
     )
 
     schedule_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     category_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
-    category: Mapped['Category'] = relationship('Category', back_populates='user_saved_categories')
-    schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='user_saved_categories')
+    category: Mapped['Category'] = relationship('Category', back_populates='schedule_categories')
+    schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='schedule_categories')
 
 
-class Club(Event):
+class Club(Base):
     __tablename__ = 'clubs'
     __table_args__ = (
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='clubs_event_id_fkey'),
-        PrimaryKeyConstraint('event_id', name='clubs_pkey'),
-        UniqueConstraint('event_id', name='clubs_event_id_key')
+        PrimaryKeyConstraint('event_id', name='clubs_pkey')
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
 
 
 class EventOccurrence(Base):
     __tablename__ = 'event_occurrences'
     __table_args__ = (
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='event_occurrences_category_id_fkey'),
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='event_occurrences_event_id_fkey'),
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='event_occurrences_org_id_fkey'),
         PrimaryKeyConstraint('id', name='event_occurrences_pkey')
     )
 
@@ -281,10 +290,19 @@ class EventOccurrence(Base):
     end_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(True))
     location: Mapped[str] = mapped_column(Text)
     is_all_day: Mapped[bool] = mapped_column(Boolean)
-    is_uploaded: Mapped[bool] = mapped_column(Boolean)
+    user_edited: Mapped[Optional[list]] = mapped_column(ARRAY(BigInteger()))
     event_id: Mapped[int] = mapped_column(BigInteger)
+    event_saved_at: Mapped[datetime.datetime] = mapped_column(DateTime(True))
+    title: Mapped[str] = mapped_column(Text)
+    org_id: Mapped[int] = mapped_column(BigInteger)
+    category_id: Mapped[int] = mapped_column(BigInteger)
+    recurrence: Mapped[str] = mapped_column(Enum(RecurrenceType, name='recurrence_type', create_type=False))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    source_url: Mapped[Optional[str]] = mapped_column(Text)
 
+    category: Mapped['Category'] = relationship('Category', back_populates='event_occurrences')
     event: Mapped['Event'] = relationship('Event', back_populates='event_occurrences')
+    org: Mapped['Organization'] = relationship('Organization', back_populates='event_occurrences')
 
 
 class EventTag(Base):
@@ -313,13 +331,15 @@ class RecurrenceRule(Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     event_id: Mapped[int] = mapped_column(BigInteger)
-    frequency: Mapped[Optional[str]] = mapped_column(Enum('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', name='frequency_type'))
-    interval: Mapped[Optional[int]] = mapped_column(BigInteger)
+    frequency: Mapped[str] = mapped_column(Enum(FrequencyType, name='frequency_type', create_type=False))
+    interval: Mapped[int] = mapped_column(BigInteger)
+    start_datetime: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     count: Mapped[Optional[int]] = mapped_column(BigInteger)
-    until: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    by_day: Mapped[Optional[str]] = mapped_column(Enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', name='day_type'))
-    by_month_day: Mapped[Optional[int]] = mapped_column(BigInteger)
-    by_month: Mapped[Optional[int]] = mapped_column(BigInteger)
+    until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True))
+    by_month: Mapped[Optional[list]] = mapped_column(SmallInteger)
+    by_month_day: Mapped[Optional[list]] = mapped_column(SmallInteger)
+    by_day: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
+    orig_until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
 

@@ -124,6 +124,8 @@ export function ConnectGoogleButton() {
     });
   
     if (res.status === 401) {
+      // should add a screen to give them more information and ask if 
+      // the user wants to connect their Google account
       window.location.href = "http://localhost:5001/api/google/authorize";
       return;
     }
