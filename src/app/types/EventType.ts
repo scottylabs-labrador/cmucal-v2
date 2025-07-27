@@ -12,4 +12,5 @@ export type EventType = {
   description?: string; 
   event_type?: string;
   user_saved: boolean;
+  user_is_admin?: boolean;
 };

@@ -50,7 +50,7 @@ const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
 
   const handleEventClick = async (info: EventClickArg) => {
     console.log(info.event.extendedProps);
-    setEventId(info.event.id)
+    setEventId(info.event.extendedProps.event_id)
   };
 
   return (

@@ -7,12 +7,13 @@ from app.services.db import SessionLocal
 from app.models.event import save_event
 from app.models.career import save_career
 from app.models.academic import save_academic
+from app.models.admin import get_admin_by_org_and_user
 from app.models.club import save_club
 from app.models.tag import get_tag_by_name, save_tag, get_all_tags
 from app.models.event_tag import save_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
-from app.models.models import Event, UserSavedEvent, Organization
+from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence
 import pprint
 from datetime import datetime
 
@@ -313,6 +314,7 @@ def get_specific_events(event_id):
         
         org = db.query(Organization).filter_by(id=event.org_id).first()
         event_dict["org"] = org.name
+        event_dict["user_is_admin"] = True if get_admin_by_org_and_user(db, event.org_id, user.id) else False
 
         # check if saved
         if user:
@@ -355,6 +357,43 @@ def get_all_saved_events():
                 "end": e[3].isoformat(),
             }
             for e in events
+        ]
+
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print("❌ Exception:", traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+@events_bp.route("user_saved_event_occurrences", methods=["GET"])
+def get_all_saved_events_occurrences():
+    db = SessionLocal()
+    try:
+        # get user
+        clerk_id = request.args.get("user_id")
+        if not clerk_id:
+            return jsonify({"error": "Missing user_id"}), 400
+        user = get_user_by_clerk_id(db, clerk_id)
+
+        event_occurrences = (db.query(EventOccurrence.id, EventOccurrence.title, 
+        EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id)
+            .join(Event, EventOccurrence.event_id == Event.id)
+            .join(UserSavedEvent, UserSavedEvent.event_id == Event.id)
+            .filter(
+                UserSavedEvent.user_id == user.id
+            ).all())
+
+        return [
+            {
+                "id": e[0],
+                "title": e[1],
+                "start": e[2].isoformat(),
+                "end": e[3].isoformat(),
+                "event_id": e[4]
+            }
+            for e in event_occurrences
         ]
 
     except Exception as e:
@@ -420,3 +459,4 @@ def user_unsave_event(event_id):
         return jsonify({"error": str(e)}), 500
     finally:
         db.close()
+

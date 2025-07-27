@@ -18,7 +18,7 @@ export default function ExplorePage() {
 
   async function fetchCalendarEvents() {
     // get user saved events
-    const savedResponse = await axios.get("http://localhost:5001/api/events/user_saved_events", {
+    const savedResponse = await axios.get("http://localhost:5001/api/events/user_saved_event_occurrences", {
       params: {
         user_id: user?.id,
       },
