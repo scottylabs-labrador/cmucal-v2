@@ -51,6 +51,7 @@ class Organization(Base):
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
     events: Mapped[List['Event']] = relationship('Event', back_populates='org')
     event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='org')
+    schedule_orgs: Mapped[List['ScheduleOrg']] = relationship('ScheduleOrg', back_populates='org')
 
 
 t_pg_stat_statements = Table(
@@ -195,6 +196,8 @@ class Schedule(Base):
 
     user: Mapped['User'] = relationship('User', back_populates='schedules')
     schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='schedule')
+    schedule_orgs: Mapped[List['ScheduleOrg']] = relationship('ScheduleOrg', back_populates='schedule')
+    user_saved_events: Mapped[List['UserSavedEvent']] = relationship('UserSavedEvent', back_populates='schedule')
 
 
 class SyncedEvent(Base):
@@ -248,6 +251,22 @@ class Event(Base):
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class ScheduleOrg(Base):
+    __tablename__ = 'schedule_orgs'
+    __table_args__ = (
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='schedule_orgs_org_id_fkey'),
+        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='schedule_orgs_schedule_id_fkey'),
+        PrimaryKeyConstraint('schedule_id', 'org_id', name='schedule_orgs_pkey')
+    )
+
+    schedule_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    org_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+
+    org: Mapped['Organization'] = relationship('Organization', back_populates='schedule_orgs')
+    schedule: Mapped['Schedule'] = relationship('Schedule', back_populates='schedule_orgs')
+
 
 class ScheduleCategory(Base):
     __tablename__ = 'schedule_categories'
@@ -349,6 +368,7 @@ class UserSavedEvent(Base):
     __table_args__ = (
         ForeignKeyConstraint(['event_id'], ['events.id'], ondelete='CASCADE', name='user_saved_events_event_id_fkey'),
         ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE', name='user_saved_events_user_id_fkey'),
+        ForeignKeyConstraint(['schedule_id'], ['schedules.id'], ondelete='CASCADE', name='user_saved_events_schedule_id_fkey'),
         PrimaryKeyConstraint('user_id', 'event_id', name='user_saved_events_pkey'),
         UniqueConstraint('google_event_id', name='user_saved_events_google_event_id_key')
     )
@@ -357,6 +377,8 @@ class UserSavedEvent(Base):
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     google_event_id: Mapped[str] = mapped_column(Text)
     saved_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    schedule_id: Mapped[Optional[int]] = mapped_column(BigInteger)
 
     event: Mapped['Event'] = relationship('Event', back_populates='user_saved_events')
+    schedule: Mapped[Optional['Schedule']] = relationship('Schedule', back_populates='user_saved_events')
     user: Mapped['User'] = relationship('User', back_populates='user_saved_events')
