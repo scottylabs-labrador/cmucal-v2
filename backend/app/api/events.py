@@ -363,41 +363,6 @@ def get_all_saved_events():
 
 @events_bp.route("user_saved_event_occurrences", methods=["GET"])
 def get_all_saved_events_occurrences():
-    db = SessionLocal()
-    try:
-        # get user
-        clerk_id = request.args.get("user_id")
-        if not clerk_id:
-            return jsonify({"error": "Missing user_id"}), 400
-        user = get_user_by_clerk_id(db, clerk_id)
-
-        event_occurrences = (db.query(EventOccurrence.id, EventOccurrence.title, 
-        EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id)
-            .join(Event, EventOccurrence.event_id == Event.id)
-            .join(UserSavedEvent, UserSavedEvent.event_id == Event.id)
-            .filter(
-                UserSavedEvent.user_id == user.id
-            ).all())
-
-        return [
-            {
-                "id": e[0],
-                "title": e[1],
-                "start": e[2].isoformat(),
-                "end": e[3].isoformat(),
-                "event_id": e[4]
-            }
-            for e in event_occurrences
-        ]
-
-        except Exception as e:
-            db.rollback()
-            import traceback
-            print("❌ Exception:", traceback.format_exc())
-            return jsonify({"error": str(e)}), 500
-
-@events_bp.route("user_saved_event_occurrences", methods=["GET"])
-def get_all_saved_events_occurrences():
     with SessionLocal() as db:
         try:
             # get user
