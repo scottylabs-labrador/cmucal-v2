@@ -83,8 +83,16 @@ def add_event_route():
                 return jsonify({"error": "User or calendar not found"}), 400
 
             calendar_id = user.calendar_id
+            data["start"] = convert_to_iso8601(data["start"]) # data["start"].isoformat()
+            data["end"] = convert_to_iso8601(data["end"]) # data["end"].isoformat()
 
             event = add_event(creds, data, calendar_id)
+
+            ## double check that the event was not already saved, otherwise would cause duplicates
+            # existing = db.query(UserSavedEvent or SyncedEvent).filter_by(
+            #         user_id=user_id,
+            #         google_event_id=google_event_id
+            #     ).first()
 
             save_google_event(
                 db=db,
