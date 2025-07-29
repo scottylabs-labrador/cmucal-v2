@@ -31,6 +31,7 @@ export default function ModalEvent({ show, onClose, toggleAdded, eventId }: Moda
             .catch(err => console.error("Failed to fetch event:", eventId, err));
     }, [eventId])
     
+    const isAdmin = eventDetails?.user_is_admin;
 
     return (
         <Modal show={show} onClose={onClose}>
@@ -42,13 +43,19 @@ export default function ModalEvent({ show, onClose, toggleAdded, eventId }: Moda
                 <p className="text-base text-gray-500">{eventDetails.location}</p>
                 {eventDetails.org && (<p className="text-base text-gray-500">Hosted by {eventDetails.org}</p>)}
                 <p className="text-base text-gray-500 py-4">{eventDetails.description || "No additional details available."}</p>
+                <div className="flex gap-4">
                 <button 
-                className={`mt-2 px-4 py-2 rounded-md w-full ${
+                className={`px-4 py-2 rounded-md ${ isAdmin ? "flex-1" : "w-full"} ${
                     eventDetails.user_saved ? "bg-blue-300" : "bg-blue-500"
                 } text-white`}
                     onClick={() => {toggleAdded(eventDetails.id); onClose()}}>
                    { eventDetails.user_saved ? "Remove" : "Add" }
-                </button> </>)}
+                </button> 
+                <button className={`px-4 py-2 rounded-md ${ isAdmin ? "flex-1" : "hidden"}  bg-gray-200`}
+                    onClick={() => console.log("clicked edit...")}>
+                    Edit Event
+                </button></div>
+                </>)}
             </div>
         </Modal>
 
