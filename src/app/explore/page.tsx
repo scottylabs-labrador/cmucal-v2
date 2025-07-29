@@ -9,7 +9,6 @@ import SearchResultsSidebar from "@components/SearchResultSidebar";
 import { EventType } from "../types/EventType";
 import ModalEvent from "../components/ModalEvent";
 
-
 export default function ExplorePage() {
   const { user } = useUser();
   const [events, setEvents] = useState<EventType[]>([]);
@@ -118,12 +117,16 @@ export default function ExplorePage() {
       rightContent={<Calendar events={calendarEvents}  setEvents={setEvents} setEventId={setEventId}/>}
     />
     
-    <ModalEvent 
-      show={eventId ? true : false} 
-      onClose={() => setEventId("")}  
-      eventId={eventId}
-      toggleAdded={toggleAdded}>
-    </ModalEvent>
+    {eventId && 
+      // Render ModalEvent only if eventId is set}
+      <ModalEvent 
+        show={eventId ? true : false} 
+        onClose={() => setEventId("")}  
+        eventId={eventId}
+        toggleAdded={toggleAdded}>
+      </ModalEvent>
+      }
     </div>
+    
   );
 }

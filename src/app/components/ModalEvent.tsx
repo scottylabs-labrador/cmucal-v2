@@ -1,3 +1,5 @@
+"use client";
+
 import Modal from './Modal';
 import { formatDate } from "~/app/utils/dateService";
 import { EventType } from '../types/EventType';
