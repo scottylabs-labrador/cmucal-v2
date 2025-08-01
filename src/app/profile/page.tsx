@@ -84,6 +84,7 @@ export default function Profile() {
   }
 
   return (
+    <div className="flex h-[calc(99vh-80px)]">
     <TwoColumnLayout 
       leftContent={
         <ProfileSidebar 
@@ -94,5 +95,6 @@ export default function Profile() {
       } 
       rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents}/>} 
     />
+    </div>
   );
 }

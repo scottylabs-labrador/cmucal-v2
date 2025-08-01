@@ -10,7 +10,7 @@ import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
 
 // import ModalUploadOne from "./ModalUploadOne"; 
-import ModalUploadTwo from "./ModalUploadTwo"; 
+import ModalEventForm from "./ModalEventForm"; 
 import { useUser } from "@clerk/clerk-react";
 
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
@@ -90,7 +90,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   return (
     <>
-      <nav className="flex items-center justify-between p-3 border-b bg-white dark:bg-gray-800">
+      <nav className="flex sticky top-0 z-50 items-center justify-between p-3 border-b bg-white dark:bg-gray-800">
         {/* Left Section: User & Search */}
         <div className="flex items-center space-x-2">
           {/* User Icon (Links to Profile Page) */}
@@ -221,7 +221,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
       )}
 
       {showUploadModalTwo && (
-        <ModalUploadTwo
+        <ModalEventForm
           show={showUploadModalTwo}
           onClose={() => setShowUploadModalTwo(false)}
           selectedCategory={selectedCategory}
