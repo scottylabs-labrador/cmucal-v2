@@ -20,7 +20,19 @@ export function formatDate(dateString: string): string {
     }).format(date);
   }
   
-
+export function formatEventDate(dateString: string | null | undefined): string {
+  if (!dateString) return '';
+  
+  try {
+    const date = dayjs(dateString);
+    if (!date.isValid()) return '';
+    
+    return date.format('MMM D, h:mm A'); // Feb 2, 10:00 AM
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
+}
 export const getDateString = (date: string) => {
     // return: 2024-08-02
     return new Date(date).toISOString().slice(0, 10);
