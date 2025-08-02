@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FiChevronUp, FiChevronDown, FiEye, FiEdit2 } from "react-icons/fi";
+import Link from "next/link";
 import Accordion from "./Accordion";
 import ToggleItem from "./ToggleItem";
 import { Course, Club } from "../utils/types";
@@ -20,6 +21,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const [toggledCategories, setToggledCategories] = useState<Record<number, boolean>>({});
   const [isCoursesOpen, setIsCoursesOpen] = useState(true);
   const [isClubsOpen, setIsClubsOpen] = useState(true);
+  const [isEventsOpen, setIsEventsOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleToggle = (categoryId: number) => {
@@ -108,6 +110,21 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             ))}
           </Accordion>
         ))}
+      </div>
+
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center cursor-pointer" onClick={() => setIsEventsOpen(!isEventsOpen)}>
+            <h3 className="text-gray-600 dark:text-gray-400 mr-2">My Events</h3>
+            {isEventsOpen ? <FiChevronUp className="w-5 h-5 text-gray-600" /> : <FiChevronDown className="w-5 h-5 text-gray-600" />}
+          </div>
+          <Link 
+            href="/explore" 
+            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Explore
+          </Link>
+        </div>
       </div>
     </div>
   );
