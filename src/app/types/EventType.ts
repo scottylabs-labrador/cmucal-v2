@@ -1,5 +1,5 @@
 export type EventType = {
-  id: string;
+  id: number;//string;
   title: string;
   start_datetime: string; // start_datetime
   end_datetime: string; // end_datetime

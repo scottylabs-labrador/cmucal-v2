@@ -8,6 +8,7 @@ import Calendar from "@components/Calendar";
 import SearchResultsSidebar from "@components/SearchResultSidebar";
 import { EventType } from "../types/EventType";
 import ModalEvent from "../components/ModalEvent";
+import ModalEventForm from "../components/ModalEventForm"
 
 export default function ExplorePage() {
   const { user } = useUser();
@@ -42,7 +43,7 @@ export default function ExplorePage() {
   }, []); 
 
 
-  const toggleAdded = async (thisId: string) => {
+  const toggleAdded = async (thisId: number) => {
     const updatedEvents = [...events];
     const index = updatedEvents.findIndex((e) => e.id === thisId);
     const event = updatedEvents[index];
@@ -84,6 +85,7 @@ export default function ExplorePage() {
     // 4. Sync with Google Calendar
     try {
       if (event.user_saved) {
+        console.log("adding event to gcallll")
         // Add to Google Calendar via backend
         await axios.post("http://localhost:5001/api/google/calendar/events/add", {
           user_id: user?.id,
@@ -109,23 +111,13 @@ export default function ExplorePage() {
     }
   };
 
-
   return (
-    <div>
+    <div className="flex h-[calc(99vh-80px)]">
     <TwoColumnLayout
       leftContent={<SearchResultsSidebar events={events} setEvents={setEvents} toggleAdded={toggleAdded} setEventId={setEventId}/>}
       rightContent={<Calendar events={calendarEvents}  setEvents={setEvents} setEventId={setEventId}/>}
     />
-    
-    {eventId && 
-      // Render ModalEvent only if eventId is set}
-      <ModalEvent 
-        show={eventId ? true : false} 
-        onClose={() => setEventId("")}  
-        eventId={eventId}
-        toggleAdded={toggleAdded}>
-      </ModalEvent>
-      }
+
     </div>
     
   );

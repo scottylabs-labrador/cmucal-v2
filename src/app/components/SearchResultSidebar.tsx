@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs";
 
 import { EventClickArg } from "@fullcalendar/core"; 
 import { EventType } from "../types/EventType";
+import { useEventState } from "../../context/EventStateContext";
 
 import React from 'react'
 import Select from 'react-select'
@@ -29,6 +30,7 @@ export default function SearchResultsSidebar({ events, setEvents, toggleAdded, s
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [allTags, setAllTags] = useState<{id: number; name: string}[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<EventType[]>([]);
+  const { openDetails } = useEventState();
 
   // fetch tags and convert to Select options
   useEffect(() => {
@@ -94,7 +96,8 @@ export default function SearchResultsSidebar({ events, setEvents, toggleAdded, s
               {event.user_saved ? "Remove" : "Add"}
             </button>
             <button
-              onClick={() => {setEventId(event.id)}} // triggers event modal
+              // onClick={() => {setEventId(event.id)}} // triggers event modal
+              onClick={() => openDetails(event.id)}
               className="mt-2 mx-2 px-3 py-1.5 rounded-lg bg-gray-200">
               Learn more
             </button>

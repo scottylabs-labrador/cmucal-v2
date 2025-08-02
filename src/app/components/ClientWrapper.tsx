@@ -6,6 +6,8 @@ import SignedOutNav from "@components/SignedOutNav";
 import Welcome from "@components/Welcome";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { GcalEventsContext } from "../../context/GCalEventsContext";
+import { EventStateContext, ModalView } from "../../context/EventStateContext";
+import ModalRender from "@components/ModalRender";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { sendUserToBackend } from "~/utils/authService"; // adjust path as needed
@@ -13,6 +15,9 @@ import { sendUserToBackend } from "~/utils/authService"; // adjust path as neede
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [gcalEvents, setGcalEvents] = useState<any[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<number|null>(null);
+  const [modalView, setModalView] = useState<ModalView>(null);
+  const [modalData, setModalData] = useState<Record<string, any>>({});
   const { user, isSignedIn, isLoaded } = useUser();
   const [hasSynced, setHasSynced] = useState(false);
 
@@ -30,23 +35,30 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
 
   return (
     <GcalEventsContext.Provider value={{ gcalEvents, setGcalEvents }}>
-      <ThemeProvider>
-        <SignedIn>
-          <Navbar UserButton={<UserButton />} />
-        </SignedIn>
-        <SignedOut>
-          <SignedOutNav />
-        </SignedOut>
-
-        <main>
-          <SignedIn>{children}</SignedIn>
+      <EventStateContext.Provider value={{ 
+        selectedEvent, setSelectedEvent, modalView, setModalView, modalData, setModalData
+      }}>
+        <ThemeProvider>
+          <SignedIn>
+            <Navbar UserButton={<UserButton />} />
+          </SignedIn>
           <SignedOut>
-            <div className="flex justify-center items-center h-[90vh] dark:bg-gray-700">
-              <Welcome />
-            </div>
+            <SignedOutNav />
           </SignedOut>
-        </main>
-      </ThemeProvider>
+
+          <main>
+            <SignedIn>
+              <ModalRender/>
+              {children}
+            </SignedIn>
+            <SignedOut>
+              <div className="flex justify-center items-center h-[90vh] dark:bg-gray-700">
+                <Welcome />
+              </div>
+            </SignedOut>
+          </main>
+        </ThemeProvider>
+      </EventStateContext.Provider>
     </GcalEventsContext.Provider>
   );
 }

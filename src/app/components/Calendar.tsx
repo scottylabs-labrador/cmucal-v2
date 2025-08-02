@@ -8,6 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core"; 
 import { useGcalEvents } from "../../context/GCalEventsContext";
+import { useEventState } from "../../context/EventStateContext";
 import "../../styles/calendar.css"; 
 
 
@@ -27,6 +28,7 @@ type Props = {
 const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
   // Define state with EventInput type
   const { gcalEvents } = useGcalEvents();
+  const { modalView, openDetails } = useEventState();
 
   const mergedEventsMap = new Map<string, EventInput>();
 
@@ -50,8 +52,10 @@ const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
 
   const handleEventClick = async (info: EventClickArg) => {
     console.log(info.event.extendedProps);
-    console.log("clicked event id:", info.event.extendedProps.event_id)
-    setEventId(info.event.extendedProps.event_id)
+    console.log("clicked event id:", info.event.extendedProps.event_id);
+    // setEventId(info.event.extendedProps.event_id)
+    openDetails(info.event.extendedProps.event_id);
+    console.log("modal:", modalView)
   };
 
   return (
