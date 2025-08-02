@@ -10,15 +10,15 @@ dayjs.extend(timezone);
 
 
 export function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",      // "Feb"
-      day: "numeric",      // "2"
-      hour: "numeric",     // "10"
-      minute: "2-digit",   // "00"
-      hour12: true         // "AM/PM"
-    }).format(date);
+  try {
+    const date = dayjs(dateString);
+    if (!date.isValid()) return '';
+    return date.format('MMM D, h:mm A'); // Feb 2, 10:00 AM
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
   }
+}
   
 export function formatEventDate(dateString: string | null | undefined): string {
   if (!dateString) return '';

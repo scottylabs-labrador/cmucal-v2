@@ -372,7 +372,8 @@ def get_all_saved_events_occurrences():
             user = get_user_by_clerk_id(db, clerk_id)
 
             event_occurrences = (db.query(EventOccurrence.id, EventOccurrence.title, 
-            EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id)
+            EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id,
+            EventOccurrence.location)  # Added location to the query
                 .join(Event, EventOccurrence.event_id == Event.id)
                 .join(UserSavedEvent, UserSavedEvent.event_id == Event.id)
                 .filter(
@@ -385,7 +386,8 @@ def get_all_saved_events_occurrences():
                     "title": e[1],
                     "start": e[2].isoformat(),
                     "end": e[3].isoformat(),
-                    "event_id": e[4]
+                    "event_id": e[4],
+                    "location": e[5]  # Added location to the response
                 }
                 for e in event_occurrences
             ]
