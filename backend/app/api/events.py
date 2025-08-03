@@ -339,18 +339,28 @@ def get_all_saved_events():
                 return jsonify({"error": "Missing user_id"}), 400
             user = get_user_by_clerk_id(db, clerk_id)
 
-            # only columns required for calendar view
-            events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime)\
-                .join(UserSavedEvent).filter(
-                    UserSavedEvent.user_id == user.id
-                ).all()
+            # Get all necessary fields for display
+            events = db.query(
+                Event.id,
+                Event.title,
+                Event.start_datetime,
+                Event.end_datetime,
+                Event.location,
+                Event.org_id,
+                Event.category_id
+            ).join(UserSavedEvent).filter(
+                UserSavedEvent.user_id == user.id
+            ).all()
 
             return [
                 {
                     "id": e[0],
                     "title": e[1],
-                    "start": e[2].isoformat(),
-                    "end": e[3].isoformat(),
+                    "start": e[2].isoformat() if e[2] else None,
+                    "end": e[3].isoformat() if e[3] else None,
+                    "location": e[4],
+                    "org_id": e[5],
+                    "category_id": e[6]
                 }
                 for e in events
             ]
@@ -372,7 +382,8 @@ def get_all_saved_events_occurrences():
             user = get_user_by_clerk_id(db, clerk_id)
 
             event_occurrences = (db.query(EventOccurrence.id, EventOccurrence.title, 
-            EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id)
+            EventOccurrence.start_datetime, EventOccurrence.end_datetime, Event.id,
+            EventOccurrence.location)  # Added location to the query
                 .join(Event, EventOccurrence.event_id == Event.id)
                 .join(UserSavedEvent, UserSavedEvent.event_id == Event.id)
                 .filter(
@@ -385,7 +396,8 @@ def get_all_saved_events_occurrences():
                     "title": e[1],
                     "start": e[2].isoformat(),
                     "end": e[3].isoformat(),
-                    "event_id": e[4]
+                    "event_id": e[4],
+                    "location": e[5]  # Added location to the response
                 }
                 for e in event_occurrences
             ]
