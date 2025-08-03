@@ -1,105 +1,100 @@
 from flask import Blueprint, jsonify, request
-from sqlalchemy.orm import joinedload, subqueryload
 from app.services.db import SessionLocal
-from app.models.models import User, Schedule, ScheduleCategory, Category, Organization, EventOccurrence, Academic, Event
-from app.utils.auth import get_current_user
+from app.models.models import User, Schedule, ScheduleOrg, Organization, Category, Event, UserSavedEvent
+from app.models.user import get_user_by_clerk_id
+from sqlalchemy.orm import joinedload
 
-schedule_bp = Blueprint('schedule_bp', __name__)
+schedule_bp = Blueprint("schedule", __name__)
 
-def event_occurrence_to_dict(occurrence: EventOccurrence):
-    """Manually serialize EventOccurrence SQLAlchemy object to a dictionary."""
-    return {
-        "id": occurrence.id,
-        "title": occurrence.title,
-        "description": occurrence.description,
-        "start_datetime": occurrence.start_datetime.isoformat(),
-        "end_datetime": occurrence.end_datetime.isoformat(),
-        "location": occurrence.location,
-        "is_all_day": occurrence.is_all_day,
-        "source_url": occurrence.source_url,
-        "recurrence": occurrence.recurrence.name if occurrence.recurrence else None,
-        "event_id": occurrence.event_id,
-        "org_id": occurrence.org_id,
-        "category_id": occurrence.category_id,
-    }
-
-@schedule_bp.route('/', methods=['GET'])
-def get_schedule_route():
-    clerk_user_id = request.headers.get('Clerk-User-Id')
-    user = get_current_user(clerk_user_id)
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
+@schedule_bp.route("/", methods=["GET"])
+def get_user_schedule():
     with SessionLocal() as db:
         try:
-            user_schedule_info = db.query(User).filter(User.id == user.id).options(
-                subqueryload(User.schedules).subqueryload(Schedule.schedule_categories).subqueryload(ScheduleCategory.category).joinedload(Category.org).options(
-                    subqueryload(Organization.events)
-                )
-            ).first()
+            clerk_id = request.args.get("user_id")
+            if not clerk_id:
+                return jsonify({"error": "Missing user_id"}), 400
+            
+            user = get_user_by_clerk_id(db, clerk_id)
+            if not user:
+                return jsonify({"error": "User not found"}), 404
 
-            if not user_schedule_info or not user_schedule_info.schedules:
-                return jsonify({"courses": [], "clubs": []})
+            # Get user's schedule
+            schedule = db.query(Schedule).filter(Schedule.user_id == user.id).first()
+            if not schedule:
+                return jsonify({"error": "Schedule not found"}), 404
 
-            primary_schedule = user_schedule_info.schedules[0]
-            subscribed_categories = [sc.category for sc in primary_schedule.schedule_categories]
+            # Get organizations in the schedule with their categories
+            orgs_with_data = db.query(Organization).join(
+                ScheduleOrg, ScheduleOrg.org_id == Organization.id
+            ).filter(
+                ScheduleOrg.schedule_id == schedule.id
+            ).options(
+                joinedload(Organization.categories)
+            ).all()
 
-            courses = {}
-            clubs = {}
-            sasc_org = db.query(Organization).filter(Organization.name == "SASC").first()
+            # Get saved events for calendar display
+            saved_events = db.query(Event).join(
+                UserSavedEvent, UserSavedEvent.event_id == Event.id
+            ).filter(
+                UserSavedEvent.user_id == user.id
+            ).all()
 
-            for category in subscribed_categories:
-                org = category.org
-                academic_event_ids = [e.id for e in org.events]
-                is_academic = db.query(Academic).filter(Academic.event_id.in_(academic_event_ids)).first() is not None
+            # Format the response
+            result = {
+                "courses": [],
+                "clubs": [],
+                "saved_events": []
+            }
 
-                if is_academic:
-                    if org.id not in courses:
-                        academic_event = next((e for e in org.events if db.query(Academic).filter(Academic.event_id == e.id).first()), None)
-                        if not academic_event: continue
-                        
-                        course_details = db.query(Academic).filter(Academic.event_id == academic_event.id).first()
-                        courses[org.id] = {
-                            "org_id": org.id,
-                            "course_num": course_details.course_num,
-                            "course_name": course_details.course_name,
-                            "instructors": course_details.instructors,
-                            "categories": [],
-                            "events": {}
-                        }
+            # Get all events for these organizations
+            org_ids = [org.id for org in orgs_with_data]
+            events = db.query(Event).filter(Event.org_id.in_(org_ids)).all()
+
+            for org in orgs_with_data:
+                org_data = {
+                    "org_id": org.id,
+                    "name": org.name,
+                    "categories": []
+                }
+
+                for category in org.categories:
+                    # Filter events that match both org_id and category_id
+                    category_events = [
+                        event for event in events
+                        if event.org_id == org.id and event.category_id == category.id
+                    ]
                     
-                    courses[org.id]["categories"].append({"id": category.id, "name": category.name})
-                    event_occurrences = db.query(EventOccurrence).filter(EventOccurrence.category_id == category.id).all()
-                    courses[org.id]["events"][category.name.lower().replace(" ", "_")] = [event_occurrence_to_dict(e) for e in event_occurrences]
+                    category_data = {
+                        "id": category.id,
+                        "name": category.name,
+                        "events": [{
+                            "id": event.id,
+                            "title": event.title,
+                            "start_datetime": event.start_datetime.isoformat() if event.start_datetime else None,
+                            "end_datetime": event.end_datetime.isoformat() if event.end_datetime else None,
+                            "location": event.location,
+                            "is_saved": any(se.id == event.id for se in saved_events)
+                        } for event in category_events]
+                    }
+                    org_data["categories"].append(category_data)
 
-                    if sasc_org:
-                        related_sasc_events = db.query(Event).join(Academic).filter(
-                            Event.org_id == sasc_org.id,
-                            Academic.course_num == courses[org.id]["course_num"]
-                        ).all()
-                        if related_sasc_events:
-                            sasc_event_ids = [e.id for e in related_sasc_events]
-                            sasc_occurrences = db.query(EventOccurrence).filter(EventOccurrence.event_id.in_(sasc_event_ids)).all()
-                            if sasc_occurrences:
-                                if "sasc_events" not in courses[org.id]["events"]:
-                                    courses[org.id]["events"]["sasc_events"] = []
-                                courses[org.id]["events"]["sasc_events"].extend([event_occurrence_to_dict(o) for o in sasc_occurrences])
+                # Determine if it's a course or club based on org name/type
+                if any(keyword in org.name.lower() for keyword in ["course", "class", "lecture"]):
+                    result["courses"].append(org_data)
                 else:
-                    if org.id not in clubs:
-                        clubs[org.id] = {
-                            "org_id": org.id,
-                            "name": org.name,
-                            "description": org.description,
-                            "categories": [],
-                            "events": {}
-                        }
-                    
-                    clubs[org.id]["categories"].append({"id": category.id, "name": category.name})
-                    event_occurrences = db.query(EventOccurrence).filter(EventOccurrence.category_id == category.id).all()
-                    clubs[org.id]["events"][category.name.lower().replace(" ", "_")] = [event_occurrence_to_dict(e) for e in event_occurrences]
+                    result["clubs"].append(org_data)
 
-            return jsonify({"courses": list(courses.values()), "clubs": list(clubs.values())})
+            # Add saved events for calendar
+            result["saved_events"] = [{
+                "id": event.id,
+                "title": event.title,
+                "start": event.start_datetime.isoformat() if event.start_datetime else None,
+                "end": event.end_datetime.isoformat() if event.end_datetime else None,
+                "location": event.location
+            } for event in saved_events]
+
+            return jsonify(result)
+
         except Exception as e:
             db.rollback()
             import traceback
@@ -109,7 +104,7 @@ def get_schedule_route():
 @schedule_bp.route('/category/<int:category_id>', methods=['DELETE'])
 def remove_category_from_schedule(category_id):
     clerk_user_id = request.headers.get('Clerk-User-Id')
-    user = get_current_user(clerk_user_id)
+    user = get_user_by_clerk_id(SessionLocal(), clerk_user_id)
 
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -120,9 +115,9 @@ def remove_category_from_schedule(category_id):
             if not schedule:
                 return jsonify({"error": "Schedule not found"}), 404
 
-            schedule_category_to_delete = db.query(ScheduleCategory).filter(
-                ScheduleCategory.schedule_id == schedule.id,
-                ScheduleCategory.category_id == category_id
+            schedule_category_to_delete = db.query(ScheduleOrg).filter(
+                ScheduleOrg.schedule_id == schedule.id,
+                ScheduleOrg.org_id == category_id
             ).first()
 
             if not schedule_category_to_delete:
