@@ -3,19 +3,28 @@ import dayjs, { Dayjs } from "dayjs";
 
 
 export interface Event {
-  _id: {
-    $oid: string;
-  };
-  resource_type: string;
-  instructor: string | null;
-  course_id: string;
-  course_name: string;
+  id: string;
+  title: string;
   start_datetime: string;
   end_datetime: string;
   location: string;
-  professor: string | null;
-  resource_source: string;
+  is_saved: boolean;
 }
+
+export interface Category {
+  id: number;
+  name: string;
+  events: Event[];
+}
+
+export interface Organization {
+  org_id: number;
+  name: string;
+  categories: Category[];
+}
+
+export interface Course extends Organization {}
+export interface Club extends Organization {}
 
 
 export interface CourseOption {

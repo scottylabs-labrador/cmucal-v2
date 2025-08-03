@@ -5,65 +5,43 @@ import { FiChevronUp, FiChevronDown, FiEye, FiEdit2 } from "react-icons/fi";
 import Link from "next/link";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
-import Accordion from "./Accordion";
-import ToggleItem from "./ToggleItem";
-import SavedEventsList from "./SavedEventsList";
-import { Course, Club } from "../utils/types";
-import { EventType } from "../types/EventType";
+import { formatDate } from "~/app/utils/dateService";
+import { Course, Club, Event } from "../utils/types";
 
 interface ProfileSidebarProps {
-  courses: Course[];
-  clubs: Club[];
-  onRemoveCategory: (categoryId: number) => void;
+  onToggleEvent: (event: Event) => void;
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ 
-  courses, 
-  clubs, 
-  onRemoveCategory
-}) => {
+const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ onToggleEvent }) => {
   const { user } = useUser();
-  const [toggledCategories, setToggledCategories] = useState<Record<number, boolean>>({});
   const [isCoursesOpen, setIsCoursesOpen] = useState(true);
   const [isClubsOpen, setIsClubsOpen] = useState(true);
   const [isEventsOpen, setIsEventsOpen] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [savedEvents, setSavedEvents] = useState<EventType[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [savedEvents, setSavedEvents] = useState<Event[]>([]);
 
   useEffect(() => {
-    async function fetchSavedEvents() {
+    async function fetchSchedule() {
       if (!user?.id) return;
 
       try {
-        const response = await axios.get("http://localhost:5001/api/events/user_saved_events", {
+        const response = await axios.get("http://localhost:5001/api/schedule", {
           params: { user_id: user.id },
           withCredentials: true,
         });
 
-        // Convert events to match our EventType format
-        const events = response.data.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          start_datetime: e.start,
-          end_datetime: e.end,
-          location: e.location || "",
-          org_id: e.org_id || "",
-          category_id: e.category_id || "",
-          user_saved: true
-        }));
-
-        setSavedEvents(events);
+        setCourses(response.data.courses);
+        setClubs(response.data.clubs);
+        setSavedEvents(response.data.saved_events);
       } catch (error) {
-        console.error("Error fetching saved events:", error);
+        console.error("Error fetching schedule:", error);
       }
     }
 
-    fetchSavedEvents();
+    fetchSchedule();
   }, [user?.id]);
-
-  const handleToggle = (categoryId: number) => {
-    setToggledCategories(prev => ({...prev, [categoryId]: !prev[categoryId]}));
-  };
 
   const ViewEditToggle = ({ isEdit }: { isEdit: boolean }) => (
     <div className="flex gap-2">
@@ -82,6 +60,26 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     </div>
   );
 
+  const EventItem = ({ event }: { event: Event }) => (
+    <div className="flex items-center gap-2 ml-8 mb-2">
+      <input
+        type="checkbox"
+        checked={event.is_saved}
+        onChange={() => onToggleEvent(event)}
+        className="w-4 h-4 text-blue-600"
+      />
+      <div>
+        <p className="text-sm font-medium">{event.title}</p>
+        <p className="text-xs text-gray-500">
+          {formatDate(event.start_datetime)} - {formatDate(event.end_datetime)}
+        </p>
+        {event.location && (
+          <p className="text-xs text-gray-500">{event.location}</p>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full dark:bg-gray-700 dark:text-gray-200 p-4">
       <div className="mb-6">
@@ -96,24 +94,17 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         </div>
 
         {isCoursesOpen && courses.map(course => (
-          <Accordion 
-            key={course.org_id} 
-            title={course.course_num}
-            subtitle={course.course_name}
-            onRemove={isEditMode ? () => course.categories.forEach(cat => onRemoveCategory(cat.id)) : undefined}
-            color="red"
-          >
+          <div key={course.org_id} className="mb-4">
+            <h4 className="font-medium mb-2">{course.name}</h4>
             {course.categories.map(category => (
-              <ToggleItem
-                key={category.id}
-                label={category.name}
-                checked={toggledCategories[category.id] !== false}
-                onChange={() => handleToggle(category.id)}
-                color="red"
-                disabled={isEditMode}
-              />
+              <div key={category.id} className="mb-4">
+                <h5 className="text-sm text-gray-500 mb-2 ml-4">{category.name}</h5>
+                {category.events.map(event => (
+                  <EventItem key={event.id} event={event} />
+                ))}
+              </div>
             ))}
-          </Accordion>
+          </div>
         ))}
       </div>
 
@@ -129,23 +120,17 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         </div>
 
         {isClubsOpen && clubs.map(club => (
-          <Accordion 
-            key={club.org_id} 
-            title={club.name}
-            onRemove={isEditMode ? () => club.categories.forEach(cat => onRemoveCategory(cat.id)) : undefined}
-            color="green"
-          >
+          <div key={club.org_id} className="mb-4">
+            <h4 className="font-medium mb-2">{club.name}</h4>
             {club.categories.map(category => (
-              <ToggleItem
-                key={category.id}
-                label={category.name}
-                checked={toggledCategories[category.id] !== false}
-                onChange={() => handleToggle(category.id)}
-                color="green"
-                disabled={isEditMode}
-              />
+              <div key={category.id} className="mb-4">
+                <h5 className="text-sm text-gray-500 mb-2 ml-4">{category.name}</h5>
+                {category.events.map(event => (
+                  <EventItem key={event.id} event={event} />
+                ))}
+              </div>
             ))}
-          </Accordion>
+          </div>
         ))}
       </div>
 
@@ -163,9 +148,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
           </Link>
         </div>
 
-        {isEventsOpen && (
-          <SavedEventsList events={savedEvents} />
-        )}
+        {isEventsOpen && savedEvents.map(event => (
+          <div key={event.id} className="p-3 rounded border mb-2">
+            <p className="text-lg">{event.title}</p>
+            <p className="text-base text-gray-500">
+              {formatDate(event.start_datetime)} - {formatDate(event.end_datetime)}
+            </p>
+            {event.location && (
+              <p className="text-base text-gray-500">{event.location}</p>
+            )}
+            <button
+              onClick={() => onToggleEvent(event)}
+              className="mt-2 px-3 py-1.5 rounded-lg bg-blue-300 text-white"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
