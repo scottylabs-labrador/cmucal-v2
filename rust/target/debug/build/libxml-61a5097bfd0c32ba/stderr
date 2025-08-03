@@ -1,0 +1,1 @@
+clang diag: warning: ISO C99 requires whitespace after the macro name [-Wc99-extensions]
