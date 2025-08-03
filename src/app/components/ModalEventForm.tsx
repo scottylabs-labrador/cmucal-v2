@@ -40,6 +40,7 @@ import { start } from "repl";
 import { RecurrenceInput, PayloadType } from "../utils/types";
 import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency, getNthDayOfWeekInMonth, isLastWeekdayInMonth } from "../utils/dateService";
 import { el } from "node_modules/@fullcalendar/core/internal-common";
+import Modal from './Modal';
 
 
 interface ModalProps {
@@ -60,7 +61,7 @@ const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
 
 
-export default function ModalUploadTwo({ show, onClose, selectedCategory }: ModalProps) {
+export default function ModalEventForm({ show, onClose, selectedCategory }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();  // clerk user object
 
@@ -459,14 +460,15 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
     
 
   return (
-    <>
-      {/* Backdrop */}
+    <Modal show={show} onClose={onClose}>
+    {/* <>
+       
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-40"
         onClick={onClose}
       />
 
-      {/* Modal */}
+       
       <div
         className="fixed inset-0 z-50 flex items-center justify-center"
         onClick={onClose}
@@ -475,7 +477,8 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           ref={containerRef}
           className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-auto relative"
           onClick={(e) => e.stopPropagation()}
-        >
+        > */}
+        {/* <p>what</p> */}
           <h2 className="text-xl font-semibold mb-4">
             Upload to {selectedCategory.organization_name} — {selectedCategory.name}
           </h2>
@@ -895,8 +898,9 @@ export default function ModalUploadTwo({ show, onClose, selectedCategory }: Moda
           >
             &times;
           </button>
-        </div>
+        {/* </div>
       </div>
-    </>
+    </> */}
+    </Modal>
   );
 }

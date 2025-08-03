@@ -1,16 +1,20 @@
 "use client";
 // components/Modal.tsx
+
+import Modal from './Modal';
+import { useEventState } from "../../context/EventStateContext";
 import { ReactNode, useState, useEffect } from "react";
 
 import axios from 'axios';
 import { useUser } from "@clerk/nextjs";
 
 type ModalProps = {
-  showUploadModalOne: boolean;
-  setShowUploadModalOne: React.Dispatch<React.SetStateAction<boolean>>; 
-  showUploadModalTwo: boolean;
-  setShowUploadModalTwo: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedCategory: React.Dispatch<React.SetStateAction<any>>;
+  // showUploadModalOne: boolean;
+  // setShowUploadModalOne: React.Dispatch<React.SetStateAction<boolean>>; 
+  // showUploadModalTwo: boolean;
+  // setShowUploadModalTwo: React.Dispatch<React.SetStateAction<boolean>>;
+  // setSelectedCategory: React.Dispatch<React.SetStateAction<any>>;
+  show: boolean;
   onClose: () => void;
 };
 
@@ -22,13 +26,15 @@ interface Category {
   created_at: Date | null;
 }
 
-export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalOne, 
-                                        showUploadModalTwo, setShowUploadModalTwo, setSelectedCategory, onClose}: ModalProps) {
+// export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalOne, 
+//                                         showUploadModalTwo, setShowUploadModalTwo, setSelectedCategory, onClose}: ModalProps) {
+export default function ModalUploadOne({ show, onClose }: ModalProps) {
 
   const [selectedOption, setSelectedOption] = useState<Category | null>(null);
   const { user } = useUser();  // clerk user object
   const [loading, setLoading] = useState<boolean>(true);
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
+  const { openUpload } = useEventState();
 
   if (!user) return null;
 
@@ -66,14 +72,15 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
   
 
   return (
-    <>
-      {/* Backdrop */}
+    <Modal show={show} onClose={onClose}>
+    {/* <>
+     
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-40"
         onClick={onClose}
       >
       
-      {/* Modal */}
+      
       <div
         className="fixed inset-0 z-50 flex items-center justify-center"
         onClick={onClose}
@@ -81,7 +88,7 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
         <div
           className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full"
           onClick={(e) => e.stopPropagation()}
-        >
+        > */}
           <h2 className="text-lg font-semibold mb-4">Choose a calendar</h2>
         <select
           className="w-full border rounded-md p-2 mb-4"
@@ -103,10 +110,11 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
           disabled={!selectedOption}
           onClick={() => {
             if (selectedOption) {
-              setSelectedCategory(selectedOption);
+              // setSelectedCategory(selectedOption);
               console.log("Selected category:", selectedOption);
-              setShowUploadModalOne(false);
-              setShowUploadModalTwo(true);
+              // setShowUploadModalOne(false);
+              // setShowUploadModalTwo(true);
+              openUpload(selectedOption);
             }
           }}
         >
@@ -118,9 +126,10 @@ export default function ModalUploadOne({ showUploadModalOne, setShowUploadModalO
           >
             &times;
           </button>
-        </div>
+        {/* </div>
       </div>
-      </div>
-    </>
+      </div> */}
+      </Modal>
+    // </>
   );
 }

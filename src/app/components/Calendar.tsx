@@ -8,6 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core"; 
 import { useGcalEvents } from "../../context/GCalEventsContext";
+import { useEventState } from "../../context/EventStateContext";
 import "../../styles/calendar.css"; 
 
 
@@ -27,6 +28,7 @@ type Props = {
 const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
   // Define state with EventInput type
   const { gcalEvents } = useGcalEvents();
+  const { modalView, openDetails } = useEventState();
 
   const mergedEventsMap = new Map<string, EventInput>();
 
@@ -50,11 +52,14 @@ const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
 
   const handleEventClick = async (info: EventClickArg) => {
     console.log(info.event.extendedProps);
-    setEventId(info.event.extendedProps.event_id)
+    console.log("clicked event id:", info.event.extendedProps.event_id);
+    // setEventId(info.event.extendedProps.event_id)
+    openDetails(info.event.extendedProps.event_id);
+    console.log("modal:", modalView)
   };
 
   return (
-    <div className="-pt-4 p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300">
+    <div className="-pt-4 p-4 bg-white rounded-lg shadow-md dark:bg-gray-700 dark:text-gray-300 h-full">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
@@ -70,7 +75,8 @@ const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
         eventClick={handleEventClick}
         eventContent={FullCalendarCard} 
         // height="auto"
-        height={600}
+        // height={600}
+        height="100%"
         // eventClassNames="text-sm font-semibold p-1 rounded-md"
       />
 

@@ -24,11 +24,11 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@headlessui/react": "^2.2.4",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
     "@mui/system": "^7.2.0",
     "@mui/x-date-pickers": "^8.7.0",
-    "@headlessui/react": "^2.2.4",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@types/fullcalendar": "^3.8.0",
     "@types/lodash": "^4.17.16",
@@ -42,6 +42,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
+    "react-select": "^5.10.2",
     "zod": "^3.23.3"
   },
   "devDependencies": {
