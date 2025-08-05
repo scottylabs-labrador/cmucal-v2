@@ -45,3 +45,5 @@ def get_course_data():
     # Write to output JSON file
     with open('courses_output.json', 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2)
+
+

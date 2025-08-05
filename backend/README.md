@@ -21,5 +21,10 @@ IF need to get the table schema from Supabase: in the terminal, run `sqlacodegen
 - add `from app.services.db import Base` to the top of `models.py`
 - change all capitalized class names from plural to singular. i.e. class Events --> class Event. Don't change the lowercase names in quotes.
 
+## 4. Course data
+(ignore this unless told otherwise) IF need to scrape data from cmu schedule of classes
+- first follow the instructions in the `rust` directory's README file. 
+- Then, cd into the backend folder, and run `flask import-courses`
+
 ## Dev To-do
 - remove `os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"` after flask app has been deployed. This is only for developmet environment.
