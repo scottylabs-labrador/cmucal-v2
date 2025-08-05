@@ -1,0 +1,53 @@
+"use client";
+
+import { useEventState } from "../../context/EventStateContext";
+// import { useContext } from "react";
+import ModalEvent from "./ModalEvent";
+import ModalEventForm from "./ModalEventForm";
+import ModalEventUpdate from "./ModalEventUpdate";
+import { useEffect } from "react";
+
+// import ModalUploadOne from "./ModalUploadOne";
+import dynamic from 'next/dynamic';
+// Dynamically import ModalUploadOne
+const ModalUploadOne = dynamic(() => import('./ModalUploadOne'), {
+  ssr: false,
+});
+
+
+
+export default function ModalRender() {
+    // const [selectedEvent, setSelectedEvent] = useState<number|null>(null);
+    // const [modalView, setModalView] = useState<ModalView>(null);
+    const { modalView, closeModal, modalData } = useEventState();
+    console.log("[RENDER] modal: ", modalView);
+    console.log("hellooooo????");
+    console.log("[MODAL DATA] ", modalData);
+    
+    useEffect(() => {
+        console.log("[MODAL CHANGE]", modalView);
+      }, [modalView]);
+
+    if (!modalView) return null;
+     
+    return (
+        <>
+            {modalView==="details" && (
+                // <div style={{ position: "fixed", top: 0, left: 0, backgroundColor: "lime", padding: 20, zIndex: 9999 }}>
+                //     Modal is showing!
+                // </div>
+                <ModalEvent show={true} onClose={closeModal}/>
+            )}
+            {modalView==="update" && (
+                <ModalEventUpdate show={true} onClose={closeModal} />
+            )}
+            {modalView==="pre_upload" && (
+                <ModalUploadOne show={true} onClose={closeModal} />
+            )}
+            {modalView==="upload" && (
+                <ModalEventForm show={true} onClose={closeModal} 
+                selectedCategory={modalData.selectedCategory} />
+            )}
+        </>
+    )
+}

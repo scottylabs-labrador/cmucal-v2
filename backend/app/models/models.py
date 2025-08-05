@@ -7,6 +7,18 @@ import datetime
 from app.services.db import Base
 from app.models.enums import FrequencyType, RecurrenceType
 
+class CrosslistGroup(Base):
+    __tablename__ = 'crosslist_groups'
+    __table_args__ = (
+        PrimaryKeyConstraint('id', name='crosslist_groups_pkey'),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+
+    course_crosslist: Mapped[List['CourseCrosslist']] = relationship('CourseCrosslist', back_populates='group')
+
 class Academic(Base):
     __tablename__ = 'academics'
     __table_args__ = (
@@ -45,14 +57,45 @@ class Organization(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
     tags: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
     description: Mapped[Optional[str]] = mapped_column(Text)
-    crosslisted: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
+    type: Mapped[Optional[str]] = mapped_column(Text)
 
     admins: Mapped[List['Admin']] = relationship('Admin', back_populates='org')
+    courses: Mapped[List['Course']] = relationship('Course', back_populates='org')
     categories: Mapped[List['Category']] = relationship('Category', back_populates='org')
     events: Mapped[List['Event']] = relationship('Event', back_populates='org')
     event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='org')
     schedule_orgs: Mapped[List['ScheduleOrg']] = relationship('ScheduleOrg', back_populates='org')
 
+class Course(Base):
+    __tablename__ = 'courses'
+    __table_args__ = (
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='courses_org_id_fkey'),
+        PrimaryKeyConstraint('id', name='courses_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    course_number: Mapped[str] = mapped_column(Text)
+    org_id: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+
+    org: Mapped['Organization'] = relationship('Organization', back_populates='courses')
+    course_crosslist: Mapped[List['CourseCrosslist']] = relationship('CourseCrosslist', back_populates='course')
+
+class CourseCrosslist(Base):
+    __tablename__ = 'course_crosslist'
+    __table_args__ = (
+        ForeignKeyConstraint(['course_id'], ['courses.id'], ondelete='CASCADE', name='course_crosslist_course_id_fkey'),
+        ForeignKeyConstraint(['group_id'], ['crosslist_groups.id'], ondelete='CASCADE', name='course_crosslist_group_id_fkey'),
+        PrimaryKeyConstraint('id', name='course_crosslist_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    course_id: Mapped[int] = mapped_column(BigInteger)
+    group_id: Mapped[int] = mapped_column(BigInteger)
+
+    course: Mapped['Course'] = relationship('Course', back_populates='course_crosslist')
+    group: Mapped['CrosslistGroup'] = relationship('CrosslistGroup', back_populates='course_crosslist')
 
 t_pg_stat_statements = Table(
     'pg_stat_statements', Base.metadata,

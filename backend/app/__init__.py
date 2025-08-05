@@ -14,6 +14,7 @@ from app.api.google_oauth import google_bp
 from app.api.events import events_bp
 from app.api.schedule import schedule_bp
 from app.services.db import SessionLocal, Base
+from app.cli import import_courses_command
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -50,5 +51,7 @@ def create_app():
 
     # CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True, automatic_options=True)
     
+    # Register CLI command
+    app.cli.add_command(import_courses_command)
 
     return app

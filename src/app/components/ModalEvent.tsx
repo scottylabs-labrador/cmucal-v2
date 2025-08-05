@@ -8,18 +8,24 @@ import { User } from 'lucide-react';
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from 'react';
 import { userAgent } from 'next/server';
+// import ModalEventUpdate from './ModalEventUpdate';
+import { useEventState } from "../../context/EventStateContext";
 
 type ModalEventProps = {
     show: boolean;
     onClose: () => void;
-    toggleAdded: (eventId:string) => void;
-    eventId: string;
+    toggleAdded?: (eventId:number) => void;
+    // eventId?: number|null;
 }
 
-export default function ModalEvent({ show, onClose, toggleAdded, eventId }: ModalEventProps) {
-    if (eventId=="") return null;
+export default function ModalEvent({ show, onClose, toggleAdded }: ModalEventProps) {    
     const { user } = useUser();
+    const { selectedEvent, openUpdate, closeModal} = useEventState();
     const [eventDetails, setEventDetails] = useState<EventType | null>(null);
+
+    const eventId = selectedEvent;
+    
+    const isAdmin = eventDetails?.user_is_admin;
 
     useEffect(() => {
         // get specific event with ID
@@ -31,10 +37,9 @@ export default function ModalEvent({ show, onClose, toggleAdded, eventId }: Moda
         })
             .then(res => setEventDetails(res.data))
             .catch(err => console.error("Failed to fetch event:", eventId, err));
-    }, [eventId])
-    
-    const isAdmin = eventDetails?.user_is_admin;
+    }, [eventId])    
 
+    
     return (
         <Modal show={show} onClose={onClose}>
             <div>
@@ -54,12 +59,11 @@ export default function ModalEvent({ show, onClose, toggleAdded, eventId }: Moda
                    { eventDetails.user_saved ? "Remove" : "Add" }
                 </button> 
                 <button className={`px-4 py-2 rounded-md ${ isAdmin ? "flex-1" : "hidden"}  bg-gray-200`}
-                    onClick={() => console.log("clicked edit...")}>
+                    onClick={() => { openUpdate(eventDetails.id) }}>
                     Edit Event
                 </button></div>
                 </>)}
             </div>
         </Modal>
-
     )
 }

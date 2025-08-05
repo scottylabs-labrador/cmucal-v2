@@ -7,9 +7,27 @@ from app.services.db import SessionLocal
 from app.models.organization import create_organization
 from app.models.admin import create_admin
 from app.models.category import create_category
+from app.utils.course_data import get_course_data
+
 
 
 orgs_bp = Blueprint("orgs", __name__)
+
+@orgs_bp.route("/get_courses", methods=["GET"])
+def get_courses_from_soc():
+    """
+    Endpoint to fetch course data from the JSON file.
+    To update the JSON file, follow the instructions in the README in the rust directory.
+    """
+    try:
+        courses = get_course_data()
+        return jsonify(courses), 200
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": "An error occurred while fetching course data."}), 500
+
+
 
 
 @orgs_bp.route("/create_org", methods=["POST"])
@@ -19,10 +37,11 @@ def create_org_record():
             data = request.get_json()
             org_name = data.get("name")
             org_description = data.get("description", None)
+            org_type = data.get("type", None)
             if not org_name:
                 return jsonify({"error": "Missing org_name"}), 400
-            
-            org = create_organization(db, name=org_name, description=org_description)
+
+            org = create_organization(db, name=org_name, description=org_description, type=org_type)
 
             return jsonify({"status": "created", "org_id": org.id}), 201
         except Exception as e:

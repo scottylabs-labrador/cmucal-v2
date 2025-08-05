@@ -10,7 +10,8 @@ import { BsCalendar3 } from "react-icons/bs"; // Calendar icon
 import { ReactNode } from "react";
 
 // import ModalUploadOne from "./ModalUploadOne"; 
-import ModalUploadTwo from "./ModalUploadTwo"; 
+// import ModalEventForm from "./ModalEventForm"; 
+import { useEventState } from "../../context/EventStateContext";
 import { useUser } from "@clerk/clerk-react";
 
 import { ConnectGoogleButton } from "./ConnectGoogleButton";
@@ -20,11 +21,11 @@ import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import axios from 'axios';
 
-import dynamic from 'next/dynamic';
-// Dynamically import ModalUploadOne
-const ModalUploadOne = dynamic(() => import('./ModalUploadOne'), {
-  ssr: false,
-});
+// import dynamic from 'next/dynamic';
+// // Dynamically import ModalUploadOne
+// const ModalUploadOne = dynamic(() => import('./ModalUploadOne'), {
+//   ssr: false,
+// });
 
 
 
@@ -36,8 +37,9 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [showUploadModalOne, setShowUploadModalOne] = useState(false);
-  const [showUploadModalTwo, setShowUploadModalTwo] = useState(false);  
+  // const [showUploadModalOne, setShowUploadModalOne] = useState(false);
+  // const [showUploadModalTwo, setShowUploadModalTwo] = useState(false);  
+  const { openPreUpload } = useEventState();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [userId, setUserId] = useState<string>("n/a");
   const pathname = usePathname();
@@ -90,7 +92,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   return (
     <>
-      <nav className="flex items-center justify-between p-3 border-b bg-white dark:bg-gray-800">
+      <nav className="flex sticky top-0 z-50 items-center justify-between p-3 border-b bg-white dark:bg-gray-800">
         {/* Left Section: User & Search */}
         <div className="flex items-center space-x-2">
           {/* User Icon (Links to Profile Page) */}
@@ -163,7 +165,8 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </FormControl>
           
           <button
-            onClick={() => setShowUploadModalOne(true)}
+            // onClick={() => setShowUploadModalOne(true)}
+            onClick={() => openPreUpload()}
             className="px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500"
           >
             Upload
@@ -209,7 +212,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
         </div>
 
       {/* Modal component */}
-      {showUploadModalOne && (
+      {/* {showUploadModalOne && (
         <ModalUploadOne
           showUploadModalOne={showUploadModalOne}
           setShowUploadModalOne={setShowUploadModalOne}
@@ -218,15 +221,15 @@ export default function Navbar({ UserButton }: NavBarProps) {
           setSelectedCategory={setSelectedCategory}
           onClose={() => setShowUploadModalOne(false)}
         />
-      )}
+      )} */}
 
-      {showUploadModalTwo && (
-        <ModalUploadTwo
+      {/* {showUploadModalTwo && (
+        <ModalEventForm
           show={showUploadModalTwo}
           onClose={() => setShowUploadModalTwo(false)}
           selectedCategory={selectedCategory}
         />
-      )}
+      )} */}
 
       </nav>
     </>

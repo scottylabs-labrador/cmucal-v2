@@ -13,7 +13,7 @@ from app.models.tag import get_tag_by_name, save_tag, get_all_tags
 from app.models.event_tag import save_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
-from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence
+from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence, EventTag
 import pprint
 from datetime import datetime
 
@@ -258,6 +258,8 @@ def get_tags():
 
 @events_bp.route("/", methods=["GET"])
 def get_all_events():
+    tag_ids_raw = request.args.get("tags")
+    tag_ids = tag_ids_raw.split(",") if tag_ids_raw else []
     with SessionLocal() as db:
         try:
             # get user
@@ -269,6 +271,10 @@ def get_all_events():
             # only select some columns to save loading cost
             events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime, 
                 Event.location, Event.org_id, Event.category_id)
+            
+            # if tags are applied, filter results
+            if len(tag_ids) > 0:
+                events = events.join(EventTag).filter(EventTag.tag_id.in_(tag_ids)).group_by(Event.id)
 
             # check for saved events
             if user:
