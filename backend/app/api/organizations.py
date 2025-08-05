@@ -7,9 +7,24 @@ from app.services.db import SessionLocal
 from app.models.organization import create_organization
 from app.models.admin import create_admin
 from app.models.category import create_category
+from app.utils.course_data import get_course_data
 
 
 orgs_bp = Blueprint("orgs", __name__)
+
+@orgs_bp.route("/get_courses", methods=["GET"])
+def get_courses_from_soc():
+    """
+    Endpoint to fetch course data from the JSON file.
+    To update the JSON file, follow the instructions in the README in the rust directory.
+    """
+    try:
+        courses = get_course_data()
+        return jsonify(courses), 200
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": "An error occurred while fetching course data."}), 500
 
 
 @orgs_bp.route("/create_org", methods=["POST"])
