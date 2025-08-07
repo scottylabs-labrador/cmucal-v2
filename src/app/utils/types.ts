@@ -157,3 +157,10 @@ export interface Club {
         [category_name: string]: EventOccurrence[];
     };
 }
+
+export interface CourseOption {
+  id: string;
+  number: string;
+  title: string;
+  label: string;
+};

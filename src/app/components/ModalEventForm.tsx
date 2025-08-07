@@ -37,7 +37,7 @@ import { useUser } from "@clerk/nextjs";
 import CustomRecurrenceModal from "./CustomRecurrenceModal"; 
 import { set } from "lodash";
 import { start } from "repl";
-import { RecurrenceInput, PayloadType } from "../utils/types";
+import { RecurrenceInput, PayloadType, CourseOption } from "../utils/types";
 import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency, getNthDayOfWeekInMonth, isLastWeekdayInMonth } from "../utils/dateService";
 import { el } from "node_modules/@fullcalendar/core/internal-common";
 import Modal from './Modal';
@@ -143,19 +143,20 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
   const [host, setHost] = useState("");
 
   // Academic
-  const [course, setCourse] = useState("none");
-  const [courseNum, setCourseNum] = useState("");
-  const [courseName, setCourseName] = useState("");
+  const [course, setCourse] = useState(selectedCategory.organization_name || "none");
+  const [courseNum, setCourseNum] = useState(selectedCategory.organization_name.split(" ")[0]|| "none");
+  const [courseName, setCourseName] = useState(selectedCategory.organization_name.split(" ").slice(1).join(" ") || "none");
 
   const [courseError, setCourseError] = useState(false);
-  const courses = [
-    "15-112: Fundamentals of Programming",
-    "15-213: Intro to Computer Systems",
-    "15-251: Great Theoretical Ideas",
-    "15-281: Artificial Intelligence",
-    "15-410: Operating Systems",
-    // Manual for now... perhaps get the data from cmucourses later
-  ];
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  // const courses = [
+  //   "15-112: Fundamentals of Programming",
+  //   "15-213: Intro to Computer Systems",
+  //   "15-251: Great Theoretical Ideas",
+  //   "15-281: Artificial Intelligence",
+  //   "15-410: Operating Systems",
+  //   // Manual for now... perhaps get the data from cmucourses later
+  // ];
   const [instructors, setInstructors] = useState<string[]>([]);
   const [instructorStr, setInstructorStr] = useState("");
 
@@ -189,7 +190,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
     // the rest of the recurrence settings
     setRequireRegistration(false);
     setHost("");
-    setCourse("none");
+    setCourse(selectedCategory.organization_name);
     setCourseNum("");
     setCourseName("");
     setInstructors([]);
@@ -224,6 +225,8 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
       isLocationInvalid
     );
   };
+
+
 
   const handleSubmit = async () => {
     const isValid = validate();
@@ -261,7 +264,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           if (allDay && !startTime && !endTime) {
             payload.start_datetime = date ? dayjs(date).startOf('day').utc().toISOString() : null;
             payload.end_datetime = date ? dayjs(date).add(1, 'day').startOf('day').utc().toISOString() : null;
-
           }
 
           if (selectedEventType === "Academic") {
@@ -395,22 +397,30 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
       }
     };
 
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5001/api/orgs/get_course_orgs", {
+          withCredentials: true
+        });
+
+        if (res.status === 200) {
+          const data: CourseOption[] = res.data;
+
+          // Sort by course number, which is a string in the format "15-112"
+          data.sort((a, b) => { return a.number.localeCompare(b.number);}) // Sorts in ascending order
+
+          setCourses(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch courses:", err);
+      }
+    };
+    
+
     fetchTags();
+    fetchCourses();
   }, []);
 
-  const handleCourseChange = (e: SelectChangeEvent) => {
-    const value = e.target.value;
-    setCourse(value);
-    if (value === "") {
-      setCourseError(true);
-    } else {
-      const [num, ...nameParts] = value.split(": ");
-      setCourseNum(num? num.trim() : "");
-      setCourseName(nameParts.join("").trim());
-      setCourseError(false);
-      console.log("courseNum:", courseNum, "courseName:", courseName);
-    }
-  };
 
   const handleInstructorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -684,7 +694,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           {/* Course */}
           {selectedEventType === "Academic" && (
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Course</InputLabel>
+              {/* <InputLabel>Course</InputLabel>
               <Select
                 value={course}
                 label="Course"
@@ -699,7 +709,46 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
                       {c}
                     </MenuItem>
                   ))}
-              </Select>
+              </Select> */}
+              <Autocomplete
+                fullWidth
+                size="small"
+                options={courses}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={courses.find(c => c.label === course) || null}
+                onChange={(event, newValue) => {
+                  if (newValue) {
+                    setCourse(newValue.label);
+                    setCourseNum(newValue.number);
+                    setCourseName(newValue.title);
+                    setCourseError(false);
+                  } else {
+                    setCourse("none");
+                    setCourseNum("");
+                    setCourseName("");
+                    setCourseError(true);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Course"
+                    required
+                    error={courseError}
+                    helperText={courseError ? "Please select a course." : ""}
+                  />
+                )}
+                filterOptions={(options, state) => {
+                  const input = state.inputValue.toLowerCase();
+                  return options.filter(
+                    (option) =>
+                      option.number.toLowerCase().includes(input) ||
+                      option.title.toLowerCase().includes(input)
+                  );
+                }}
+              />
+
               {courseError && (
                 <p className="text-red-500 text-xs mt-1 ml-4">
                   Please select a course.

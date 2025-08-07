@@ -19,6 +19,12 @@ def create_organization(db, name: str, description: str = None, type: str = None
     db.commit()
     return org
 
+def get_orgs_by_type(db, org_type: str):
+    """
+    Fetch all organizations of a specific type.
+    """
+    return db.query(Organization).filter(Organization.type == org_type).all()
+
 def get_organization_by_id(db, org_id: int):
     """
     Retrieve an organization by its ID.

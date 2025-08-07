@@ -4,7 +4,7 @@ from app.services.google_service import fetch_user_credentials
 from app.models.user import update_user_calendar_id
 from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
-from app.models.organization import create_organization
+from app.models.organization import create_organization, get_orgs_by_type
 from app.models.admin import create_admin
 from app.models.category import create_category
 from app.utils.course_data import get_course_data
@@ -12,6 +12,32 @@ from app.utils.course_data import get_course_data
 
 
 orgs_bp = Blueprint("orgs", __name__)
+
+@orgs_bp.route("/get_course_orgs", methods=["GET"])
+def get_course_orgs():
+    with SessionLocal() as db:
+        try:
+            orgs = get_orgs_by_type(db, org_type='COURSE')
+            if not orgs:
+                return jsonify({"error": "No course organizations found"}), 404
+            orgs_list = []
+            for org in orgs:
+                parts = org.name.split(" ")
+                course_num = parts[0]
+                course_title = " ".join(parts[1:])
+                orgs_list.append({
+                    "id": org.id,
+                    "number": course_num,
+                    "title": course_title,
+                    "label": org.name,
+                })
+
+            return jsonify(orgs_list), 200
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
 
 @orgs_bp.route("/get_courses", methods=["GET"])
 def get_courses_from_soc():
