@@ -143,19 +143,18 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
   const [host, setHost] = useState("");
 
   // Academic
-  const [course, setCourse] = useState(selectedCategory.organization_name || "none");
-  const [courseNum, setCourseNum] = useState(selectedCategory.organization_name.split(" ")[0]|| "none");
-  const [courseName, setCourseName] = useState(selectedCategory.organization_name.split(" ").slice(1).join(" ") || "none");
+  const [course, setCourse] = useState("none");
+  const [courseNum, setCourseNum] = useState("none");
+  const [courseName, setCourseName] = useState("none");
 
   const [courseError, setCourseError] = useState(false);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   // const courses = [
-  //   "15-112: Fundamentals of Programming",
-  //   "15-213: Intro to Computer Systems",
-  //   "15-251: Great Theoretical Ideas",
-  //   "15-281: Artificial Intelligence",
-  //   "15-410: Operating Systems",
-  //   // Manual for now... perhaps get the data from cmucourses later
+  //   "15-112 Fundamentals of Programming",
+  //   "15-213 Intro to Computer Systems",
+  //   "15-251 Great Theoretical Ideas",
+  //   "15-281 Artificial Intelligence",
+  //   "15-410 Operating Systems",
   // ];
   const [instructors, setInstructors] = useState<string[]>([]);
   const [instructorStr, setInstructorStr] = useState("");
@@ -419,6 +418,16 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
 
     fetchTags();
     fetchCourses();
+
+    const potentialCourseNum = selectedCategory.organization_name.split(" ")[0] || "none";
+    const match = potentialCourseNum.match(/\d\d-\d\d\d/);
+
+    if (match) {
+      setCourse(selectedCategory.organization_name);
+      setCourseNum(potentialCourseNum);
+      setCourseName(selectedCategory.organization_name.split(" ").slice(1).join(" "));
+    }
+    
   }, []);
 
 
