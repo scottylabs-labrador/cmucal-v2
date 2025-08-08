@@ -9,6 +9,7 @@ import { useEffect } from "react";
 
 // import ModalUploadOne from "./ModalUploadOne";
 import dynamic from 'next/dynamic';
+import ModalEventLink from "./ModalEventLink";
 // Dynamically import ModalUploadOne
 const ModalUploadOne = dynamic(() => import('./ModalUploadOne'), {
   ssr: false,
@@ -43,6 +44,10 @@ export default function ModalRender() {
             )}
             {modalView==="pre_upload" && (
                 <ModalUploadOne show={true} onClose={closeModal} />
+            )}
+            {modalView==="uploadLink" && (
+                <ModalEventLink show={true} onClose={closeModal} 
+                selectedCategory={modalData.selectedCategory} />
             )}
             {modalView==="upload" && (
                 <ModalEventForm show={true} onClose={closeModal} 

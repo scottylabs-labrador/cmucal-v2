@@ -37,7 +37,7 @@ import { useUser } from "@clerk/nextjs";
 import CustomRecurrenceModal from "./CustomRecurrenceModal"; 
 import { set } from "lodash";
 import { start } from "repl";
-import { RecurrenceInput, PayloadType, CourseOption } from "../utils/types";
+import { RecurrenceInput, EventPayloadType, CourseOption } from "../utils/types";
 import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency, getNthDayOfWeekInMonth, isLastWeekdayInMonth } from "../utils/dateService";
 import { el } from "node_modules/@fullcalendar/core/internal-common";
 import Modal from './Modal';
@@ -47,6 +47,7 @@ interface ModalProps {
   show: boolean;
   onClose: () => void;
   selectedCategory?: any; // Optional prop for selected category
+  eventType?: string; // Optional prop for event type
 }
 
 type Tag = { id?: string; name: string };
@@ -61,11 +62,11 @@ const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
 
 
-export default function ModalEventForm({ show, onClose, selectedCategory }: ModalProps) {
+export default function ModalEventForm({ show, onClose, selectedCategory, eventType }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();  // clerk user object
 
-  const [selectedEventType, setSelectedEventType] = useState<string>("");
+  const [selectedEventType, setSelectedEventType] = useState<string>(eventType || "");
   const [eventTypeError, setEventTypeError] = useState(false);
 
   const [gcalLink, setGcalLink] = useState("");
@@ -240,7 +241,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
         // create a payload with just the gcalLink
       } else {
 
-          const payload : PayloadType = {
+          const payload : EventPayloadType = {
             title: title,
             description: description,
             start_datetime: date && startTime
@@ -950,12 +951,12 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           </div>
 
           {/* Close Button */}
-          <button
+          {/* <button
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white"
           >
             &times;
-          </button>
+          </button> */}
         {/* </div>
       </div>
     </> */}

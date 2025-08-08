@@ -34,7 +34,7 @@ export default function ModalUploadOne({ show, onClose }: ModalProps) {
   const { user } = useUser();  // clerk user object
   const [loading, setLoading] = useState<boolean>(true);
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
-  const { openUpload } = useEventState();
+  const { openUploadLink } = useEventState();
 
   if (!user) return null;
 
@@ -119,7 +119,7 @@ export default function ModalUploadOne({ show, onClose }: ModalProps) {
               console.log("Selected category:", selectedOption);
               // setShowUploadModalOne(false);
               // setShowUploadModalTwo(true);
-              openUpload(selectedOption);
+              openUploadLink(selectedOption);
             }
           }}
         >

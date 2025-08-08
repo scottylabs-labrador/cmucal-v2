@@ -27,8 +27,8 @@ class Academic(Base):
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    course_num: Mapped[str] = mapped_column(Text)
-    course_name: Mapped[str] = mapped_column(Text)
+    course_num: Mapped[Optional[str]] = mapped_column(Text)
+    course_name: Mapped[Optional[str]] = mapped_column(Text)
     instructors: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
 
@@ -407,7 +407,7 @@ class RecurrenceRule(Base):
     orig_until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
-    event_overrides: Mapped[List['EventOverride']] = relationship('EventOverrides', back_populates='rrule')
+    event_overrides: Mapped[List['EventOverride']] = relationship('EventOverride', back_populates='rrule')
     recurrence_exdates: Mapped[List['RecurrenceExdate']] = relationship('RecurrenceExdate', back_populates='rrule')
     recurrence_rdates: Mapped[List['RecurrenceRdate']] = relationship('RecurrenceRdate', back_populates='rrule')
 
