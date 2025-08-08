@@ -35,6 +35,8 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
   const [selectedEventType, setSelectedEventType] = useState<string>("");
   const [eventTypeError, setEventTypeError] = useState(false);
 
+  const [gcalSelected, setGcalSelected] = useState(false);
+
   const [gcalLink, setGcalLink] = useState("");
   const [gcalLinkError, setGcalLinkError] = useState(false);
 
@@ -48,11 +50,16 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
   const reset = () => {
     setSelectedEventType("");
     setGcalLink("");
+    setGcalSelected(false);
+    setSelectManual(false);
+    setEventTypeError(false);
+    setGcalLinkError(false);
+    setOptionError(false);
   }
 
   const validate = () => {
-    const isEventTypeInvalid = !selectedEventType;
-    const isRightFormat = gcalLink.trim().startsWith("https://calendar.google.com/calendar/ical/");
+    const isEventTypeInvalid = !selectedEventType && !selectManual;
+    const isRightFormat = selectManual || gcalLink.trim().startsWith("https://calendar.google.com/calendar/ical/");
     const noOptionSelected = !gcalLink && !selectManual;
 
     setEventTypeError(isEventTypeInvalid);
@@ -68,6 +75,12 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
 
 
   const handleSubmit = async () => {
+    const isValid = validate();
+    if (!isValid) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
     try {
       if (selectManual) {
         openUpload(selectedCategory, selectedEventType);
@@ -75,11 +88,6 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
       }
 
       else if (gcalLink.trim()) {
-        const isValid = validate();
-        if (!isValid) {
-          alert("Please fill in all required fields.");
-          return;
-        }
 
         const payload : GCalLinkPayloadType = {
           gcal_link: gcalLink,
@@ -146,9 +154,10 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
       {/* GCal Link Input */}
       <div
         className={`w-full cursor-pointer p-4 rounded-md border-2 mb-4 transition-colors
-          ${!selectManual && gcalLink ? "border-blue-200 bg-amber-100 dark:bg-gray-800" : "border-gray-300 hover:border-blue-200 hover:bg-amber-100 dark:hover:bg-gray-800"}`}
+          ${gcalSelected ? "border-blue-200 bg-amber-100 dark:bg-gray-800" : "border-gray-300 hover:border-blue-200 hover:bg-amber-100 dark:hover:bg-gray-800"}`}
         onClick={() => {
           setSelectManual(false);
+          setGcalSelected(true);
         }}
       >
         <p className="text-md font-medium text-gray-800 dark:text-white mb-2">Read events from an iCal link</p>
@@ -181,8 +190,11 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
       {/* Manually fill out the form */}
       <div
         onClick={() => {
+          reset(); // reset all other states
           setSelectManual(true);
           setGcalLink(""); // mutually exclusive: clear gcal link
+          setGcalSelected(false); // reset gcal selection
+          
         }}
         className={`w-full cursor-pointer p-4 rounded-md border-2 mb-4 transition-colors
           ${selectManual ? "border-blue-200 bg-amber-100 dark:bg-gray-800" : "border-gray-300 hover:border-blue-200 hover:bg-amber-100 dark:hover:bg-gray-800"}`}
