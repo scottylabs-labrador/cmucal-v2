@@ -34,7 +34,7 @@ export default function ModalUploadOne({ show, onClose }: ModalProps) {
   const { user } = useUser();  // clerk user object
   const [loading, setLoading] = useState<boolean>(true);
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
-  const { openUpload } = useEventState();
+  const { openUploadLink } = useEventState();
 
   if (!user) return null;
 
@@ -105,6 +105,11 @@ export default function ModalUploadOne({ show, onClose }: ModalProps) {
             </option>
           ))}
         </select>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          No available calendars? Please fill out this
+          <a href='https://forms.gle/DaaShMuQpbYiSNLn6' target='_blank' className="text-blue-600 hover:underline"> google form </a>
+          to request edit access to an organization's calendar.
+        </p>
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded-md w-full"
           disabled={!selectedOption}
@@ -114,7 +119,7 @@ export default function ModalUploadOne({ show, onClose }: ModalProps) {
               console.log("Selected category:", selectedOption);
               // setShowUploadModalOne(false);
               // setShowUploadModalTwo(true);
-              openUpload(selectedOption);
+              openUploadLink(selectedOption);
             }
           }}
         >

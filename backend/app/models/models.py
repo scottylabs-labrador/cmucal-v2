@@ -27,8 +27,8 @@ class Academic(Base):
     )
 
     event_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    course_num: Mapped[str] = mapped_column(Text)
-    course_name: Mapped[str] = mapped_column(Text)
+    course_num: Mapped[Optional[str]] = mapped_column(Text)
+    course_name: Mapped[Optional[str]] = mapped_column(Text)
     instructors: Mapped[Optional[list]] = mapped_column(ARRAY(Text()))
 
 
@@ -284,6 +284,9 @@ class Event(Base):
     source_url: Mapped[Optional[str]] = mapped_column(Text)
     event_type: Mapped[Optional[str]] = mapped_column(Text)
     last_updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    ical_uid: Mapped[Optional[str]] = mapped_column(Text)
+    ical_sequence: Mapped[Optional[int]] = mapped_column(BigInteger)
+    ical_last_modified: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
 
     category: Mapped['Category'] = relationship('Category', back_populates='events')
     org: Mapped['Organization'] = relationship('Organization', back_populates='events')
@@ -404,7 +407,56 @@ class RecurrenceRule(Base):
     orig_until: Mapped[Optional[datetime.date]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     event: Mapped['Event'] = relationship('Event', back_populates='recurrence_rules')
+    event_overrides: Mapped[List['EventOverride']] = relationship('EventOverride', back_populates='rrule')
+    recurrence_exdates: Mapped[List['RecurrenceExdate']] = relationship('RecurrenceExdate', back_populates='rrule')
+    recurrence_rdates: Mapped[List['RecurrenceRdate']] = relationship('RecurrenceRdate', back_populates='rrule')
 
+class RecurrenceExdate(Base):
+    __tablename__ = 'recurrence_exdates'
+    __table_args__ = (
+        ForeignKeyConstraint(['rrule_id'], ['recurrence_rules.id'], ondelete='CASCADE', name='recurrence_exdates_rrule_id_fkey'),
+        PrimaryKeyConstraint('id', name='recurrence_exdates_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    rrule_id: Mapped[int] = mapped_column(BigInteger)
+    exdate: Mapped[datetime.datetime] = mapped_column(DateTime(True))
+
+    rrule: Mapped['RecurrenceRule'] = relationship('RecurrenceRule', back_populates='recurrence_exdates')
+
+class RecurrenceRdate(Base):
+    __tablename__ = 'recurrence_rdates'
+    __table_args__ = (
+        ForeignKeyConstraint(['rrule_id'], ['recurrence_rules.id'], ondelete='CASCADE', name='recurrence_rdates_rrule_id_fkey'),
+        PrimaryKeyConstraint('id', name='recurrence_rdates_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    rrule_id: Mapped[int] = mapped_column(BigInteger)
+    rdate: Mapped[datetime.datetime] = mapped_column(DateTime(True))
+
+    rrule: Mapped['RecurrenceRule'] = relationship('RecurrenceRule', back_populates='recurrence_rdates')
+
+class EventOverride(Base):
+    __tablename__ = 'event_overrides'
+    __table_args__ = (
+        ForeignKeyConstraint(['rrule_id'], ['recurrence_rules.id'], ondelete='CASCADE', name='event_overrides_rrule_id_fkey'),
+        PrimaryKeyConstraint('id', name='event_overrides_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    rrule_id: Mapped[int] = mapped_column(BigInteger)
+    recurrence_date: Mapped[datetime.datetime] = mapped_column(DateTime(True))
+    new_start: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    new_end: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    new_title: Mapped[Optional[str]] = mapped_column(Text)
+    new_description: Mapped[Optional[str]] = mapped_column(Text)
+    new_location: Mapped[Optional[str]] = mapped_column(Text)
+
+    rrule: Mapped['RecurrenceRule'] = relationship('RecurrenceRule', back_populates='event_overrides')
 
 class UserSavedEvent(Base):
     __tablename__ = 'user_saved_events'

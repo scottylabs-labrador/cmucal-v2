@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export type ModalView = "details" | "update" | "pre_upload" | "upload" | null;
+export type ModalView = "details" | "update" | "pre_upload" | "upload" | "uploadLink" | null;
 
 type EventStateContextType = {
   selectedEvent: number|null;
@@ -31,11 +31,18 @@ export const useEventState = () => {
     context.setSelectedEvent(null);
     context.setModalView("pre_upload");
   }
-  const openUpload = (selectedCategory: any) => {
+  const openUploadLink = (selectedCategory: any) => {
     // context.setSelectedEvent(null); // no need since always routed from pre-upload
     context.setModalData({"selectedCategory": selectedCategory})
+    // need to add modalData
+    context.setModalView("uploadLink");
+  };
+  const openUpload = (selectedCategory: any, eventType: any) => {
+    // context.setSelectedEvent(null); // no need since always routed from pre-upload
+    context.setModalData({"selectedCategory": selectedCategory, "eventType": eventType})
     context.setModalView("upload");
   };
+  
   const closeModal = () => {
     context.setSelectedEvent(null);
     context.setModalView(null);
@@ -49,6 +56,7 @@ export const useEventState = () => {
     openUpdate,
     openPreUpload,
     openUpload,
+    openUploadLink,
     closeModal
   }
 };

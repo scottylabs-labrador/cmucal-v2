@@ -37,7 +37,7 @@ import { useUser } from "@clerk/nextjs";
 import CustomRecurrenceModal from "./CustomRecurrenceModal"; 
 import { set } from "lodash";
 import { start } from "repl";
-import { RecurrenceInput, PayloadType } from "../utils/types";
+import { RecurrenceInput, EventPayloadType, CourseOption } from "../utils/types";
 import { formatRecurrence, toDBRecurrenceEnds, toRRuleFrequency, getNthDayOfWeekInMonth, isLastWeekdayInMonth } from "../utils/dateService";
 import { el } from "node_modules/@fullcalendar/core/internal-common";
 import Modal from './Modal';
@@ -47,6 +47,7 @@ interface ModalProps {
   show: boolean;
   onClose: () => void;
   selectedCategory?: any; // Optional prop for selected category
+  eventType?: string; // Optional prop for event type
 }
 
 type Tag = { id?: string; name: string };
@@ -61,14 +62,12 @@ const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
 
 
-export default function ModalEventForm({ show, onClose, selectedCategory }: ModalProps) {
+export default function ModalEventForm({ show, onClose, selectedCategory, eventType }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();  // clerk user object
 
-  const [selectedEventType, setSelectedEventType] = useState<string>("");
+  const [selectedEventType, setSelectedEventType] = useState<string>(eventType || "");
   const [eventTypeError, setEventTypeError] = useState(false);
-
-  const [gcalLink, setGcalLink] = useState("");
 
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
@@ -144,18 +143,18 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
 
   // Academic
   const [course, setCourse] = useState("none");
-  const [courseNum, setCourseNum] = useState("");
-  const [courseName, setCourseName] = useState("");
+  const [courseNum, setCourseNum] = useState("none");
+  const [courseName, setCourseName] = useState("none");
 
   const [courseError, setCourseError] = useState(false);
-  const courses = [
-    "15-112: Fundamentals of Programming",
-    "15-213: Intro to Computer Systems",
-    "15-251: Great Theoretical Ideas",
-    "15-281: Artificial Intelligence",
-    "15-410: Operating Systems",
-    // Manual for now... perhaps get the data from cmucourses later
-  ];
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  // const courses = [
+  //   "15-112 Fundamentals of Programming",
+  //   "15-213 Intro to Computer Systems",
+  //   "15-251 Great Theoretical Ideas",
+  //   "15-281 Artificial Intelligence",
+  //   "15-410 Operating Systems",
+  // ];
   const [instructors, setInstructors] = useState<string[]>([]);
   const [instructorStr, setInstructorStr] = useState("");
 
@@ -174,7 +173,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
 
   const reset = () => {
     setSelectedEventType("");
-    setGcalLink("");
     setTitle("");
     setLocation("");
     setSourceURL("");
@@ -189,7 +187,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
     // the rest of the recurrence settings
     setRequireRegistration(false);
     setHost("");
-    setCourse("none");
+    setCourse(selectedCategory.organization_name);
     setCourseNum("");
     setCourseName("");
     setInstructors([]);
@@ -200,11 +198,11 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
   const validate = () => {
     const isEventTypeInvalid = !selectedEventType;
     const isCourseInvalid = selectedEventType === "Academic" && course === "none";
-    const isTitleInvalid = !gcalLink.trim() && !title.trim();
-    const isDateInvalid = !gcalLink.trim() && !date;
-    const isStartInvalid = !gcalLink.trim() && !allDay && !startTime;
-    const isEndInvalid = !gcalLink.trim() && !allDay && !endTime;
-    const isLocationInvalid = !gcalLink.trim() && !location.trim();
+    const isTitleInvalid = !title.trim();
+    const isDateInvalid = !date;
+    const isStartInvalid = !allDay && !startTime;
+    const isEndInvalid = !allDay && !endTime;
+    const isLocationInvalid = !location.trim();
 
     setEventTypeError(isEventTypeInvalid);
     setCourseError(isCourseInvalid);
@@ -225,6 +223,8 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
     );
   };
 
+
+
   const handleSubmit = async () => {
     const isValid = validate();
     if (!isValid) {
@@ -233,12 +233,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
     }
 
     try {
-      if (gcalLink.trim()) {
-        // If gcalLink is provided, we can skip other fields
-        // create a payload with just the gcalLink
-      } else {
-
-          const payload : PayloadType = {
+          const payload : EventPayloadType = {
             title: title,
             description: description,
             start_datetime: date && startTime
@@ -261,7 +256,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           if (allDay && !startTime && !endTime) {
             payload.start_datetime = date ? dayjs(date).startOf('day').utc().toISOString() : null;
             payload.end_datetime = date ? dayjs(date).add(1, 'day').startOf('day').utc().toISOString() : null;
-
           }
 
           if (selectedEventType === "Academic") {
@@ -366,7 +360,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           } else {
             alert("Something went wrong while submitting.");
           }
-        }
     } catch (err) {
       console.error("Submission error:", err);
       alert("Failed to submit. Please try again.");
@@ -395,22 +388,40 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
       }
     };
 
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5001/api/orgs/get_course_orgs", {
+          withCredentials: true
+        });
+
+        if (res.status === 200) {
+          const data: CourseOption[] = res.data;
+
+          // Sort by course number, which is a string in the format "15-112"
+          data.sort((a, b) => { return a.number.localeCompare(b.number);}) // Sorts in ascending order
+
+          setCourses(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch courses:", err);
+      }
+    };
+    
+
     fetchTags();
+    fetchCourses();
+
+    const potentialCourseNum = selectedCategory.organization_name.split(" ")[0] || "none";
+    const match = potentialCourseNum.match(/\d\d-\d\d\d/);
+
+    if (match) {
+      setCourse(selectedCategory.organization_name);
+      setCourseNum(potentialCourseNum);
+      setCourseName(selectedCategory.organization_name.split(" ").slice(1).join(" "));
+    }
+    
   }, []);
 
-  const handleCourseChange = (e: SelectChangeEvent) => {
-    const value = e.target.value;
-    setCourse(value);
-    if (value === "") {
-      setCourseError(true);
-    } else {
-      const [num, ...nameParts] = value.split(": ");
-      setCourseNum(num? num.trim() : "");
-      setCourseName(nameParts.join("").trim());
-      setCourseError(false);
-      console.log("courseNum:", courseNum, "courseName:", courseName);
-    }
-  };
 
   const handleInstructorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -684,7 +695,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           {/* Course */}
           {selectedEventType === "Academic" && (
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Course</InputLabel>
+              {/* <InputLabel>Course</InputLabel>
               <Select
                 value={course}
                 label="Course"
@@ -699,7 +710,46 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
                       {c}
                     </MenuItem>
                   ))}
-              </Select>
+              </Select> */}
+              <Autocomplete
+                fullWidth
+                size="small"
+                options={courses}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={courses.find(c => c.label === course) || null}
+                onChange={(event, newValue) => {
+                  if (newValue) {
+                    setCourse(newValue.label);
+                    setCourseNum(newValue.number);
+                    setCourseName(newValue.title);
+                    setCourseError(false);
+                  } else {
+                    setCourse("none");
+                    setCourseNum("");
+                    setCourseName("");
+                    setCourseError(true);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Course"
+                    required
+                    error={courseError}
+                    helperText={courseError ? "Please select a course." : ""}
+                  />
+                )}
+                filterOptions={(options, state) => {
+                  const input = state.inputValue.toLowerCase();
+                  return options.filter(
+                    (option) =>
+                      option.number.toLowerCase().includes(input) ||
+                      option.title.toLowerCase().includes(input)
+                  );
+                }}
+              />
+
               {courseError && (
                 <p className="text-red-500 text-xs mt-1 ml-4">
                   Please select a course.
@@ -832,25 +882,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           />
           
           
-          <hr className="my-4" />
-
-
-          {/* Google Calendar Link */}
-          <p className="text-sm">Or paste your Google Calendar link below</p>
-
-          <input
-            type="text"
-            placeholder="https://calendar.google.com/..."
-            value={gcalLink}
-            onChange={(e) => {
-              setGcalLink(e.target.value);
-            }}
-            className="w-full p-2 border rounded-md mb-2 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600"
-          />
-
-          <p className="text-xs text-gray-400 mb-4">
-            Need help? Go to Calendar Settings &gt; Get Sharable Link
-          </p>
 
           {/* Custom Recurrence Modal */}
           {showCustomRecurrence && (
@@ -892,12 +923,12 @@ export default function ModalEventForm({ show, onClose, selectedCategory }: Moda
           </div>
 
           {/* Close Button */}
-          <button
+          {/* <button
             onClick={onClose}
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white"
           >
             &times;
-          </button>
+          </button> */}
         {/* </div>
       </div>
     </> */}

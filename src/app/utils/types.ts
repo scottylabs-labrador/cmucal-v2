@@ -63,8 +63,17 @@ export interface AccordionProps {
   badge?: string;
 }
 
+export interface GCalLinkPayloadType {
+  gcal_link: string;
+  org_id: string;
+  category_id: string;
+  course_num?: string;
+  course_name?: string;
+  instructors?: string[];
+}
 
-export interface PayloadType {
+
+export interface EventPayloadType {
   title: string;
   description?: string;
   start_datetime?: string | null;
@@ -157,3 +166,10 @@ export interface Club {
         [category_name: string]: EventOccurrence[];
     };
 }
+
+export interface CourseOption {
+  id: string;
+  number: string;
+  title: string;
+  label: string;
+};
