@@ -68,12 +68,6 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
 
 
   const handleSubmit = async () => {
-    const isValid = validate();
-    if (!isValid) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
     try {
       if (selectManual) {
         openUpload(selectedCategory, selectedEventType);
@@ -81,8 +75,12 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
       }
 
       else if (gcalLink.trim()) {
-        // If gcalLink is provided, we can skip other fields
-        // create a payload with just the gcalLink
+        const isValid = validate();
+        if (!isValid) {
+          alert("Please fill in all required fields.");
+          return;
+        }
+
         const payload : GCalLinkPayloadType = {
           gcal_link: gcalLink,
           org_id: selectedCategory.org_id,

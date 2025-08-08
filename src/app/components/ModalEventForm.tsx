@@ -69,8 +69,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
   const [selectedEventType, setSelectedEventType] = useState<string>(eventType || "");
   const [eventTypeError, setEventTypeError] = useState(false);
 
-  const [gcalLink, setGcalLink] = useState("");
-
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
   const [location, setLocation] = useState("");
@@ -175,7 +173,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
 
   const reset = () => {
     setSelectedEventType("");
-    setGcalLink("");
     setTitle("");
     setLocation("");
     setSourceURL("");
@@ -201,11 +198,11 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
   const validate = () => {
     const isEventTypeInvalid = !selectedEventType;
     const isCourseInvalid = selectedEventType === "Academic" && course === "none";
-    const isTitleInvalid = !gcalLink.trim() && !title.trim();
-    const isDateInvalid = !gcalLink.trim() && !date;
-    const isStartInvalid = !gcalLink.trim() && !allDay && !startTime;
-    const isEndInvalid = !gcalLink.trim() && !allDay && !endTime;
-    const isLocationInvalid = !gcalLink.trim() && !location.trim();
+    const isTitleInvalid = !title.trim();
+    const isDateInvalid = !date;
+    const isStartInvalid = !allDay && !startTime;
+    const isEndInvalid = !allDay && !endTime;
+    const isLocationInvalid = !location.trim();
 
     setEventTypeError(isEventTypeInvalid);
     setCourseError(isCourseInvalid);
@@ -236,11 +233,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
     }
 
     try {
-      if (gcalLink.trim()) {
-        // If gcalLink is provided, we can skip other fields
-        // create a payload with just the gcalLink
-      } else {
-
           const payload : EventPayloadType = {
             title: title,
             description: description,
@@ -368,7 +360,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
           } else {
             alert("Something went wrong while submitting.");
           }
-        }
     } catch (err) {
       console.error("Submission error:", err);
       alert("Failed to submit. Please try again.");
@@ -891,25 +882,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
           />
           
           
-          <hr className="my-4" />
-
-
-          {/* Google Calendar Link */}
-          <p className="text-sm">Or paste your Google Calendar link below</p>
-
-          <input
-            type="text"
-            placeholder="https://calendar.google.com/..."
-            value={gcalLink}
-            onChange={(e) => {
-              setGcalLink(e.target.value);
-            }}
-            className="w-full p-2 border rounded-md mb-2 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600"
-          />
-
-          <p className="text-xs text-gray-400 mb-4">
-            Need help? Go to Calendar Settings &gt; Get Sharable Link
-          </p>
 
           {/* Custom Recurrence Modal */}
           {showCustomRecurrence && (
