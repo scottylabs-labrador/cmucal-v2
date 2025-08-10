@@ -3,7 +3,26 @@ from app.models.enums import RecurrenceType
 from app.models.recurrence_rule import get_rrule_from_db_rule
 from datetime import datetime, timedelta, timezone
 from typing import List
-import copy
+from copy import deepcopy
+
+
+def _parse_iso_aware(s: str | None):
+    if not s:
+        return None
+    # Support trailing 'Z'
+    if isinstance(s, str) and s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    dt = datetime.fromisoformat(s) if isinstance(s, str) else s
+    # Ensure tz-aware
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+def _ensure_aware(dt):
+    if dt is None: return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
 
 ### need to check type of event_saved_at, start_datetime, end_datetime before using them
 def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, title: str, 
@@ -23,14 +42,18 @@ def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, titl
     Returns:
         The created EventOccurrence object.
     """
+    start_dt = _parse_iso_aware(start_datetime) if isinstance(start_datetime, str) else start_datetime
+    end_dt   = _parse_iso_aware(end_datetime)   if isinstance(end_datetime, str)   else end_datetime
+    saved_at = _parse_iso_aware(event_saved_at) if isinstance(event_saved_at, str) else event_saved_at
+
     event_occurrence = EventOccurrence(
         event_id=event_id,
         org_id=org_id,
         category_id=category_id,
         title=title,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
-        event_saved_at=event_saved_at,
+        start_datetime=start_dt,
+        end_datetime=end_dt,
+        event_saved_at=saved_at,
         recurrence=recurrence,
         is_all_day=is_all_day,
         user_edited=user_edited,
