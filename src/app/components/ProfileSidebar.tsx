@@ -10,12 +10,14 @@ interface ProfileSidebarProps {
   courses: Course[];
   clubs: Club[];
   onRemoveCategory: (categoryId: number) => void;
+  onEventToggle?: (eventId: number, isVisible: boolean) => void;
 }
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ 
   courses, 
   clubs, 
-  onRemoveCategory
+  onRemoveCategory,
+  onEventToggle
 }) => {
   const [toggledCategories, setToggledCategories] = useState<Record<number, boolean>>({});
   const [isCoursesOpen, setIsCoursesOpen] = useState(true);
@@ -36,19 +38,28 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         {isCoursesOpen && courses.map(course => (
           <Accordion 
             key={course.org_id} 
-            title={course.course_num}
-            subtitle={course.course_name}
+            title={course.name}
             onRemove={() => course.categories.forEach(cat => onRemoveCategory(cat.id))}
             color="red"
           >
             {course.categories.map(category => (
-              <ToggleItem
-                key={category.id}
-                label={category.name}
-                checked={toggledCategories[category.id] !== false}
-                onChange={() => handleToggle(category.id)}
-                color="red"
-              />
+              <div key={category.id} className="mb-4">
+                <div className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  {category.name}
+                </div>
+                {course.events[category.name]?.map(event => (
+                  <ToggleItem
+                    key={event.id}
+                    label={event.title}
+                    checked={toggledCategories[event.id] ?? false}
+                    onChange={() => {
+                      handleToggle(event.id);
+                      onEventToggle?.(event.id, !toggledCategories[event.id]);
+                    }}
+                    color="red"
+                  />
+                ))}
+              </div>
             ))}
           </Accordion>
         ))}
@@ -68,13 +79,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
             color="green"
           >
             {club.categories.map(category => (
-              <ToggleItem
-                key={category.id}
-                label={category.name}
-                checked={toggledCategories[category.id] !== false}
-                onChange={() => handleToggle(category.id)}
-                color="green"
-              />
+              <div key={category.id} className="mb-4">
+                <div className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  {category.name}
+                </div>
+                {club.events[category.name]?.map(event => (
+                  <ToggleItem
+                    key={event.id}
+                    label={event.title}
+                    checked={toggledCategories[event.id] ?? false}
+                    onChange={() => {
+                      handleToggle(event.id);
+                      onEventToggle?.(event.id, !toggledCategories[event.id]);
+                    }}
+                    color="green"
+                  />
+                ))}
+              </div>
             ))}
           </Accordion>
         ))}

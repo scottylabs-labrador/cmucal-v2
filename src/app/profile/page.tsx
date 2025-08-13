@@ -38,37 +38,59 @@ export default function Profile() {
     fetchSchedule();
   }, [fetchSchedule]);
 
+  const [visibleEvents, setVisibleEvents] = useState<Set<number>>(new Set());
+
+  const handleEventToggle = (eventId: number, isVisible: boolean) => {
+    setVisibleEvents(prev => {
+      const newSet = new Set(prev);
+      if (isVisible) {
+        newSet.add(eventId);
+      } else {
+        newSet.delete(eventId);
+      }
+      return newSet;
+    });
+  };
+
   useEffect(() => {
     const newCalendarEvents: EventInput[] = [];
     
     courses.forEach(course => {
       Object.values(course.events).flat().forEach((event) => {
-        newCalendarEvents.push({
-          id: event.id.toString(),
-          title: event.title,
-          start: event.start_datetime,
-          end: event.end_datetime,
-          allDay: event.is_all_day,
-          extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
-        });
-      });
-    });
-
-    clubs.forEach(club => {
-        Object.values(club.events).flat().forEach((event) => {
+        if (visibleEvents.has(event.id)) {
           newCalendarEvents.push({
             id: event.id.toString(),
             title: event.title,
             start: event.start_datetime,
             end: event.end_datetime,
             allDay: event.is_all_day,
+            backgroundColor: "#f87171", // Red color for courses
+            borderColor: "#f87171",
             extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
           });
-        });
+        }
       });
+    });
+
+    clubs.forEach(club => {
+      Object.values(club.events).flat().forEach((event) => {
+        if (visibleEvents.has(event.id)) {
+          newCalendarEvents.push({
+            id: event.id.toString(),
+            title: event.title,
+            start: event.start_datetime,
+            end: event.end_datetime,
+            allDay: event.is_all_day,
+            backgroundColor: "#4ade80", // Green color for clubs
+            borderColor: "#4ade80",
+            extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
+          });
+        }
+      });
+    });
 
     setCalendarEvents(newCalendarEvents);
-  }, [courses, clubs]);
+  }, [courses, clubs, visibleEvents]);
 
   const handleRemoveCategory = async (categoryId: number) => {
     try {
@@ -91,9 +113,10 @@ export default function Profile() {
           courses={courses} 
           clubs={clubs} 
           onRemoveCategory={handleRemoveCategory}
+          onEventToggle={handleEventToggle}
         />
       } 
-      rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents}/>} 
+      rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents} setEventId={() => {}}/>} 
     />
     </div>
   );

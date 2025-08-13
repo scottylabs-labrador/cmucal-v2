@@ -44,47 +44,123 @@ export default function Navbar({ UserButton }: NavBarProps) {
   const [userId, setUserId] = useState<string>("n/a");
   const pathname = usePathname();
 
-  const [term, setTerm] = useState('Spring 25');
+  const [schedules, setSchedules] = useState<Array<{id: number, name: string}>>([]);
+  const [selectedSchedule, setSelectedSchedule] = useState<string>('');
+  const [showNewScheduleInput, setShowNewScheduleInput] = useState(false);
+  const [newScheduleName, setNewScheduleName] = useState('');
 
   const { user } = useUser();  // clerk user object
-  if (!user) {
-    console.error("User not found. Ensure Clerk is properly configured.");
-    return null; // or handle the case where user is not available
-  }
-  const clerkId = user.id;    // Clerk ID
 
   const getUserIdFromClerkId = async (clerkId: string) => {
     try {
+      // First try to get user ID
       const res = await axios.get("http://localhost:5001/api/users/get_user_id", {
         params: { clerk_id: clerkId },
         withCredentials: true,
       });
       return res.data.user_id;
-    } catch (err) {
+    } catch (err: any) {
+      // If user not found, create new user
+      if (err.response?.status === 404 && user) {
+        try {
+          const loginRes = await axios.post("http://localhost:5001/api/users/login", {
+            clerk_id: clerkId,
+            email: user.emailAddresses[0].emailAddress,
+            fname: user.firstName,
+            lname: user.lastName
+          }, {
+            withCredentials: true,
+          });
+          return loginRes.data.user.id;
+        } catch (loginErr) {
+          console.error("Failed to create user:", loginErr);
+          return null;
+        }
+      }
       console.error("Failed to fetch user ID:", err);
       return null;
     }
   };
 
-  const handleTermChange = (event: SelectChangeEvent) => {
-    setTerm(event.target.value);
+  const handleScheduleChange = (event: SelectChangeEvent) => {
+    setSelectedSchedule(event.target.value);
+  };
+
+  const handleCreateSchedule = async () => {
+    if (!newScheduleName.trim() || !user?.id) {
+      console.error("Missing schedule name or user not logged in");
+      return;
+    }
+
+    try {
+      const id = await getUserIdFromClerkId(user.id);
+      if (!id) {
+        console.error("No user ID available");
+        return;
+      }
+
+      // Create schedule
+      const response = await axios.post("http://localhost:5001/api/users/create_schedule", {
+        user_id: id,
+        name: newScheduleName.trim()
+      }, {
+        withCredentials: true,
+      });
+
+      if (response.data.schedule_id) {
+        // Update local state
+        const newSchedule = { id: response.data.schedule_id, name: newScheduleName.trim() };
+        setSchedules(prev => [...prev, newSchedule]);
+        setSelectedSchedule(newScheduleName.trim());
+        setShowNewScheduleInput(false);
+        setNewScheduleName('');
+
+        // Refetch schedules to ensure consistency
+        const refreshResponse = await axios.get("http://localhost:5001/api/users/schedules", {
+          params: { user_id: id },
+          withCredentials: true,
+        });
+        setSchedules(refreshResponse.data);
+      }
+    } catch (error: any) {
+      console.error("Failed to create schedule:", error.response?.data?.error || error.message);
+    }
   };
 
 
+  // Handle dark mode mounting
   useEffect(() => {
     setMounted(true);
-    getUserIdFromClerkId(clerkId).then((id) => {
-      if (id) {
-        setUserId(id);
-      } else {
-        console.error("Failed to retrieve user ID from Clerk ID");
-      }
-    }
-    ).catch((error) => {
-      console.error("Error fetching user ID:", error);
-    }
-    );
   }, []);
+
+  // Handle user data fetching
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const id = await getUserIdFromClerkId(user.id);
+        if (id) {
+          setUserId(id);
+          // Fetch user's schedules
+          const response = await axios.get("http://localhost:5001/api/users/schedules", {
+            params: { user_id: id },
+            withCredentials: true,
+          });
+          setSchedules(response.data);
+          if (response.data.length > 0) {
+            setSelectedSchedule(response.data[0].name);
+          }
+        } else {
+          console.error("Failed to retrieve user ID from Clerk ID");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [user?.id]);
 
   if (!userId) {
     return <div>Loading...</div>;
@@ -128,8 +204,8 @@ export default function Navbar({ UserButton }: NavBarProps) {
           </button> */}
           <FormControl sx={{ m: 1, minWidth: 120}} size="small">
             <Select
-              value={term}
-              onChange={handleTermChange}
+              value={selectedSchedule}
+              onChange={handleScheduleChange}
               displayEmpty
               inputProps={{ 'aria-label': 'Without label' }}
               sx={{
@@ -138,31 +214,58 @@ export default function Navbar({ UserButton }: NavBarProps) {
                   border: "1px solid #f1f1f1",
                 },
                 '& .MuiSelect-icon': {
-                  display: "none", // hide dropdown arrow
+                  display: "none",
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                   border: "1px solid #f1f1f1",
                 },
                 '&.Mui-focused': {
-                  boxShadow: "none", // remove focus ring
+                  boxShadow: "none",
                   border: "1px solid #f1f1f1"
                 }
               }}
             >
-              <MenuItem value={'Spring 25'}>
-                <div className="flex items-center space-x-2">
-                  {term === 'Spring 25' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
-                  <span className="text-sm text-gray-800 dark:text-white">Spring 25</span>
-                </div>
-              </MenuItem>
-              <MenuItem value={'Fall 24'}>
-                <div className="flex items-center space-x-2">
-                  {term === 'Fall 24' ? (<BsCalendar3 className="text-gray-600 dark:text-white" size={16} />): (<></>)}
-                  <span className="text-sm text-gray-800 dark:text-white">Fall 24</span>
+              {schedules.map((schedule) => (
+                <MenuItem key={schedule.id} value={schedule.name}>
+                  <div className="flex items-center space-x-2">
+                    <BsCalendar3 className="text-gray-600 dark:text-white" size={16} />
+                    <span className="text-sm text-gray-800 dark:text-white">{schedule.name}</span>
+                  </div>
+                </MenuItem>
+              ))}
+              <MenuItem value="new" onClick={() => setShowNewScheduleInput(true)}>
+                <div className="flex items-center space-x-2 text-blue-500">
+                  <span className="text-sm">+ Create New Schedule</span>
                 </div>
               </MenuItem>
             </Select>
           </FormControl>
+          
+          {showNewScheduleInput && (
+            <div className="absolute mt-2 p-2 bg-white dark:bg-gray-800 border rounded-md shadow-lg z-50">
+              <input
+                type="text"
+                value={newScheduleName}
+                onChange={(e) => setNewScheduleName(e.target.value)}
+                placeholder="Schedule name"
+                className="w-full p-2 border rounded-md mb-2 dark:bg-gray-700 dark:text-white"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowNewScheduleInput(false)}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateSchedule}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  Create
+                </button>
+              </div>
+            </div>
+          )}
           
           <button
             // onClick={() => setShowUploadModalOne(true)}
