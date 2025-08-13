@@ -65,7 +65,7 @@ export default function Navbar({ UserButton }: NavBarProps) {
         try {
           const loginRes = await axios.post("http://localhost:5001/api/users/login", {
             clerk_id: clerkId,
-            email: user.emailAddresses[0].emailAddress,
+            email: user.emailAddresses[0]?.emailAddress,
             fname: user.firstName,
             lname: user.lastName
           }, {
