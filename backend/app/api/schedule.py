@@ -26,6 +26,7 @@ def event_occurrence_to_dict(occurrence: EventOccurrence):
 @schedule_bp.route('/', methods=['GET'])
 def get_schedule_route():
     clerk_user_id = request.headers.get('Clerk-User-Id')
+    schedule_id = request.args.get('schedule_id')
     user = get_current_user(clerk_user_id)
 
     if not user:
@@ -33,8 +34,13 @@ def get_schedule_route():
 
     with SessionLocal() as db:
         try:
-            # Get user's primary schedule with all relationships
-            schedule = db.query(Schedule).filter(Schedule.user_id == user.id).first()
+            # Get specific schedule or user's first schedule
+            schedule_query = db.query(Schedule).filter(Schedule.user_id == user.id)
+            if schedule_id:
+                schedule = schedule_query.filter(Schedule.id == schedule_id).first()
+            else:
+                schedule = schedule_query.first()
+
             if not schedule:
                 return jsonify({"courses": [], "clubs": []})
 
