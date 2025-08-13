@@ -1,9 +1,13 @@
-from app.models.models import EventOccurrence, RecurrenceRule, Event
+from app.models.models import (
+    Event, RecurrenceRule, EventOccurrence,
+    RecurrenceExdate, RecurrenceRdate, EventOverride
+)
 from app.models.enums import RecurrenceType
 from app.models.recurrence_rule import get_rrule_from_db_rule
 from datetime import datetime, timedelta, timezone
 from typing import List
 from copy import deepcopy
+from app.utils.ical import _ensure_aware
 
 
 def _parse_iso_aware(s: str | None):
@@ -18,11 +22,11 @@ def _parse_iso_aware(s: str | None):
         dt = dt.replace(tzinfo=timezone.utc)
     return dt
 
-def _ensure_aware(dt):
-    if dt is None: return None
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt
+# def _ensure_aware(dt):
+#     if dt is None: return None
+#     if dt.tzinfo is None:
+#         return dt.replace(tzinfo=timezone.utc)
+#     return dt
 
 ### need to check type of event_saved_at, start_datetime, end_datetime before using them
 def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, title: str, 
@@ -79,46 +83,133 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
     Returns:
         A message indicating the number of occurrences populated.
     """
-    count = 0
-    duration = event.end_datetime - event.start_datetime
-    six_months_later = datetime.now(timezone.utc) + timedelta(days=180)
+    # Defensive duration (end could be equal to start in some feeds)
+    duration = (event.end_datetime or event.start_datetime) - event.start_datetime
+    if duration.total_seconds() < 0:
+        duration = timedelta(0)
+
+    now_utc = datetime.now(timezone.utc)
+    six_months_later = now_utc + timedelta(days=180)
 
     temp_rule = rule # Create a copy of the rule to avoid modifying the original
 
-    # ✅ Fallback for `until`
-    if not rule.count:
-        if not rule.until:
+    # ---- Safe copy of rule “view” for expansion window
+    temp_rule = deepcopy(rule)
+    # until logic
+    if not temp_rule.count:
+        if not temp_rule.until:
             temp_rule.until = six_months_later
         else:
-            # ❗ make sure both are timezone-aware
-            temp_rule.until = min(rule.until, six_months_later)
+            # both aware
+            temp_rule.until = min(_ensure_aware(temp_rule.until), six_months_later)
+
+
 
     print("➡️ rule.start_datetime =", rule.start_datetime)
     print("➡️ rule.until =", rule.until)
     print("➡️ temp_rule.until =", temp_rule.until)
 
-    rrule = get_rrule_from_db_rule(temp_rule)
-    print("➡️ FIRST OCCURRENCE:", next(iter(rrule), "None"))
+    # Build an rrule iterator from temp_rule
+    rrule_iter = get_rrule_from_db_rule(temp_rule)
 
-    for occ_start in rrule:
-        occ_end = occ_start + duration
+    # Pull EXDATE/RDATE/Overrides
+    exdates = {
+        _ensure_aware(x.exdate) for x in RecurrenceExdate.query
+            .filter_by(recurrence_id=rule.id).all()
+    }
+    rdates = {
+        _ensure_aware(x.rdate) for x in RecurrenceRdate.query
+            .filter_by(recurrence_id=rule.id).all()
+    }
+    overrides = {
+        _ensure_aware(o.recurrence_date): o
+        for o in EventOverride.query.filter_by(recurrence_id=rule.id).all()
+    }
 
-        occurrence = EventOccurrence(
+    # Start fresh for this event’s occurrences
+    EventOccurrence.query.filter_by(event_id=event.id).delete(synchronize_session=False)
+
+    count = 0
+    seen_starts = set()  # to avoid dupes when RDATE == RRULE date
+
+    # 1) Generate from RRULE, skipping EXDATE and applying overrides
+    for occ_start in rrule_iter:
+        occ_start = _ensure_aware(occ_start)
+        if occ_start in exdates:
+            continue
+
+        if occ_start in overrides:
+            o = overrides[occ_start]
+            start_dt = o.new_start or occ_start
+            end_dt   = o.new_end   or (start_dt + duration)
+            title    = o.new_title or event.title
+            desc     = o.new_description if o.new_description is not None else event.description
+            loc      = o.new_location if o.new_location is not None else event.location
+        else:
+            start_dt = occ_start
+            end_dt   = occ_start + duration
+            title    = event.title
+            desc     = event.description
+            loc      = event.location# 1) Generate from RRULE, skipping EXDATE and applying overrides
+
+        db.add(EventOccurrence(
             event_id=event.id,
             org_id=event.org_id,
             category_id=event.category_id,
-            title=event.title,
-            start_datetime=occ_start,
-            end_datetime=occ_end,
+            title=title,
+            start_datetime=start_dt,
+            end_datetime=end_dt,
             event_saved_at=event.last_updated_at,
             recurrence="RECURRING",
             is_all_day=event.is_all_day,
             user_edited=event.user_edited,
-            description=event.description,
-            location=event.location,
+            description=desc,
+            location=loc,
             source_url=event.source_url,
-        )
-        db.add(occurrence)
+        ))
+        seen_starts.add(start_dt)
+        count += 1
+    
+    # 2) Add RDATEs that weren’t already covered
+    for rdate in sorted(rdates):
+        # Skip if excluded or already added from RRULE/override
+        if rdate in exdates or rdate in seen_starts:
+            continue
+
+        # If there is an override on this rdate, apply it
+        if rdate in overrides:
+            o = overrides[rdate]
+            start_dt = o.new_start or rdate
+            end_dt   = o.new_end   or (start_dt + duration)
+            title    = o.new_title or event.title
+            desc     = o.new_description if o.new_description is not None else event.description
+            loc      = o.new_location if o.new_location is not None else event.location
+        else:
+            start_dt = rdate
+            end_dt   = rdate + duration
+            title    = event.title
+            desc     = event.description
+            loc      = event.location
+
+        # (Optional) Respect the same 6-month cap when no count/until
+        if not rule.count and (start_dt > six_months_later):
+            continue
+
+        db.add(EventOccurrence(
+            event_id=event.id,
+            org_id=event.org_id,
+            category_id=event.category_id,
+            title=title,
+            start_datetime=start_dt,
+            end_datetime=end_dt,
+            event_saved_at=event.last_updated_at,
+            recurrence="RECURRING",
+            is_all_day=event.is_all_day,
+            user_edited=event.user_edited,
+            description=desc,
+            location=loc,
+            source_url=event.source_url,
+        ))
         count += 1
 
     db.flush()

@@ -180,7 +180,7 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
             Please provide a Google Calendar link or select "Manually fill out the form".
           </p>
         )}
-        {gcalLinkError && (
+        {gcalLinkError && !optionError && (
           <p className="text-red-500 text-sm mb-4">
             Please enter a valid Google Calendar iCal link.
           </p>
