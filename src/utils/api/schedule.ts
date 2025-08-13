@@ -11,13 +11,14 @@ const api = axios.create({
 // For now, the page component will handle passing the token if needed
 // based on how the getSchedule function on the page is implemented.
 
-export const getSchedule = async (userId: string | null | undefined) => {
+export const getSchedule = async (userId: string | null | undefined, scheduleId?: string | number) => {
   if (!userId) {
     throw new Error("User ID is required to fetch schedule.");
   }
   try {
     const response = await api.get('/schedule/', { 
-      headers: { 'Clerk-User-Id': userId } 
+      headers: { 'Clerk-User-Id': userId },
+      params: scheduleId ? { schedule_id: scheduleId } : undefined
     });
     return response.data;
   } catch (error) {

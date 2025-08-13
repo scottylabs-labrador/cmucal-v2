@@ -18,11 +18,13 @@ export default function Profile() {
   const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSchedule = useCallback(async () => {
+  const [currentScheduleId, setCurrentScheduleId] = useState<string | number | null>(null);
+
+  const fetchSchedule = useCallback(async (scheduleId?: string | number) => {
     if (!isLoaded || !userId) return;
     setLoading(true);
     try {
-      const data = await getSchedule(userId);
+      const data = await getSchedule(userId, scheduleId);
       if (data) {
         setCourses(data.courses || []);
         setClubs(data.clubs || []);
@@ -32,11 +34,23 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  }, [isLoaded, getToken, userId]);
+  }, [isLoaded, userId]);
 
   useEffect(() => {
-    fetchSchedule();
-  }, [fetchSchedule]);
+    fetchSchedule(currentScheduleId || undefined);
+  }, [fetchSchedule, currentScheduleId]);
+
+  // Listen for schedule changes from Navbar
+  useEffect(() => {
+    const handleScheduleChange = (event: CustomEvent<{ scheduleId: string | number }>) => {
+      setCurrentScheduleId(event.detail.scheduleId);
+    };
+
+    window.addEventListener('scheduleChange', handleScheduleChange as EventListener);
+    return () => {
+      window.removeEventListener('scheduleChange', handleScheduleChange as EventListener);
+    };
+  }, []);
 
   const [visibleEvents, setVisibleEvents] = useState<Set<number>>(new Set());
 

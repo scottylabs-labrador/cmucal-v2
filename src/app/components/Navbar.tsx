@@ -83,7 +83,11 @@ export default function Navbar({ UserButton }: NavBarProps) {
   };
 
   const handleScheduleChange = (event: SelectChangeEvent) => {
+    const schedule = schedules.find(s => s.name === event.target.value) || null;
     setSelectedSchedule(event.target.value);
+    // Emit schedule change event
+    const changeEvent = new CustomEvent('scheduleChange', { detail: { scheduleId: schedule?.id ?? null } });
+    window.dispatchEvent(changeEvent);
   };
 
   const handleCreateSchedule = async () => {
