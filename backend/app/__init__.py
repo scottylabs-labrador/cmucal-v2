@@ -47,7 +47,7 @@ def create_app():
 
     # Register blueprints (modular routing)
     app.register_blueprint(users_bp, url_prefix="/api/users")
-    app.register_blueprint(orgs_bp, url_prefix="/api/orgs")
+    app.register_blueprint(orgs_bp, url_prefix="/api/organizations")
     app.register_blueprint(google_bp, url_prefix="/api/google")
     app.register_blueprint(events_bp, url_prefix="/api/events")
     app.register_blueprint(schedule_bp, url_prefix="/api/schedule")
