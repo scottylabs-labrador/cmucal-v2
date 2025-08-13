@@ -47,24 +47,40 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   }, [isClubsEditMode]);
 
   const handleAddClub = async (clubId: number) => {
-    if (!currentScheduleId) return;
+    console.log('handleAddClub called with clubId:', clubId, 'currentScheduleId:', currentScheduleId);
+    if (!currentScheduleId) {
+      console.error('No schedule selected. Please select a schedule first.');
+      alert('Please select a schedule before adding clubs.');
+      return;
+    }
     
     try {
+      console.log('Calling addOrgToSchedule with:', currentScheduleId, clubId);
       await addOrgToSchedule(currentScheduleId, clubId);
+      console.log('Successfully added club to schedule');
       onScheduleUpdate?.(); // Refresh the schedule data
     } catch (error) {
       console.error('Failed to add club to schedule:', error);
+      alert('Failed to add club to schedule. Please try again.');
     }
   };
 
   const handleRemoveClub = async (clubId: number) => {
-    if (!currentScheduleId) return;
+    console.log('handleRemoveClub called with clubId:', clubId, 'currentScheduleId:', currentScheduleId);
+    if (!currentScheduleId) {
+      console.error('No schedule selected. Please select a schedule first.');
+      alert('Please select a schedule before removing clubs.');
+      return;
+    }
     
     try {
+      console.log('Calling removeOrgFromSchedule with:', currentScheduleId, clubId);
       await removeOrgFromSchedule(currentScheduleId, clubId);
+      console.log('Successfully removed club from schedule');
       onScheduleUpdate?.(); // Refresh the schedule data
     } catch (error) {
       console.error('Failed to remove club from schedule:', error);
+      alert('Failed to remove club from schedule. Please try again.');
     }
   };
 
