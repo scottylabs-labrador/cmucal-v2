@@ -10,12 +10,14 @@ interface ProfileSidebarProps {
   courses: Course[];
   clubs: Club[];
   onRemoveCategory: (categoryId: number) => void;
+  onEventToggle?: (eventId: number, isVisible: boolean) => void;
 }
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ 
   courses, 
   clubs, 
-  onRemoveCategory
+  onRemoveCategory,
+  onEventToggle
 }) => {
   const [toggledCategories, setToggledCategories] = useState<Record<number, boolean>>({});
   const [isCoursesOpen, setIsCoursesOpen] = useState(true);
@@ -49,8 +51,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                   <ToggleItem
                     key={event.id}
                     label={event.title}
-                    checked={toggledCategories[event.id] !== false}
-                    onChange={() => handleToggle(event.id)}
+                    checked={toggledCategories[event.id] ?? false}
+                    onChange={() => {
+                      handleToggle(event.id);
+                      onEventToggle?.(event.id, !toggledCategories[event.id]);
+                    }}
                     color="red"
                   />
                 ))}
@@ -82,8 +87,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                   <ToggleItem
                     key={event.id}
                     label={event.title}
-                    checked={toggledCategories[event.id] !== false}
-                    onChange={() => handleToggle(event.id)}
+                    checked={toggledCategories[event.id] ?? false}
+                    onChange={() => {
+                      handleToggle(event.id);
+                      onEventToggle?.(event.id, !toggledCategories[event.id]);
+                    }}
                     color="green"
                   />
                 ))}
