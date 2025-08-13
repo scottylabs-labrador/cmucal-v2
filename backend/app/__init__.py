@@ -38,7 +38,11 @@ def create_app():
     app.config["SUPABASE_API_KEY"] = os.getenv("SUPABASE_API_KEY")
     app.config["SUPABASE_DB_URL"] = os.getenv("SUPABASE_DB_URL")
 
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+    CORS(app, resources={r"/api/*": {
+        "origins": "http://localhost:3000",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Clerk-User-Id"],
+    }}, supports_credentials=True)
 
 
     # Register blueprints (modular routing)

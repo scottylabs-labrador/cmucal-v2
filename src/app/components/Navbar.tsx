@@ -53,12 +53,30 @@ export default function Navbar({ UserButton }: NavBarProps) {
 
   const getUserIdFromClerkId = async (clerkId: string) => {
     try {
+      // First try to get user ID
       const res = await axios.get("http://localhost:5001/api/users/get_user_id", {
         params: { clerk_id: clerkId },
         withCredentials: true,
       });
       return res.data.user_id;
-    } catch (err) {
+    } catch (err: any) {
+      // If user not found, create new user
+      if (err.response?.status === 404 && user) {
+        try {
+          const loginRes = await axios.post("http://localhost:5001/api/users/login", {
+            clerk_id: clerkId,
+            email: user.emailAddresses[0].emailAddress,
+            fname: user.firstName,
+            lname: user.lastName
+          }, {
+            withCredentials: true,
+          });
+          return loginRes.data.user.id;
+        } catch (loginErr) {
+          console.error("Failed to create user:", loginErr);
+          return null;
+        }
+      }
       console.error("Failed to fetch user ID:", err);
       return null;
     }
@@ -69,7 +87,11 @@ export default function Navbar({ UserButton }: NavBarProps) {
   };
 
   const handleCreateSchedule = async () => {
-    if (!newScheduleName.trim() || !user?.id) return;
+    if (!newScheduleName.trim() || !user?.id) {
+      console.error("Missing schedule name or user not logged in");
+      return;
+    }
+
     try {
       const id = await getUserIdFromClerkId(user.id);
       if (!id) {
@@ -77,20 +99,31 @@ export default function Navbar({ UserButton }: NavBarProps) {
         return;
       }
 
+      // Create schedule
       const response = await axios.post("http://localhost:5001/api/users/create_schedule", {
         user_id: id,
-        name: newScheduleName
+        name: newScheduleName.trim()
       }, {
         withCredentials: true,
       });
+
       if (response.data.schedule_id) {
-        setSchedules(prev => [...prev, { id: response.data.schedule_id, name: newScheduleName }]);
-        setSelectedSchedule(newScheduleName);
+        // Update local state
+        const newSchedule = { id: response.data.schedule_id, name: newScheduleName.trim() };
+        setSchedules(prev => [...prev, newSchedule]);
+        setSelectedSchedule(newScheduleName.trim());
         setShowNewScheduleInput(false);
         setNewScheduleName('');
+
+        // Refetch schedules to ensure consistency
+        const refreshResponse = await axios.get("http://localhost:5001/api/users/schedules", {
+          params: { user_id: id },
+          withCredentials: true,
+        });
+        setSchedules(refreshResponse.data);
       }
-    } catch (error) {
-      console.error("Failed to create schedule:", error);
+    } catch (error: any) {
+      console.error("Failed to create schedule:", error.response?.data?.error || error.message);
     }
   };
 
