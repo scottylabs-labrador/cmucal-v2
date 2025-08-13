@@ -126,13 +126,20 @@ def get_user_schedules():
             if not user_id:
                 return jsonify({"error": "Missing user_id"}), 400
 
-            # Query user's schedules
+            # Query user's schedules with schedule_orgs
             user = db.query(User).filter(User.id == user_id).first()
             if not user:
                 return jsonify({"error": "User not found"}), 404
 
-            # Convert schedules to dict format
-            schedules = [{"id": schedule.id, "name": schedule.name} for schedule in user.schedules]
+            # Convert schedules to dict format with schedule_orgs
+            schedules = [{
+                "id": schedule.id,
+                "name": schedule.name,
+                "schedule_orgs": [{
+                    "org_id": org.org_id,
+                    "org_name": org.org.name if org.org else None
+                } for org in schedule.schedule_orgs]
+            } for schedule in user.schedules]
             return jsonify(schedules), 200
 
         except Exception as e:

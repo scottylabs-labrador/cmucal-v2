@@ -146,25 +146,22 @@ export interface Category {
     name: string;
 }
 
-export interface Course {
+export interface Organization {
     org_id: number;
-    course_num: string;
-    course_name: string;
-    instructors: string[] | null;
+    name: string;
     categories: Category[];
     events: {
         [category_name: string]: EventOccurrence[];
     };
 }
 
-export interface Club {
-    org_id: number;
-    name: string;
-    description: string | null;
-    categories: Category[];
-    events: {
-        [category_name: string]: EventOccurrence[];
-    };
+export interface Course extends Organization {
+    type: "COURSE" | "ACADEMIC";
+}
+
+export interface Club extends Organization {
+    type: "CLUB";
+    description?: string | null;
 }
 
 export interface CourseOption {
