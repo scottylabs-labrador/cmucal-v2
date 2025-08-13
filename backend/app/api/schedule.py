@@ -98,19 +98,37 @@ def get_schedule_route():
                             "name": category.name
                         })
                         
-                        # Get events for this category
+                        # Get regular events for this category
                         events = db.query(Event).filter(
                             Event.org_id == org.id,
                             Event.category_id == category.id
                         ).all()
+
+                        # Convert regular events to the same format as occurrences
+                        event_list = [{
+                            "id": event.id,
+                            "title": event.title,
+                            "description": event.description,
+                            "start_datetime": event.start_datetime.isoformat(),
+                            "end_datetime": event.end_datetime.isoformat(),
+                            "location": event.location,
+                            "is_all_day": event.is_all_day,
+                            "source_url": event.source_url,
+                            "recurrence": None,
+                            "event_id": event.id,
+                            "org_id": event.org_id,
+                            "category_id": event.category_id,
+                        } for event in events]
                         
-                        # Get event occurrences
+                        # Get event occurrences if any exist
                         event_ids = [e.id for e in events]
-                        occurrences = db.query(EventOccurrence).filter(
-                            EventOccurrence.event_id.in_(event_ids)
-                        ).all()
+                        if event_ids:
+                            occurrences = db.query(EventOccurrence).filter(
+                                EventOccurrence.event_id.in_(event_ids)
+                            ).all()
+                            event_list.extend([event_occurrence_to_dict(o) for o in occurrences])
                         
-                        clubs[org.id]["events"][category.name] = [event_occurrence_to_dict(o) for o in occurrences]
+                        clubs[org.id]["events"][category.name] = event_list
 
             return jsonify({"courses": list(courses.values()), "clubs": list(clubs.values())})
         except Exception as e:
