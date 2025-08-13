@@ -154,6 +154,11 @@ export default function Navbar({ UserButton }: NavBarProps) {
           setSchedules(response.data);
           if (response.data.length > 0) {
             setSelectedSchedule(response.data[0].name);
+            // Emit initial schedule change event
+            const changeEvent = new CustomEvent('scheduleChange', { 
+              detail: { scheduleId: response.data[0].id } 
+            });
+            window.dispatchEvent(changeEvent);
           }
         } else {
           console.error("Failed to retrieve user ID from Clerk ID");

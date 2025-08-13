@@ -128,6 +128,8 @@ export default function Profile() {
           clubs={clubs} 
           onRemoveCategory={handleRemoveCategory}
           onEventToggle={handleEventToggle}
+          currentScheduleId={currentScheduleId ? Number(currentScheduleId) : undefined}
+          onScheduleUpdate={() => fetchSchedule(currentScheduleId || undefined)}
         />
       } 
       rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents} setEventId={() => {}}/>} 

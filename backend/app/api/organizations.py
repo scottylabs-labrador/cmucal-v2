@@ -5,6 +5,7 @@ from app.models.user import update_user_calendar_id
 from app.services.google_service import create_cmucal_calendar
 from app.services.db import SessionLocal
 from app.models.organization import create_organization, get_orgs_by_type
+from app.models.models import Organization
 from app.models.admin import create_admin
 from app.models.category import create_category
 from app.utils.course_data import get_course_data
@@ -30,6 +31,38 @@ def get_course_orgs():
                     "number": course_num,
                     "title": course_title,
                     "label": org.name,
+                })
+
+            return jsonify(orgs_list), 200
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+@orgs_bp.route("/get_club_orgs", methods=["GET"])
+def get_club_orgs():
+    with SessionLocal() as db:
+        try:
+            # Debug: Check all organizations first
+            all_orgs = db.query(Organization).all()
+            print(f"Total organizations in database: {len(all_orgs)}")
+            for org in all_orgs[:5]:  # Print first 5 for debugging
+                print(f"Org ID: {org.id}, Name: {org.name}, Type: {org.type}")
+            
+            orgs = get_orgs_by_type(db, org_type='CLUB')
+            print(f"Found {len(orgs)} CLUB organizations")
+            
+            if not orgs:
+                # Return empty list instead of 404 for better UX
+                return jsonify([]), 200
+                
+            orgs_list = []
+            for org in orgs:
+                orgs_list.append({
+                    "id": org.id,
+                    "name": org.name,
+                    "description": org.description,
                 })
 
             return jsonify(orgs_list), 200
@@ -91,6 +124,47 @@ def create_category_record():
             category = create_category(db, org_id=org_id, name=name)
             
             return jsonify({"status": "category created", "category_id": category.id}), 201
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+@orgs_bp.route("/create_test_clubs", methods=["POST"])
+def create_test_clubs():
+    """Create some test club organizations for development"""
+    with SessionLocal() as db:
+        try:
+            test_clubs = [
+                {"name": "ScottyLabs", "description": "A community of passionate, interdisciplinary leaders that use design and technology to achieve more."},
+                {"name": "UXA", "description": "User Experience Association - Exploring the intersection of design and technology"},
+                {"name": "Activities Board", "description": "Programming events and activities for the CMU community"},
+                {"name": "Badminton Club", "description": "CMU Badminton Club for recreational and competitive play"},
+                {"name": "Robotics Club", "description": "Building and programming robots for competitions and fun"},
+                {"name": "Photography Club", "description": "Capturing moments and exploring creative photography"}
+            ]
+            
+            created_clubs = []
+            for club_data in test_clubs:
+                # Check if club already exists
+                existing = db.query(Organization).filter(
+                    Organization.name == club_data["name"],
+                    Organization.type == "CLUB"
+                ).first()
+                
+                if not existing:
+                    org = create_organization(db, 
+                                            name=club_data["name"], 
+                                            description=club_data["description"], 
+                                            type="CLUB")
+                    created_clubs.append(org.name)
+            
+            return jsonify({
+                "status": "success", 
+                "created_clubs": created_clubs,
+                "message": f"Created {len(created_clubs)} new clubs"
+            }), 201
+            
         except Exception as e:
             db.rollback()
             import traceback

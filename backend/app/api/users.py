@@ -8,6 +8,7 @@ from app.models.organization import create_organization
 from app.models.admin import create_admin, get_categories_for_admin_user
 from app.models.schedule import create_schedule
 from app.models.schedule_category import create_schedule_category
+from app.models.schedule_org import create_schedule_org, remove_schedule_org
 from app.models.category import join_org_and_to_dict
 from app.models.models import User
 from contextlib import contextmanager
@@ -111,6 +112,47 @@ def create_schedule_category_record():
             schedule_category = create_schedule_category(db, schedule_id=schedule_id, category_id=category_id)
 
             return jsonify({"status": "schedule created", "schedule_id": schedule_id, "category_id": category_id}), 201
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+@users_bp.route("/add_org_to_schedule", methods=["POST"])
+def add_org_to_schedule():
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            schedule_id = data.get("schedule_id")
+            org_id = data.get("org_id")
+            if not schedule_id or not org_id:
+                return jsonify({"error": "Missing schedule_id or org_id"}), 400
+            
+            schedule_org = create_schedule_org(db, schedule_id=schedule_id, org_id=org_id)
+
+            return jsonify({"status": "organization added to schedule", "schedule_id": schedule_id, "org_id": org_id}), 201
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+@users_bp.route("/remove_org_from_schedule", methods=["POST"])
+def remove_org_from_schedule():
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            schedule_id = data.get("schedule_id")
+            org_id = data.get("org_id")
+            if not schedule_id or not org_id:
+                return jsonify({"error": "Missing schedule_id or org_id"}), 400
+            
+            success = remove_schedule_org(db, schedule_id=schedule_id, org_id=org_id)
+            
+            if success:
+                return jsonify({"status": "organization removed from schedule", "schedule_id": schedule_id, "org_id": org_id}), 200
+            else:
+                return jsonify({"error": "Organization not found in schedule"}), 404
         except Exception as e:
             db.rollback()
             import traceback
