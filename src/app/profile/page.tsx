@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useAuth } from "@clerk/nextjs";
 import TwoColumnLayout from "@components/TwoColumnLayout";
 import { EventInput } from "@fullcalendar/core";
@@ -7,6 +7,7 @@ import ProfileSidebar from "../components/ProfileSidebar";
 import { Course, Club } from "../utils/types";
 import { getSchedule, removeCategoryFromSchedule } from "../../utils/api/schedule";
 import Calendar from "../components/Calendar";
+import { useEventState } from "~/context/EventStateContext";
 
 /**
  * Profile page with personalized calendar view
@@ -15,7 +16,8 @@ export default function Profile() {
   const { getToken, isLoaded, userId } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
+  // const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]);
+  const { calendarEvents, setCalendarEvents } = useEventState();
   const [loading, setLoading] = useState(true);
 
   const [currentScheduleId, setCurrentScheduleId] = useState<string | number | null>(null);
@@ -132,7 +134,8 @@ export default function Profile() {
           onScheduleUpdate={() => fetchSchedule(currentScheduleId || undefined)}
         />
       } 
-      rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents} setEventId={() => {}}/>} 
+      // rightContent={<Calendar events={calendarEvents} setEvents={setCalendarEvents} setEventId={() => {}}/>} 
+      rightContent={<Calendar events={calendarEvents} />} 
     />
     </div>
   );

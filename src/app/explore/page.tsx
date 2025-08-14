@@ -14,7 +14,8 @@ import { useEventState } from "~/context/EventStateContext";
 export default function ExplorePage() {
   // const { user } = useUser();
   const [events, setEvents] = useState<EventType[]>([]);
-  const [calendarEvents, setCalendarEvents] = useState([]);
+  // const [calendarEvents, setCalendarEvents] = useState([]);
+  const { calendarEvents, setCalendarEvents } = useEventState();
   const { toggleAdded } = useEventState();
   return (
     <div className="flex h-[calc(99vh-80px)]">
