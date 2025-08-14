@@ -496,7 +496,6 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
           className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-xl max-w-xl w-full max-h-[90vh] overflow-auto relative"
           onClick={(e) => e.stopPropagation()}
         > */}
-        {/* <p>what</p> */}
           <h2 className="text-xl font-semibold mb-4">
             Upload to {selectedCategory.organization_name} — {selectedCategory.name}
           </h2>

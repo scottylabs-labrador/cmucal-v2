@@ -1,18 +1,20 @@
 from flask import Blueprint, jsonify, request
 from app.models.user import get_user_by_clerk_id
 from app.services.db import SessionLocal
-from app.models.event import save_event
+from app.models.event import save_event, get_event_by_id
 from app.models.career import save_career
 from app.models.academic import save_academic
 from app.models.admin import get_admin_by_org_and_user
 from app.models.club import save_club
 from app.models.tag import get_tag_by_name, save_tag, get_all_tags
-from app.models.event_tag import save_event_tag
+from app.models.event_tag import save_event_tag, get_tags_by_event, delete_event_tag
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
-from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence, EventTag
+from app.models.category import category_to_dict, get_category_by_id
+from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence, EventTag, Category, Tag
 import pprint
 from datetime import datetime
+from sqlalchemy import cast, Date, or_
 
 from app.services.ical import import_ical_feed_using_helpers
 
@@ -298,9 +300,12 @@ def create_single_event_occurrence():
         
 @events_bp.route("/tags", methods=["GET"])
 def get_tags():
+    # print("🙇 geting tags 🙇")
     with SessionLocal() as db:
         try: 
+            # print("here we go")
             tags = get_all_tags(db)
+            # print("tags, ", tags)
             return jsonify([{"name": tag.name, "id": tag.id} for tag in tags]), 200
         except Exception as e:
             db.rollback()
@@ -308,10 +313,58 @@ def get_tags():
             print("❌ Exception:", e)
             return jsonify({"error": str(e)}), 500
 
+@events_bp.route("/<event_id>/tags", methods=["GET"])
+def get_event_tags(event_id):
+    with SessionLocal() as db:
+        try:
+            # # get user
+            # clerk_id = request.args.get("user_id")
+            # if not clerk_id:
+            #     return jsonify({"error": "Missing user_id"}), 400
+            # user = get_user_by_clerk_id(db, clerk_id)
+            
+            # # event = db.query(Event).filter_by(id=event_id).first()
+            # event = get_event_by_id(db, event_id)
+            # event_dict = event.as_dict()
+            
+            # org = db.query(Organization).filter_by(id=event.org_id).first()
+            # event_dict["org"] = org.name
+            # event_dict["user_is_admin"] = True if get_admin_by_org_and_user(db, event.org_id, user.id) else False
+
+            # tags = (
+            #     db.query(Tag.id, Tag.name)
+            #     .join(Tag.event_tags) # relationship set up in models
+            #     # .join(EventTag, Tag.id == EventTag.tag_id)  # explicit join condition
+            #     .filter(EventTag.event_id == event_id)      # filter by the event id
+            #     .all()
+            # )
+            tags = get_tags_by_event(db, event_id)
+
+            tag_names = [{"id": t.id, "name": t.name} for t in tags]
+
+            # # check if saved
+            # if user:
+            #     saved = db.query(UserSavedEvent.event_id).filter_by(user_id=user.id, event_id=event_id).first()
+            #     event_dict["user_saved"] = (saved is not None)
+            # else:
+            #     event_dict["user_saved"] = False
+            print("👉🏷🏷🏷🏷 👈 ", tag_names)
+
+            return tag_names
+
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
 @events_bp.route("/", methods=["GET"])
 def get_all_events():
+    term = request.args.get("term").lower()
     tag_ids_raw = request.args.get("tags")
     tag_ids = tag_ids_raw.split(",") if tag_ids_raw else []
+    date = request.args.get("date")
+    # print("🔗🔗🔗😄 ", request.url)
     with SessionLocal() as db:
         try:
             # get user
@@ -322,11 +375,26 @@ def get_all_events():
 
             # only select some columns to save loading cost
             events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime, 
-                Event.location, Event.org_id, Event.category_id)
+                Event.location, Event.org_id, Event.category_id).join(Event.org)
+
             
+            # if search term is applied, filter results
+            if term:
+                term_pattern = f"%{term}%"
+                events = events.filter(or_(
+                    Event.title.ilike(term_pattern),
+                    Event.description.ilike(term_pattern),
+                    Organization.name.ilike(term_pattern), 
+                ))
+
             # if tags are applied, filter results
             if len(tag_ids) > 0:
                 events = events.join(EventTag).filter(EventTag.tag_id.in_(tag_ids)).group_by(Event.id)
+
+            # if date is applied, filter results
+            if date:
+                # events = events.filter(Event.start_datetime==date)
+                events = events.filter(cast(Event.start_datetime, Date) == date)
 
             # check for saved events
             if user:
@@ -365,7 +433,8 @@ def get_specific_events(event_id):
                 return jsonify({"error": "Missing user_id"}), 400
             user = get_user_by_clerk_id(db, clerk_id)
             
-            event = db.query(Event).filter_by(id=event_id).first()
+            # event = db.query(Event).filter_by(id=event_id).first()
+            event = get_event_by_id(db, event_id)
             event_dict = event.as_dict()
             
             org = db.query(Organization).filter_by(id=event.org_id).first()
@@ -387,15 +456,79 @@ def get_specific_events(event_id):
             print("❌ Exception:", traceback.format_exc())
             return jsonify({"error": str(e)}), 500
 
+@events_bp.route("/<event_id>", methods=["PATCH"])
+def update_event(event_id):
+    print("🔗🔢", request.url)
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            print("🔢🔢🔢🔢🔢DATA ", data)
+            
+            event_data = data.get("updated_event", None)
+            tag_data = data.get("updated_tags", None)
+            recurrence_data = data.get("updated_recurrence", None)
+
+            if not event_data: 
+                return jsonify({"error": "No event data provided"}), 400
+
+            # update the event itself
+            event = db.query(Event).filter_by(id=event_id).first()
+            if not event:
+                return jsonify({"error": "Event not found"}), 400
+
+            for key, value in event_data.items(): 
+                if hasattr(event, key):
+                    setattr(event, key, value)
+
+            # update event tag
+            if tag_data:
+                # desired_tags = [t.strip().lower() for t in tag_data]
+                desired_tags = [t["name"].strip().lower() for t in tag_data]
+                current_tags = [t.name.strip().lower() for t in get_tags_by_event(db, event_id)]  # returns list of tag names
+                # print("👑", desired_tags, "🥒", current_tags)
+                for tag_name in desired_tags:
+                    tag = get_tag_by_name(db, tag_name)
+                    if not tag:
+                        tag = save_tag(db, name=tag_name) # add new tag
+                    if tag_name not in current_tags:
+                        save_event_tag(db, event_id=event_id, tag_id=tag.id)
+
+                # remove tags that are no longer in desired list
+                for tag_name in current_tags:
+                    if tag_name not in desired_tags:
+                        tag = get_tag_by_name(db, tag_name)
+                        delete_event_tag(db, event_id=event_id, tag_id=tag.id)
+
+
+            # TODO: update the corresponding type table (academic/career/club)
+
+            # TODO: update recurrence table
+
+            db.commit()
+
+            event_dict = event.as_dict()
+            return jsonify(event_dict), 200
+
+
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+
 @events_bp.route("user_saved_events", methods=["GET"])
 def get_all_saved_events():
     with SessionLocal() as db:
         try:
             # get user
+            print("🔗Request URL: ", request.url)
             clerk_id = request.args.get("user_id")
+            # print("😮 [clerk_id] ", clerk_id)
             if not clerk_id:
                 return jsonify({"error": "Missing user_id"}), 400
             user = get_user_by_clerk_id(db, clerk_id)
+            # print("😀 [user] ", user)
 
             # only columns required for calendar view
             events = db.query(Event.id, Event.title, Event.start_datetime, Event.end_datetime)\
@@ -403,15 +536,16 @@ def get_all_saved_events():
                     UserSavedEvent.user_id == user.id
                 ).all()
 
-            return [
-                {
-                    "id": e[0],
-                    "title": e[1],
-                    "start": e[2].isoformat(),
-                    "end": e[3].isoformat(),
-                }
-                for e in events
-            ]
+            return jsonify([e[0] for e in events]) 
+            # [
+            #     {
+            #         "id": e[0],
+            #         # "title": e[1],
+            #         # "start": e[2].isoformat(),
+            #         # "end": e[3].isoformat(),
+            #     }
+            #     for e in events
+            # ]
 
         except Exception as e:
             db.rollback()
@@ -500,6 +634,21 @@ def user_unsave_event(event_id):
                 db.commit()
             return jsonify({"message": "Event removed from user's saved events."}), 200 
                 
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+            return jsonify({"error": str(e)}), 500
+
+@events_bp.route("/<category_id>/category", methods=["GET"])
+def get_event_category(category_id):
+    print("👀👀👀 ", request.url)
+    with SessionLocal() as db:
+        try:
+            category = get_category_by_id(db, category_id)
+            print("-------------------\n", jsonify(category_to_dict(category)), "-------------------\n")
+            return jsonify(category_to_dict(category))
+        
         except Exception as e:
             db.rollback()
             import traceback

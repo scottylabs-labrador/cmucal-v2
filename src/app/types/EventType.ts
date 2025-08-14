@@ -9,8 +9,9 @@ export type EventType = {
   org_id: string;
   org?: string;
   category_id: string;
+  source_url?: string;
   description?: string; 
   event_type?: string;
-  user_saved: boolean;
+  user_saved?: boolean;
   user_is_admin?: boolean;
 };
