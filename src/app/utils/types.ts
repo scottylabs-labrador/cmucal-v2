@@ -214,6 +214,7 @@ export interface FullCalendarEvent {
       calendarId: string,
       location?: string,
       description?: string,
-      source_url?: string
+      source_url?: string,
+      event_id?: string
     }
 };
