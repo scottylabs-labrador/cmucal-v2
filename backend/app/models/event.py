@@ -1,130 +1,11 @@
 from app.models.models import Event 
 
-from icalendar import Calendar, Event as IcalEvent
-from recurring_ical_events import recurring_ical_events
+# from icalendar import Calendar, Event as IcalEvent
+# from recurring_ical_events import recurring_ical_events
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import requests
-from app.models.models import Event, RecurrenceRule, EventOccurrence, RecurrenceRDate, RecurrenceExDate, EventOverride
-
-
-def is_all_day(component: IcalEvent) -> bool:
-    dtstart = component.get('DTSTART')
-    return dtstart and isinstance(dtstart.dt, datetime) and dtstart.params.get('VALUE') == 'DATE'
-
-def parse_ical_and_store(ical_text: str, db, org_id, category_id, event_type):
-    cal = Calendar.from_ical(ical_text)
-    
-    for component in cal.walk():
-        if component.name != "VEVENT":
-            continue
-
-        # -- 1. UID --
-        uid = str(component.get('UID'))
-
-        # -- 2. Create the base event --
-        title = str(component.get('SUMMARY'))
-        description = str(component.get('DESCRIPTION', ''))
-        location = str(component.get('LOCATION', ''))
-        dtstart = component.decoded('DTSTART')
-        dtend = component.decoded('DTEND')
-
-        event = save_event(db, org_id=org_id, 
-                                category_id=category_id,
-                                title=title,
-                                description=description,
-                                start_datetime=dtstart,
-                                end_datetime=dtend,
-                                is_all_day=is_all_day(component),
-                                location=location,
-                                event_type=event_type)
-            
-        if not event:
-            print(f"Failed to create event for UID: {uid}")
-            continue
-
-        # -- 3. Detect override instance --
-        recurrence_id = component.get('RECURRENCE-ID')
-        if recurrence_id:
-            # Find the recurrence rule this belongs to
-            recurrence_datetime = recurrence_id.dt
-            event_override = EventOverride(
-                recurrence_date=recurrence_datetime,
-                new_start=component.get('DTSTART').dt,
-                new_end=component.get('DTEND').dt,
-                new_title=str(component.get('SUMMARY')),
-                new_description=str(component.get('DESCRIPTION')),
-                new_location=str(component.get('LOCATION'))
-            )
-            db.add(event_override)
-            db.flush()
-            continue  # Skip normal VEVENT creation
-
-        # -- 4. Store Recurrence Rule if present --
-        rrule = component.get('RRULE')
-        if rrule:
-            rule = RecurrenceRule(
-                event_id=event.id,
-                frequency=rrule.get('FREQ', [None])[0],
-                interval=rrule.get('INTERVAL', [1])[0],
-                count=rrule.get('COUNT', [None])[0],
-                until=rrule.get('UNTIL', [None])[0],
-                by_day=','.join(rrule.get('BYDAY', [])),
-                by_month_day=rrule.get('BYMONTHDAY', [None])[0],
-                by_month=rrule.get('BYMONTH', [None])[0],
-                start_datetime=dtstart
-            )
-            db.session.add(rule)
-            db.session.flush()
-
-            # -- 5. EXDATEs --
-            for ex in component.get('EXDATE', []):
-                for exdate in ex.dts:
-                    db.session.add(RecurrenceExDate(
-                        recurrence_id=rule.id,
-                        exdate=exdate.dt
-                    ))
-
-            # -- 6. RDATEs --
-            for r in component.get('RDATE', []):
-                for rdate in r.dts:
-                    db.session.add(RecurrenceRDate(
-                        recurrence_id=rule.id,
-                        rdate=rdate.dt
-                    ))
-
-            # -- 7. Generate occurrences --
-            full_cal = Calendar()
-            full_cal.add_component(component)  # ensure it's a valid calendar
-            occurrences = recurring_ical_events.of(full_cal).between(
-                datetime.now(), datetime.now().replace(year=datetime.now().year + 1)
-            )
-
-            for occ in occurrences:
-                db.session.add(EventOccurrence(
-                    event_id=event.id,
-                    start_datetime=occ['DTSTART'].dt,
-                    end_datetime=occ['DTEND'].dt,
-                    title=occ.get('SUMMARY'),
-                    description=occ.get('DESCRIPTION', ''),
-                    location=occ.get('LOCATION', ''),
-                    is_all_day=is_all_day(occ)
-                ))
-
-        else:
-            # Non-recurring → store one occurrence
-            db.session.add(EventOccurrence(
-                event_id=event.id,
-                start_datetime=dtstart,
-                end_datetime=dtend,
-                title=title,
-                description=description,
-                location=location,
-                is_all_day=is_all_day(component)
-            ))
-
-    db.session.commit()
-
+from app.models.models import Event, RecurrenceRule, EventOccurrence, RecurrenceRdate, RecurrenceExdate, EventOverride
 
 ### need to check type of start_datetime, end_datetime before using them
 def save_event(db, org_id: int, category_id: int, title: str, start_datetime: str, end_datetime: str, 
@@ -162,7 +43,6 @@ def save_event(db, org_id: int, category_id: int, title: str, start_datetime: st
     )
     db.add(event)
     db.flush()      # Allocate event.id without committing
-    db.refresh(event)
     return event
 
 def get_event_by_id(db, event_id: int):

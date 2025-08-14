@@ -7,26 +7,8 @@ from app.models.recurrence_rule import get_rrule_from_db_rule
 from datetime import datetime, timedelta, timezone
 from typing import List
 from copy import deepcopy
-from app.utils.ical import _ensure_aware
+from app.utils.date import _ensure_aware, _parse_iso_aware
 
-
-def _parse_iso_aware(s: str | None):
-    if not s:
-        return None
-    # Support trailing 'Z'
-    if isinstance(s, str) and s.endswith("Z"):
-        s = s[:-1] + "+00:00"
-    dt = datetime.fromisoformat(s) if isinstance(s, str) else s
-    # Ensure tz-aware
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt
-
-# def _ensure_aware(dt):
-#     if dt is None: return None
-#     if dt.tzinfo is None:
-#         return dt.replace(tzinfo=timezone.utc)
-#     return dt
 
 ### need to check type of event_saved_at, start_datetime, end_datetime before using them
 def save_event_occurrence(db, event_id: int, org_id: int, category_id: int, title: str, 
@@ -84,7 +66,9 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
         A message indicating the number of occurrences populated.
     """
     # Defensive duration (end could be equal to start in some feeds)
-    duration = (event.end_datetime or event.start_datetime) - event.start_datetime
+    end_datetime = _parse_iso_aware(event.end_datetime) if event.end_datetime else None
+    start_datetime = _parse_iso_aware(event.start_datetime) if event.start_datetime else None
+    duration = (end_datetime or start_datetime) - start_datetime
     if duration.total_seconds() < 0:
         duration = timedelta(0)
 
@@ -114,20 +98,20 @@ def populate_event_occurrences(db, event: Event, rule: RecurrenceRule):
 
     # Pull EXDATE/RDATE/Overrides
     exdates = {
-        _ensure_aware(x.exdate) for x in RecurrenceExdate.query
-            .filter_by(recurrence_id=rule.id).all()
+        _ensure_aware(x.exdate) for x in db.query(RecurrenceExdate)
+            .filter_by(rrule_id=rule.id).all()
     }
     rdates = {
-        _ensure_aware(x.rdate) for x in RecurrenceRdate.query
-            .filter_by(recurrence_id=rule.id).all()
+        _ensure_aware(x.rdate) for x in db.query(RecurrenceRdate)
+            .filter_by(rrule_id=rule.id).all()
     }
     overrides = {
         _ensure_aware(o.recurrence_date): o
-        for o in EventOverride.query.filter_by(recurrence_id=rule.id).all()
+        for o in db.query(EventOverride).filter_by(rrule_id=rule.id).all()
     }
 
     # Start fresh for this event’s occurrences
-    EventOccurrence.query.filter_by(event_id=event.id).delete(synchronize_session=False)
+    db.query(EventOccurrence).filter_by(event_id=event.id).delete(synchronize_session=False)
 
     count = 0
     seen_starts = set()  # to avoid dupes when RDATE == RRULE date

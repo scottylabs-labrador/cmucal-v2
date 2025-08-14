@@ -9,7 +9,7 @@ from dateutil.rrule import (
 )
 from typing import List, Optional, Union
 from dateutil.parser import parse as parse_datetime
-from app.utils.ical import _ensure_aware
+from app.utils.date import _ensure_aware
 
 def add_recurrence_rule(db, event_id: int, frequency: FrequencyType,  
                         interval: int, start_datetime: str, count: int = None, until: str = None, 
