@@ -21,11 +21,11 @@ import { EventType } from "../types/EventType";
 
 type Props = {
   events: EventInput[];
-  setEvents: React.Dispatch<React.SetStateAction<any[]>>;
-  setEventId: (eventId: string) => void;
+  // setEvents: React.Dispatch<React.SetStateAction<any[]>>;
+  // setEventId: (eventId: string) => void;
 };
 
-const Calendar: FC<Props> = ({ events, setEvents, setEventId }) => {
+const Calendar: FC<Props> = ({ events }) => {
   // Define state with EventInput type
   const { gcalEvents } = useGcalEvents();
   const { modalView, openDetails } = useEventState();

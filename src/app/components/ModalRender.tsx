@@ -22,7 +22,6 @@ export default function ModalRender() {
     // const [modalView, setModalView] = useState<ModalView>(null);
     const { modalView, closeModal, modalData } = useEventState();
     console.log("[RENDER] modal: ", modalView);
-    console.log("hellooooo????");
     console.log("[MODAL DATA] ", modalData);
     
     useEffect(() => {
@@ -37,10 +36,13 @@ export default function ModalRender() {
                 // <div style={{ position: "fixed", top: 0, left: 0, backgroundColor: "lime", padding: 20, zIndex: 9999 }}>
                 //     Modal is showing!
                 // </div>
-                <ModalEvent show={true} onClose={closeModal}/>
+                <ModalEvent show={true} onClose={closeModal}
+                savedEventDetails={modalData.savedEventDetails}/>
             )}
             {modalView==="update" && (
-                <ModalEventUpdate show={true} onClose={closeModal} />
+                <ModalEventUpdate show={true} onClose={closeModal} 
+                oldEventInfo={modalData.eventInfo}
+                savedEventTags={modalData.selectedTags}/>
             )}
             {modalView==="pre_upload" && (
                 <ModalUploadOne show={true} onClose={closeModal} />
