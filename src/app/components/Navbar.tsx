@@ -175,14 +175,14 @@ export default function Navbar({ UserButton }: NavBarProps) {
         </div>
 
         {/* Middle Section: Search Bar */}
-        <div className="relative flex items-center w-full max-w-md">
+        {/* <div className="relative flex items-center w-full max-w-md">
           <FiSearch className="absolute left-3 text-gray-500 dark:text-gray-300" size={16} />
           <input
             type="text"
             placeholder="Search for a schedule or event..."
             className="w-full p-2 pl-10 border rounded-md bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500"
           />
-        </div>
+        </div> */}
 
         {/* Right Section: Upload Button, dark mode, logout */}
         <div className="flex items-center space-x-2">
