@@ -85,6 +85,7 @@ export default function Profile() {
             classNames: ["temp-course-event"],
             extendedProps: { location: event.location, description: event.description, source_url: event.source_url,
                            event_id: event.event_id || event.id, // event_id for occurrences, id for non-recurring}
+            }
           });
         }
       });
@@ -104,6 +105,7 @@ export default function Profile() {
             classNames: ["temp-club-event"],
             extendedProps: { location: event.location, description: event.description, source_url: event.source_url,
                            event_id: event.event_id || event.id, // event_id for occurrences, id for non-recurring}
+            }
           });
         }
       });
