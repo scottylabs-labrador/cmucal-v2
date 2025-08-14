@@ -14,6 +14,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Checkbox from '@mui/material/Checkbox';
 import { useGcalEvents } from "../../context/GCalEventsContext";
 import { formatGCalEvent } from "../utils/calendarUtils";
+import { CalendarFields } from "../utils/types";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -36,7 +37,8 @@ export function ConnectGoogleButton() {
   const [availableCalendars, setAvailableCalendars] = useState<any[]>([]); // full objects with id & summary
   const [selectedCalendarIds, setSelectedCalendarIds] = useState<string[]>([]); // selected calendar IDs from dropdown
   const { gcalEvents, setGcalEvents } = useGcalEvents();
-  
+  const [cmuCalIds, setCMUCalIds] = useState<string[]>([]);
+
   // const { user, isSignedIn, isLoaded: userLoaded } = useUser();
 
   // const [message, setMessage] = useState("");
@@ -92,7 +94,9 @@ export function ConnectGoogleButton() {
       body: JSON.stringify({ calendarIds }),
     });
     const data = await res.json();
-    const formattedGCalEvents = data.map((event: any) => (formatGCalEvent(event)));
+
+    const formattedGCalEvents = data.map((event: any) => (formatGCalEvent(event, cmuCalIds)));
+
     setGcalEvents(formattedGCalEvents);
     // console.log("Fetched events:", data);
   };
@@ -130,24 +134,31 @@ export function ConnectGoogleButton() {
       return;
     }
   
-    const data = await res.json();
+    const data : CalendarFields[] = await res.json();
   
     // Sort order:
-    // 1. primary calendar
-    // 2. owned calendars (not primary)
-    // 3. shared calendars
-    const sorted = data.sort((a: any, b: any) => {
-      const priority = (cal: any) => {
-        if (cal.primary) return 0;
-        if (cal.accessRole === "owner") return 1;
-        return 2;
+    // 1. CMUCal (events added from our website)
+    // 2. primary calendar
+    // 3. owned calendars (not primary)
+    // 4. shared calendars
+    const sorted = data.sort((a: CalendarFields, b: CalendarFields) => {
+      const priority = (cal: CalendarFields) => {
+        if (cal.summary === "CMUCal") return 0;
+        if (cal.primary) return 1;
+        if (cal.accessRole === "owner") return 2;
+        return 3;
       };
       return priority(a) - priority(b);
     });
-  
+
     // Save the sorted calendars (or just summary list if you prefer)
     // setAvailableCalendars(sorted.map((cal: any) => cal.summary));
     setAvailableCalendars(sorted);
+    const defaultSelectedIds = data
+          .filter(cal => cal.summary === "CMUCal")
+          .map(cal => cal.id);
+    setSelectedCalendarIds(defaultSelectedIds);
+    setCMUCalIds(defaultSelectedIds);
   };
   
 

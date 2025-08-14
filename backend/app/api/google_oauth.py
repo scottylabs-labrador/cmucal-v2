@@ -1,6 +1,7 @@
 # routes requests and coordinates services/models
 from flask import Blueprint, request, jsonify, redirect, current_app, session
 from app.services.db import SessionLocal
+from app.utils.date import convert_to_iso8601
 
 from app.services.google_service import (
     create_google_flow,
@@ -57,12 +58,6 @@ def bulk_events():
         return jsonify({"error": "Unauthorized"}), 401
     calendar_ids = request.get_json().get("calendarIds", [])
     return jsonify(fetch_events_for_calendars(creds, calendar_ids))
-
-import traceback
-from datetime import datetime
-def convert_to_iso8601(dt_str):
-    return datetime.strptime(dt_str, "%a, %d %b %Y %H:%M:%S %Z").isoformat() + "Z"
-    # will move this somewhere else when refactoring
 
 @google_bp.route("/calendar/events/add", methods=["POST"])
 def add_event_route():
