@@ -80,6 +80,7 @@ export default function Profile() {
             allDay: event.is_all_day,
             backgroundColor: "#f87171", // Red color for courses
             borderColor: "#f87171",
+            classNames: ["temp-course-event"],
             extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
           });
         }
@@ -97,6 +98,7 @@ export default function Profile() {
             allDay: event.is_all_day,
             backgroundColor: "#4ade80", // Green color for clubs
             borderColor: "#4ade80",
+            classNames: ["temp-club-event"],
             extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
           });
         }

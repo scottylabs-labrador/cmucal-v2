@@ -102,3 +102,6 @@ def _parse_iso_aware(s: str = None):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt
+
+def convert_to_iso8601(dt_str):
+    return datetime.strptime(dt_str, "%a, %d %b %Y %H:%M:%S %Z").isoformat() + "Z"
