@@ -425,6 +425,7 @@ def get_all_events():
 
 @events_bp.route("/<event_id>", methods=["GET"])
 def get_specific_events(event_id):
+    print("🍎🍎🍎🍎", request.url)
     with SessionLocal() as db:
         try:
             # get user

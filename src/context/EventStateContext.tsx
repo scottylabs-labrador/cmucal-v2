@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import { EventType } from "../app/types/EventType";
+import { EventInput } from "@fullcalendar/core";
 import { List } from "lucide-react";
 
 export type ModalView = "details" | "update" | "pre_upload" | "upload" | "uploadLink" | null;
@@ -17,6 +18,8 @@ type EventStateContextType = {
   savedEventIds: Set<number>;
   // toggleAdded: (eventId: number) => void;
   toggleAdded: (event: EventType) => void;
+  calendarEvents: EventInput[];
+  setCalendarEvents: (events: EventInput[]) => void;
 };
 
 export const EventStateContext = createContext<EventStateContextType | null>(null);
@@ -28,6 +31,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [modalData, setModalData] = useState<Record<string, any>>({});
   // const [savedEventIds, setSavedEventIds] = useState<number[]>([]);
   const [savedEventIds, setSavedEventIds] = useState(new Set<number>());
+  const [calendarEvents, setCalendarEvents] = useState<EventInput[]>([]); 
 
   // console.log("😮Fetching saved events for user:", user?.id);
 
@@ -144,7 +148,12 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <EventStateContext.Provider value={{ 
-        selectedEvent, setSelectedEvent, modalView, setModalView, modalData, setModalData, savedEventIds, toggleAdded
+        selectedEvent, setSelectedEvent, 
+        modalView, setModalView, 
+        modalData, setModalData, 
+        savedEventIds, 
+        toggleAdded,
+        calendarEvents, setCalendarEvents 
       }}>
         {children}
       </EventStateContext.Provider>
@@ -199,6 +208,8 @@ export const useEventState = () => {
     modalData: context.modalData,
     savedEventIds: context.savedEventIds,
     toggleAdded: context.toggleAdded,
+    calendarEvents: context.calendarEvents,        
+    setCalendarEvents: context.setCalendarEvents,  
     openDetails,
     openUpdate,
     openPreUpload,
