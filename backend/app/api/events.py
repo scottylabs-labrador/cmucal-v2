@@ -1,8 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models.user import get_user_by_clerk_id, create_user, user_to_dict
-from app.services.google_service import fetch_user_credentials
-from app.models.user import update_user_calendar_id
-from app.services.google_service import create_cmucal_calendar
+from app.models.user import get_user_by_clerk_id
 from app.services.db import SessionLocal
 from app.models.event import save_event
 from app.models.career import save_career
@@ -16,6 +13,8 @@ from app.models.event_occurrence import populate_event_occurrences, save_event_o
 from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence, EventTag
 import pprint
 from datetime import datetime
+
+from app.services.ical import import_ical_feed_using_helpers
 
 
 events_bp = Blueprint("events", __name__)
@@ -148,6 +147,44 @@ def create_event_record():
 
             return jsonify({"error": str(e)}), 500
 
+@events_bp.route("/read_gcal_link", methods=["POST"])
+def read_gcal_link():
+    with SessionLocal() as db:
+        try:
+            data = request.get_json()
+            gcal_link = data.get("gcal_link")
+            event_type = data.get("event_type", None)
+            org_id = data.get("org_id")
+            category_id = data.get("category_id")
+            if not gcal_link:
+                return jsonify({"error": "Missing gcal_link"}), 400
+            status = import_ical_feed_using_helpers(
+                db_session=db,
+                ical_text_or_url=gcal_link,
+                org_id=org_id,
+                category_id=category_id,
+                default_event_type=event_type
+            )
+            print(status)
+
+            db.commit()  # Only commit if all succeeded
+            return jsonify({"status": "gcal link processed"}), 201
+
+        except Exception as e:
+            db.rollback()
+            import traceback
+            print("❌ Exception:", traceback.format_exc())
+
+            return jsonify({"error": str(e)}), 500
+
+# @events_bp.route("/generate_more_occurrences", methods=["POST"])
+# def generate_more_occurrences():
+#     with SessionLocal() as db:
+#         try:
+#             data = request.get_json()
+#             event_id = data.get("event_id")
+#             event = db.query(Event).filter(Event.id == event_id).first()
+#             populate_event_occurrences(db, event_id=event_id)
 
 # should only be used for testing purposes
 @events_bp.route("/create_recurrence_rule", methods=["POST"])

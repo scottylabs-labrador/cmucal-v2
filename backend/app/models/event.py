@@ -1,5 +1,11 @@
 from app.models.models import Event 
-from typing import List
+
+# from icalendar import Calendar, Event as IcalEvent
+# from recurring_ical_events import recurring_ical_events
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional
+import requests
+from app.models.models import Event, RecurrenceRule, EventOccurrence, RecurrenceRdate, RecurrenceExdate, EventOverride
 
 ### need to check type of start_datetime, end_datetime before using them
 def save_event(db, org_id: int, category_id: int, title: str, start_datetime: str, end_datetime: str, 
@@ -37,7 +43,6 @@ def save_event(db, org_id: int, category_id: int, title: str, start_datetime: st
     )
     db.add(event)
     db.flush()      # Allocate event.id without committing
-    db.refresh(event)
     return event
 
 def get_event_by_id(db, event_id: int):
