@@ -82,7 +82,9 @@ export default function Profile() {
             allDay: event.is_all_day,
             backgroundColor: "#f87171", // Red color for courses
             borderColor: "#f87171",
-            extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
+            extendedProps: { location: event.location, description: event.description, source_url: event.source_url, 
+              event_id: event.event_id || event.id, // event_id for occurrences, id for non-recurring
+             }
           });
         }
       });
@@ -99,7 +101,9 @@ export default function Profile() {
             allDay: event.is_all_day,
             backgroundColor: "#4ade80", // Green color for clubs
             borderColor: "#4ade80",
-            extendedProps: { location: event.location, description: event.description, source_url: event.source_url }
+            extendedProps: { location: event.location, description: event.description, source_url: event.source_url,
+              event_id: event.event_id || event.id, // event_id for occurrences, id for non-recurring
+             }
           });
         }
       });
