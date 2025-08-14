@@ -231,6 +231,10 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
       alert("Please fill in all required fields.");
       return;
     }
+    if (!user?.id) {
+        alert("User not found.");
+        return;
+    }
 
     try {
           const payload : EventPayloadType = {
@@ -251,6 +255,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
             category_id: selectedCategory.id,
             org_id: selectedCategory.org_id,
             event_tags: selectedTags.map(tag => tag.name),
+            clerk_id: user.id,
           };
 
           if (allDay && !startTime && !endTime) {
@@ -390,7 +395,7 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
 
     const fetchCourses = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/orgs/get_course_orgs", {
+        const res = await axios.get("http://localhost:5001/api/organizations/get_course_orgs", {
           withCredentials: true
         });
 
@@ -409,18 +414,20 @@ export default function ModalEventForm({ show, onClose, selectedCategory, eventT
     
 
     fetchTags();
-    fetchCourses();
 
-    const potentialCourseNum = selectedCategory.organization_name.split(" ")[0] || "none";
-    const match = potentialCourseNum.match(/\d\d-\d\d\d/);
-
-    if (match) {
-      setCourse(selectedCategory.organization_name);
-      setCourseNum(potentialCourseNum);
-      setCourseName(selectedCategory.organization_name.split(" ").slice(1).join(" "));
+    if (selectedEventType === "Academic") {
+      fetchCourses();
+      const potentialCourseNum = selectedCategory.organization_name.split(" ")[0] || "none";
+      const match = potentialCourseNum.match(/\d\d-\d\d\d/);
+        
+      if (match) {
+        setCourse(selectedCategory.organization_name);
+        setCourseNum(potentialCourseNum);
+        setCourseName(selectedCategory.organization_name.split(" ").slice(1).join(" "));
+      }
     }
     
-  }, []);
+  }, [selectedEventType]);
 
 
   const handleInstructorChange = (e: React.ChangeEvent<HTMLInputElement>) => {

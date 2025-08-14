@@ -45,6 +45,7 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
   const { openUpload } = useEventState();
 
 
+  
 
 
   const reset = () => {
@@ -88,11 +89,16 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
       }
 
       else if (gcalLink.trim()) {
+        if (!user?.id) {
+          alert("User not found.");
+          return;
+        }
 
         const payload : GCalLinkPayloadType = {
           gcal_link: gcalLink,
           org_id: selectedCategory.org_id,
           category_id: selectedCategory.id,
+          clerk_id: user.id
         };
 
         console.log("Submitting payload:", payload);

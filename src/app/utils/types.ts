@@ -67,6 +67,7 @@ export interface GCalLinkPayloadType {
   gcal_link: string;
   org_id: string;
   category_id: string;
+  clerk_id: string;
   course_num?: string;
   course_name?: string;
   instructors?: string[];
@@ -84,6 +85,7 @@ export interface EventPayloadType {
   event_type: string;
   category_id: number;
   org_id: string;
+  clerk_id: string;
   event_tags?: string[];
   course_num?: string;
   course_name?: string;

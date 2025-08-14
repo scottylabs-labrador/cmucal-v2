@@ -36,19 +36,26 @@ def create_event_record():
             location = data.get("location", None)
             source_url = data.get("source_url", None)
             event_type= data.get("event_type", None)
-            user_edited = data.get("user_edited", None)
+            user_edited = data.get("user_edited", [])
             org_id = data.get("org_id")
             category_id = data.get("category_id")
             event_tags = data.get("event_tags", None)
             recurrence = data.get("recurrence", None)
+            clerk_id = data.get("clerk_id", None)
 
-            if not org_id or not category_id:
+            if not org_id or not category_id or not clerk_id:
                 db.rollback()
-                return jsonify({"error": "Missing org_id or category_id"}), 400
+                return jsonify({"error": "Missing org_id or category_id or clerk_id"}), 400
 
             if not title or not start_datetime or not end_datetime or not recurrence:
                 db.rollback()
                 return jsonify({"error": "Missing required fields: title, start_datetime, end_datetime, recurrence"}), 400
+
+            user = get_user_by_clerk_id(db, clerk_id)
+            if not user:
+                db.rollback()
+                return jsonify({"error": "User not found"}), 404
+            user_edited.append(user.id)
 
             # Assuming you have a function to create an event
             event = save_event(db, org_id=org_id, 
@@ -156,14 +163,22 @@ def read_gcal_link():
             event_type = data.get("event_type", None)
             org_id = data.get("org_id")
             category_id = data.get("category_id")
+            clerk_id = data.get("clerk_id", None)
+
             if not gcal_link:
                 return jsonify({"error": "Missing gcal_link"}), 400
+            user = get_user_by_clerk_id(db, clerk_id)
+            if not user:
+                db.rollback()
+                return jsonify({"error": "User not found"}), 404
+
             status = import_ical_feed_using_helpers(
                 db_session=db,
                 ical_text_or_url=gcal_link,
                 org_id=org_id,
                 category_id=category_id,
-                default_event_type=event_type
+                default_event_type=event_type,
+                user_id=user.id
             )
             print(status)
 

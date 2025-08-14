@@ -25,7 +25,8 @@ def import_ical_feed_using_helpers(
     category_id: int,
     default_event_type: Optional[str] = None,   # e.g. "CLUB"/"ACADEMIC"/"CAREER"/"OH"/NONE
     source_url: Optional[str] = None,
-    user_edited: Optional[List[int]] = None,
+    # user_edited: Optional[List[int]] = None,
+    user_id: Optional[int] = None,
     delete_missing_uids: bool = False           # if True, remove events that disappeared from feed
 ):
     """
@@ -66,7 +67,7 @@ def import_ical_feed_using_helpers(
             category_id=category_id,
             default_event_type=default_event_type,
             source_url=source_url,
-            user_edited=user_edited
+            user_id=user_id
         )
         if event_id:
             event_ids.append(event_id)
@@ -92,7 +93,8 @@ def _process_uid_group_with_helpers(
     category_id: int,
     default_event_type: Optional[str],
     source_url: Optional[str],
-    user_edited: Optional[bool]
+    # user_edited: Optional[bool],
+    user_id: Optional[int]
 ):
     # Split: base components (no RECURRENCE-ID) vs overrides
     base_candidates = [c for c in components if not c.get("RECURRENCE-ID")]
@@ -134,7 +136,7 @@ def _process_uid_group_with_helpers(
     if existing:
         # Decide if we should update (SEQUENCE or LAST-MODIFIED newer)
         if changed:
-            # Reuse your helper path: save_event is likely for new; for updates we set fields directly.
+            
             existing.title = title
             existing.description = description or ""
             existing.location = location or "no location recorded"
@@ -143,7 +145,12 @@ def _process_uid_group_with_helpers(
             existing.is_all_day = is_all_day
             existing.source_url = source_url
             existing.event_type = default_event_type
+
+
+            user_edited = existing.user_edited if existing.user_edited else []
+            user_edited.append(user_id)
             existing.user_edited = user_edited
+
             existing.org_id = org_id
             existing.category_id = category_id
             existing.ical_sequence = seq
@@ -169,7 +176,7 @@ def _process_uid_group_with_helpers(
             location=location or None,
             source_url=source_url,
             event_type=default_event_type,
-            user_edited=user_edited
+            user_edited=[user_id]
         )
         db_session.flush()
         # Add iCal metadata directly on the persisted model
@@ -287,6 +294,7 @@ def _process_uid_group_with_helpers(
 
         # Write a single occurrence via your helper
             event_saved_at = getattr(event, "last_updated_at", datetime.utcnow())
+
             save_event_occurrence(
                 db_session,
                 event_id=event.id,
@@ -298,7 +306,7 @@ def _process_uid_group_with_helpers(
                 recurrence="ONETIME",
                 event_saved_at=event_saved_at,
                 is_all_day=is_all_day,
-                user_edited=user_edited,
+                user_edited=[user_id],
                 description=description or None,
                 location=location or None,
                 source_url=source_url
