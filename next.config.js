@@ -14,8 +14,10 @@ const config = {
     ignoreBuildErrors: true,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
+    // !! Warning !!
+    // This allows production builds to successfully complete even if
     // your project has ESLint errors.
+    // !! Warning !!
     ignoreDuringBuilds: true,
   },
 };
