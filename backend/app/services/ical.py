@@ -5,10 +5,11 @@ from app.utils.date import _ensure_aware, _parse_iso, decoded_dt_with_tz
 from datetime import datetime, timedelta, timezone, date
 from typing import Dict, List, Optional
 import requests
+import os
 
 from app.models.models import (
     Event, RecurrenceRule, EventOccurrence,
-    RecurrenceExdate, RecurrenceRdate, EventOverride
+    RecurrenceExdate, RecurrenceRdate, EventOverride, CalendarSource
 )
 
 from app.models.recurrence_rule import add_recurrence_rule
@@ -80,6 +81,66 @@ def import_ical_feed_using_helpers(
             db_session.query(Event).filter(Event.ical_uid.in_(missing)).delete(synchronize_session=False)
 
     return f"Processed {len(incoming_uids)} unique UIDs from ICS feed:\n{event_ids}"
+
+
+## this function (sync_ical_source) has not been tested yet, do not run in production environment
+# def sync_ical_source(db, source: CalendarSource):
+#     # Acquire soft lock
+#     if source.locked_at and (datetime.now(timezone.utc) - source.locked_at).total_seconds() < 1800:
+#         return "locked"
+#     source.locked_at = datetime.now(timezone.utc)
+#     source.lock_owner = os.getenv("HOSTNAME", "worker")
+#     db.flush()
+
+#     try:
+#         url = source.url.replace("webcal://", "https://")
+#         headers = {}
+#         if source.etag:
+#             headers["If-None-Match"] = source.etag
+#         if source.last_modified_hdr:
+#             headers["If-Modified-Since"] = source.last_modified_hdr.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+#         resp = requests.get(url, headers=headers, timeout=30)
+#         if resp.status_code == 304:
+#             source.last_sync_status = "not_modified"
+#         else:
+#             resp.raise_for_status()
+#             body = resp.text
+
+#             # Optional extra guard
+#             h = hashlib.sha256(body.encode("utf-8")).hexdigest()
+#             if h == source.content_hash and source.sync_mode == "delta":
+#                 source.last_sync_status = "not_modified"
+#             else:
+#                 status = import_ical_feed_using_helpers(
+#                     db_session=db,
+#                     ical_text_or_url=body,   # pass raw ICS
+#                     org_id=source.org_id,
+#                     category_id=source.category_id,
+#                     default_event_type=source.default_event_type,
+#                 )
+#                 source.content_hash = h
+#                 source.last_sync_status = "ok"
+
+#             source.etag = resp.headers.get("ETag") or source.etag
+#             lm = resp.headers.get("Last-Modified")
+#             if lm:
+#                 source.last_modified_hdr = parsed_httpdate_to_dt(lm)
+
+#         source.last_fetched_at = datetime.now(timezone.utc)
+#         source.next_due_at = source.last_fetched_at + timedelta(seconds=source.fetch_interval_seconds)
+#         db.flush()
+#         return source.last_sync_status
+#     except Exception as e:
+#         source.last_error = str(e)[:500]
+#         source.last_sync_status = "error"
+#         db.flush()
+#         raise
+#     finally:
+#         # Release lock
+#         source.locked_at = None
+#         source.lock_owner = None
+#         db.flush()
 
 
 def _process_uid_group_with_helpers(
