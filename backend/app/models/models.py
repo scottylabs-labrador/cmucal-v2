@@ -225,7 +225,60 @@ class Category(Base):
     schedule_categories: Mapped[List['ScheduleCategory']] = relationship('ScheduleCategory', back_populates='category')
     event_occurrences: Mapped[List['EventOccurrence']] = relationship('EventOccurrence', back_populates='category')
     calendar_sources: Mapped[List['CalendarSource']] = relationship('CalendarSource', back_populates='category')
+    category_icals: Mapped[List['CategoryIcal']] = relationship('CategoryIcal', back_populates='category')
 
+
+class CategoryIcal(Base):
+    __tablename__ = 'category_icals'
+    __table_args__ = (
+        ForeignKeyConstraint(['calendar_source_id'], ['calendar_sources.id'], ondelete='CASCADE', name='org_icals_calendar_source_id_fkey'),
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='org_icals_category_id_fkey'),
+        PrimaryKeyConstraint('category_id', 'calendar_source_id', name='org_icals_pkey')
+    )
+
+    category_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    calendar_source_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+
+    calendar_source: Mapped['CalendarSource'] = relationship('CalendarSource', back_populates='category_icals')
+    category: Mapped['Category'] = relationship('Category', back_populates='category_icals')
+
+class CalendarSource(Base):
+    __tablename__ = 'calendar_sources'
+    __table_args__ = (
+        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='calendar_sources_category_id_fkey'),
+        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='calendar_sources_org_id_fkey'),
+        PrimaryKeyConstraint('id', name='calendar_sources_pkey')
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    url: Mapped[str] = mapped_column(Text)
+    org_id: Mapped[int] = mapped_column(BigInteger)
+    category_id: Mapped[int] = mapped_column(BigInteger)
+    active: Mapped[bool] = mapped_column(Boolean)
+    fetch_interval_seconds: Mapped[int] = mapped_column(BigInteger, server_default=text("'21600'::bigint"))
+    deletion_policy: Mapped[str] = mapped_column(Text, server_default=text("'mirror'::text"))
+    all_day_handling: Mapped[str] = mapped_column(Text, server_default=text("'date_only'::text"))
+    horizon_days: Mapped[int] = mapped_column(BigInteger, server_default=text("'180'::bigint"))
+    sync_mode: Mapped[str] = mapped_column(Text, server_default=text("'delta'::text"))
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
+    default_event_type: Mapped[Optional[str]] = mapped_column(Text)
+    created_by_user_id: Mapped[Optional[int]] = mapped_column(BigInteger)
+    etag: Mapped[Optional[str]] = mapped_column(Text)
+    last_modified_hdr: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    content_hash: Mapped[Optional[str]] = mapped_column(Text)
+    last_fetched_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    last_sync_status: Mapped[Optional[str]] = mapped_column(Text)
+    last_error: Mapped[Optional[str]] = mapped_column(Text)
+    next_due_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    locked_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True))
+    lock_owner: Mapped[Optional[str]] = mapped_column(Text)
+    default_tzid: Mapped[Optional[str]] = mapped_column(Text)
+
+    category: Mapped['Category'] = relationship('Category', back_populates='calendar_sources')
+    org: Mapped['Organization'] = relationship('Organization', back_populates='calendar_sources')
+    category_icals: Mapped[List['CategoryIcal']] = relationship('CategoryIcal', back_populates='calendar_source')
 
 class Schedule(Base):
     __tablename__ = 'schedules'
@@ -302,26 +355,6 @@ class Event(Base):
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
-
-class CalendarSource(Base):
-    __tablename__ = 'calendar_sources'
-    __table_args__ = (
-        ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE', name='calendar_sources_category_id_fkey'),
-        ForeignKeyConstraint(['org_id'], ['organizations.id'], ondelete='CASCADE', name='calendar_sources_org_id_fkey'),
-        PrimaryKeyConstraint('id', name='calendar_sources_pkey')
-    )
-
-    id: Mapped[int] = mapped_column(BigInteger, Identity(start=1, increment=1, minvalue=1, maxvalue=9223372036854775807, cycle=False, cache=1), primary_key=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), server_default=text('now()'))
-    url: Mapped[str] = mapped_column(Text)
-    org_id: Mapped[int] = mapped_column(BigInteger)
-    category_id: Mapped[int] = mapped_column(BigInteger)
-    active: Mapped[bool] = mapped_column(Boolean)
-    default_event_type: Mapped[Optional[str]] = mapped_column(Text)
-    created_by_user_id: Mapped[Optional[int]] = mapped_column(BigInteger)
-
-    category: Mapped['Category'] = relationship('Category', back_populates='calendar_sources')
-    org: Mapped['Organization'] = relationship('Organization', back_populates='calendar_sources')
 
 class ScheduleOrg(Base):
     __tablename__ = 'schedule_orgs'
