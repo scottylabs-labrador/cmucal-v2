@@ -11,12 +11,14 @@ from app.models.event_tag import save_event_tag, get_tags_by_event, delete_event
 from app.models.recurrence_rule import add_recurrence_rule
 from app.models.event_occurrence import populate_event_occurrences, save_event_occurrence
 from app.models.category import category_to_dict, get_category_by_id
-from app.models.models import Event, UserSavedEvent, Organization, EventOccurrence, EventTag, Category, Tag
+from app.models.models import CalendarSource, CategoryIcal, Event, UserSavedEvent, Organization, EventOccurrence, EventTag, Category, Tag
 import pprint
 from datetime import datetime
 from sqlalchemy import cast, Date, or_
 
 from app.services.ical import import_ical_feed_using_helpers
+from app.models.calendar_source import create_calendar_source
+from app.models.category_ical import create_category_ical
 
 
 events_bp = Blueprint("events", __name__)
@@ -174,7 +176,7 @@ def read_gcal_link():
                 db.rollback()
                 return jsonify({"error": "User not found"}), 404
 
-            status = import_ical_feed_using_helpers(
+            ics_message = import_ical_feed_using_helpers(
                 db_session=db,
                 ical_text_or_url=gcal_link,
                 org_id=org_id,
@@ -182,10 +184,32 @@ def read_gcal_link():
                 default_event_type=event_type,
                 user_id=user.id
             )
-            print(status)
+            print(ics_message)
+
+            # store the gcal link if it is not already stored
+            existing_calendar_source = db.query(CalendarSource).filter(CalendarSource.url == gcal_link).first()
+            if not existing_calendar_source:
+                calendar_source = create_calendar_source(
+                    db_session=db,
+                    url=gcal_link,
+                    org_id=org_id,
+                    category_id=category_id,
+                    active=True,
+                    default_event_type=event_type,
+                    created_by_user_id=user.id
+                )
+                existing_calendar_source = calendar_source
+            existing_category_ical = db.query(CategoryIcal).filter(CategoryIcal.calendar_source_id == existing_calendar_source.id).first()
+            if not existing_category_ical:
+                category_ical = create_category_ical(
+                    db_session=db,
+                    category_id=category_id,
+                    calendar_source_id=existing_calendar_source.id
+                )
+                existing_category_ical = category_ical
 
             db.commit()  # Only commit if all succeeded
-            return jsonify({"status": "gcal link processed"}), 201
+            return jsonify({"status": "gcal link processed and stored at calendar_source " + str(existing_calendar_source.id)}), 201
 
         except Exception as e:
             db.rollback()
