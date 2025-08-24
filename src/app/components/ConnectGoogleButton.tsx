@@ -15,6 +15,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { useGcalEvents } from "../../context/GCalEventsContext";
 import { formatGCalEvent } from "../utils/calendarUtils";
 import { CalendarFields } from "../utils/types";
+import { checkGoogleAuthStatus } from "../utils/api/google";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -39,25 +40,19 @@ export function ConnectGoogleButton() {
   const { gcalEvents, setGcalEvents } = useGcalEvents();
   const [cmuCalIds, setCMUCalIds] = useState<string[]>([]);
 
-  // const { user, isSignedIn, isLoaded: userLoaded } = useUser();
-
-  // const [message, setMessage] = useState("");
-  // "http://localhost:5001/api/google/authorize"
-
   useEffect(() => {
     // Only runs on mount
     const checkAuthStatus = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/google/calendar/status", {
-          credentials: "include",
-        });
+        // const res = await fetch("http://localhost:5001/api/google/calendar/status", {
+        //   credentials: "include",
+        // });
+        const { authorized } = await checkGoogleAuthStatus();
 
-        if (res.ok) {
-          const data = await res.json();
-          setIsConnected(true);
-          if (availableCalendars.length === 0) {
-            fetchCalendars();
-          }
+        setIsConnected(authorized);
+
+        if (authorized && availableCalendars.length === 0) {
+          await fetchCalendars();
         }
         
       } catch (err) {

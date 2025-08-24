@@ -218,3 +218,19 @@ export interface FullCalendarEvent {
       event_id?: string
     }
 };
+
+export type AuthStatus = { authorized: boolean };
+
+export interface ClubOrganization {
+  id: number;
+  name: string;
+  description: string;
+}
+
+// Generic type for your jsonify response
+export type CoursesClubsResponse<TCourse = unknown, TClub = unknown> = {
+  courses: TCourse[];
+  clubs: TClub[];
+};
+
+
