@@ -43,6 +43,23 @@ export async function apiPost<T, B = unknown>(
   }
 }
 
+export async function apiPatch<T, B = unknown>(
+  path: string,
+  body: B,
+  config?: AxiosRequestConfig
+): Promise<T> {
+  try {
+    const res = await api.patch<T>(path, body, config);
+    return res.data;
+  } catch (err) {
+    const e = err as AxiosError;
+    const status = e.response?.status ?? "";
+    const statusText = e.response?.statusText ?? e.message;
+    throw new Error(`${status} ${statusText}`.trim());
+  }
+}
+
+
 export async function apiDelete<T = unknown>(
   path: string,
   config?: AxiosRequestConfig

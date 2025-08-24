@@ -11,6 +11,7 @@ import { userAgent } from 'next/server';
 // import ModalEventUpdate from './ModalEventUpdate';
 import { useEventState } from "../../context/EventStateContext";
 import { fetchTagsForEvent } from "../utils/api/events";
+import { API_BASE_URL } from '../utils/api/api';
 
 type ModalEventProps = {
     show: boolean;
@@ -62,7 +63,7 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
             setLoadingEvent(true);
             const fetchEventDetails = async() => {
                 try {
-                    const eventRes = await axios.get(`http://localhost:5001//api/events/${eventId}`, {
+                    const eventRes = await axios.get(`${API_BASE_URL}/events/${eventId}`, {
                         params: {
                             user_id: user?.id,
                         },

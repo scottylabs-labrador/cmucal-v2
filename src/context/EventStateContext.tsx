@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { EventType } from "../app/types/EventType";
 import { EventInput } from "@fullcalendar/core";
 import { List } from "lucide-react";
+import { API_BASE_URL } from "~/app/utils/api/api";
 
 export type ModalView = "details" | "update" | "pre_upload" | "upload" | "uploadLink" | null;
 type Tag = { id?: string; name: string };
@@ -41,7 +42,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     async function fetchSaved() {
       try {
         console.log("😮Fetching saved events for user:", user?.id);
-        const response = await axios.get("http://localhost:5001/api/events/user_saved_events", {
+        const response = await axios.get(`${API_BASE_URL}/events/user_saved_events`, {
           params: {
             user_id: user?.id,
           },
@@ -91,7 +92,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       if (!isCurrentlySaved) {
         // Add the event to current user's calendar
-        await axios.post("http://localhost:5001/api/events/user_saved_events", {
+        await axios.post(`${API_BASE_URL}/events/user_saved_events`, {
           user_id: user?.id,
           event_id: event.id,
           google_event_id: event.id, // [Q|TODO] is google event id needed in this table
@@ -100,7 +101,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }); 
       } else {
         // Remove the event from current user's calendar
-        await axios.delete(`http://localhost:5001/api/events/user_saved_events/${event.id}`, {
+        await axios.delete(`${API_BASE_URL}/events/user_saved_events/${event.id}`, {
           data: {
           user_id: user?.id,
           google_event_id: event.id, // [Q|TODO] is google event id needed in this table
@@ -120,7 +121,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (!isCurrentlySaved) {
         console.log("adding event to gcallll")
         // Add to Google Calendar via backend
-        await axios.post("http://localhost:5001/api/google/calendar/events/add", {
+        await axios.post(`${API_BASE_URL}/google/calendar/events/add`, {
           user_id: user?.id,
           local_event_id: event.id,
           title: event.title,
@@ -131,7 +132,7 @@ export const EventStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         });        
       } else {
         // Remove from Google Calendar via backend
-        await axios.delete(`http://localhost:5001/api/google/calendar/events/${event.id}`, {
+        await axios.delete(`${API_BASE_URL}/google/calendar/events/${event.id}`, {
           data: {
             user_id: user?.id,
           },

@@ -148,6 +148,14 @@ export interface Category {
     name: string;
 }
 
+export interface CategoryOrg {
+  id: number;
+  name: string;
+  org_id: string;
+  organization_name: string;
+  created_at: Date | null;
+}
+
 export interface Organization {
     org_id: number;
     name: string;
@@ -238,4 +246,16 @@ export interface TagType {
   name: string;
 }
 
+export type ReadIcalLinkResponse = { status: string };
 
+
+export type LoginPayload = {
+  clerk_id: string;
+  email?: string;
+  fname?: string | null;
+  lname?: string | null;
+};
+
+export type LoginResponse = {
+  user: { id: number | string };
+};
