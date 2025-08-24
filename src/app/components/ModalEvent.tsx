@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { userAgent } from 'next/server';
 // import ModalEventUpdate from './ModalEventUpdate';
 import { useEventState } from "../../context/EventStateContext";
+import { fetchTags } from "../utils/api/event";
 
 type ModalEventProps = {
     show: boolean;
@@ -83,16 +84,15 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
         setLoadingTags(true);
         const fetchTag = async() => {
             try {
-                const tagRes = await axios.get(`http://localhost:5001/api/events/${eventId}/tags`, {
-                    withCredentials: true,
-                });
-                const tags = tagRes.data; // e.g. [{ id: "1", name: "computer science" }, ...]
-                setSelectedTags(
-                    tags.map((tag: any) => ({
-                        id: tag.id,
-                        name: tag.name.toLowerCase(),
-                    }))
-                );
+                if (eventId) {
+                    const tags = await fetchTags(eventId); // e.g. [{ id: "1", name: "computer science" }, ...]
+                    setSelectedTags(
+                        tags.map((tag: any) => ({
+                            id: tag.id,
+                            name: tag.name.toLowerCase(),
+                        }))
+                    );
+                }
             } catch (err) {
                 console.error("Failed to fetch event tags for event: ", eventId, err);
             } finally { 
@@ -102,10 +102,6 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
         fetchTag();        
     }, [eventId, eventDetails])
 
-
-
-
-    
     console.log("show edit modal!!", show, eventDetails)
 
     return (

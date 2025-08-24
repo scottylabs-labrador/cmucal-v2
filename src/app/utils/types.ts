@@ -233,4 +233,9 @@ export type CoursesClubsResponse<TCourse = unknown, TClub = unknown> = {
   clubs: TClub[];
 };
 
+export interface TagType {
+  id: number;
+  name: string;
+}
+
 

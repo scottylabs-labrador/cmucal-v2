@@ -15,7 +15,9 @@ import Checkbox from '@mui/material/Checkbox';
 import { useGcalEvents } from "../../context/GCalEventsContext";
 import { formatGCalEvent } from "../utils/calendarUtils";
 import { CalendarFields } from "../utils/types";
-import { checkGoogleAuthStatus } from "../utils/api/google";
+import { checkGoogleAuthStatus, fetchBulkEventsFromCalendars } from "../utils/api/google";
+import { API_BASE_URL } from "../utils/api/api";
+
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -27,8 +29,6 @@ const MenuProps = {
     },
   },
 };
-
-
 
 export function ConnectGoogleButton() {
   // https://mui.com/material-ui/react-select/
@@ -82,13 +82,13 @@ export function ConnectGoogleButton() {
   }, [selectedCalendarIds]);
 
   const fetchEventsFromCalendars = async (calendarIds: string[]) => {
-    const res = await fetch("http://localhost:5001/api/google/calendar/events/bulk", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ calendarIds }),
-    });
-    const data = await res.json();
+    // const res = await fetch("http://localhost:5001/api/google/calendar/events/bulk", {
+    //   method: "POST",
+    //   credentials: "include",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ calendarIds }),
+    // });
+    const data = await fetchBulkEventsFromCalendars(calendarIds);
 
     const formattedGCalEvents = data.map((event: any) => (formatGCalEvent(event, cmuCalIds)));
 
@@ -114,18 +114,19 @@ export function ConnectGoogleButton() {
 
   const authorizeGoogle = async () => {
     const redirectUrl = window.location.href;
-    window.location.href = `http://localhost:5001/api/google/authorize?redirect=${redirectUrl}`;
+    window.location.href = `${API_BASE_URL}/google/authorize?redirect=${redirectUrl}`;
   }
 
   const fetchCalendars = async () => {
-    const res = await fetch("http://localhost:5001/api/google/calendars", {
+    // need to change this to using the api client later
+    const res = await fetch(`${API_BASE_URL}/google/calendars`, {
       credentials: "include",
     });
   
     if (res.status === 401) {
       // should add a screen to give them more information and ask if 
       // the user wants to connect their Google account
-      window.location.href = "http://localhost:5001/api/google/authorize";
+      window.location.href = `${API_BASE_URL}/google/authorize`;
       return;
     }
   
