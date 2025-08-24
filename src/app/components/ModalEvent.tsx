@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { userAgent } from 'next/server';
 // import ModalEventUpdate from './ModalEventUpdate';
 import { useEventState } from "../../context/EventStateContext";
-import { fetchTags } from "../utils/api/event";
+import { fetchTagsForEvent } from "../utils/api/events";
 
 type ModalEventProps = {
     show: boolean;
@@ -85,7 +85,7 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
         const fetchTag = async() => {
             try {
                 if (eventId) {
-                    const tags = await fetchTags(eventId); // e.g. [{ id: "1", name: "computer science" }, ...]
+                    const tags = await fetchTagsForEvent(eventId); // e.g. [{ id: "1", name: "computer science" }, ...]
                     setSelectedTags(
                         tags.map((tag: any) => ({
                             id: tag.id,

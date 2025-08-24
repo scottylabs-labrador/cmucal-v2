@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from "./api";
-import { ClubOrganization } from "../types";
+import { ClubOrganization, CourseOption } from "../types";
 
 
 export const getClubOrganizations = async (): Promise<ClubOrganization[]> => {
@@ -31,4 +31,8 @@ export const removeOrgFromSchedule = async (scheduleId: number, orgId: number): 
     console.error("Failed to remove organization from schedule:", error);
     throw error;
   }
+};
+
+export const getCourseOrgs = async () : Promise<CourseOption[]> => {
+  return apiGet<CourseOption[]>("/organizations/get_course_orgs");
 };

@@ -228,9 +228,9 @@ export interface ClubOrganization {
 }
 
 // Generic type for your jsonify response
-export type CoursesClubsResponse<TCourse = unknown, TClub = unknown> = {
-  courses: TCourse[];
-  clubs: TClub[];
+export type CoursesClubsResponse = {
+  courses: Course[];
+  clubs: Club[];
 };
 
 export interface TagType {

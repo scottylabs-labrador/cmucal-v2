@@ -5,13 +5,11 @@ import { CoursesClubsResponse } from "../types";
 // For now, the page component will handle passing the token if needed
 // based on how the getSchedule function on the page is implemented.
 
-export const getSchedule = async <CoursesClubsResponse>(
+export const getSchedule = async (
   userId: string | null | undefined,
   scheduleId?: string | number
 ): Promise<CoursesClubsResponse> => {
-  if (!userId) {
-    throw new Error("User ID is required to fetch schedule.");
-  }
+  if (!userId) throw new Error("User ID is required to fetch schedule.");
   return apiGet<CoursesClubsResponse>("/schedule/", {
     headers: { "Clerk-User-Id": userId },
     params: scheduleId != null ? { schedule_id: scheduleId } : undefined,
