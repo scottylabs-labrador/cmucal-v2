@@ -15,7 +15,7 @@ import { useEventState } from "../../context/EventStateContext";
 import React from 'react'
 import Select from 'react-select'
 import { fetchAllTags } from "../utils/api/events";
-import { API_BASE_URL } from "../utils/api/api";
+import { API_BASE_URL, api } from "../utils/api/api";
 
 
 type Props = {
@@ -94,10 +94,9 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_BASE_URL}/events`, {
-          headers: { "Content-Type": "application/json" },
+        const res = await api.get(`/events/`, {
+          headers: { "Clerk-User-Id": user?.id },
           params: {
-            user_id: user?.id,
             term: debouncedSearchTerm,
             tags: selectedTagIds,
             date: selectedDate,
