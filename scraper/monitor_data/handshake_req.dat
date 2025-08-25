@@ -1,0 +1,14 @@
+{
+  "operationName": "GetEventAbstractions",
+  "variables": {
+    "params": {
+      "medium": "HYBRID",
+      "sort": "DATE",
+      "date": "NEXT_30",
+      "collection": "ALL",
+      "searchModels": ["Event", "CareerFair"]
+    },
+    "first": 50
+  },
+  "query": "query GetEventAbstractions($params: EventAbstractionSearchInput, $first: Int) { eventAbstractions(params: $params, first: $first) { edges { node { id name startDate endDate medium registered categories { name } ... on Event { host { name } studentRegistrationStart studentRegistrationEnd } ... on CareerFair { host { name } studentRegistrationStart studentRegistrationEnd } employers { name } } } } }"
+}

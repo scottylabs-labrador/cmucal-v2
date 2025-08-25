@@ -1,0 +1,2 @@
+[PROD]
+DB_URI_SHORT = mongodb+srv://USER:something_something_something@calcluster.blah_blah_blah.mongodb.net/?retryWrites=true&w=majority
