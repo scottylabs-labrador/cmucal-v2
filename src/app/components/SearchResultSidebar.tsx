@@ -95,6 +95,7 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
       try {
         setLoading(true);
         const res = await axios.get(`${API_BASE_URL}/events`, {
+          headers: { "Content-Type": "application/json" },
           params: {
             user_id: user?.id,
             term: debouncedSearchTerm,
