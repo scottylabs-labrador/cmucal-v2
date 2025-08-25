@@ -148,6 +148,14 @@ export interface Category {
     name: string;
 }
 
+export interface CategoryOrg {
+  id: number;
+  name: string;
+  org_id: string;
+  organization_name: string;
+  created_at: Date | null;
+}
+
 export interface Organization {
     org_id: number;
     name: string;
@@ -217,4 +225,37 @@ export interface FullCalendarEvent {
       source_url?: string,
       event_id?: string
     }
+};
+
+export type AuthStatus = { authorized: boolean };
+
+export interface ClubOrganization {
+  id: number;
+  name: string;
+  description: string;
+}
+
+// Generic type for your jsonify response
+export type CoursesClubsResponse = {
+  courses: Course[];
+  clubs: Club[];
+};
+
+export interface TagType {
+  id: number;
+  name: string;
+}
+
+export type ReadIcalLinkResponse = { status: string };
+
+
+export type LoginPayload = {
+  clerk_id: string;
+  email?: string;
+  fname?: string | null;
+  lname?: string | null;
+};
+
+export type LoginResponse = {
+  user: { id: number | string };
 };

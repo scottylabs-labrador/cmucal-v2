@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import { userAgent } from 'next/server';
 // import ModalEventUpdate from './ModalEventUpdate';
 import { useEventState } from "../../context/EventStateContext";
+import { fetchTagsForEvent } from "../utils/api/events";
+import { API_BASE_URL } from '../utils/api/api';
 
 type ModalEventProps = {
     show: boolean;
@@ -61,7 +63,7 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
             setLoadingEvent(true);
             const fetchEventDetails = async() => {
                 try {
-                    const eventRes = await axios.get(`http://localhost:5001//api/events/${eventId}`, {
+                    const eventRes = await axios.get(`${API_BASE_URL}/events/${eventId}`, {
                         params: {
                             user_id: user?.id,
                         },
@@ -83,16 +85,15 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
         setLoadingTags(true);
         const fetchTag = async() => {
             try {
-                const tagRes = await axios.get(`http://localhost:5001/api/events/${eventId}/tags`, {
-                    withCredentials: true,
-                });
-                const tags = tagRes.data; // e.g. [{ id: "1", name: "computer science" }, ...]
-                setSelectedTags(
-                    tags.map((tag: any) => ({
-                        id: tag.id,
-                        name: tag.name.toLowerCase(),
-                    }))
-                );
+                if (eventId) {
+                    const tags = await fetchTagsForEvent(eventId); // e.g. [{ id: "1", name: "computer science" }, ...]
+                    setSelectedTags(
+                        tags.map((tag: any) => ({
+                            id: tag.id,
+                            name: tag.name.toLowerCase(),
+                        }))
+                    );
+                }
             } catch (err) {
                 console.error("Failed to fetch event tags for event: ", eventId, err);
             } finally { 
@@ -102,10 +103,6 @@ export default function ModalEvent({ show, onClose, savedEventDetails }: ModalEv
         fetchTag();        
     }, [eventId, eventDetails])
 
-
-
-
-    
     console.log("show edit modal!!", show, eventDetails)
 
     return (

@@ -14,6 +14,8 @@ import { useEventState } from "../../context/EventStateContext";
 
 import React from 'react'
 import Select from 'react-select'
+import { fetchAllTags } from "../utils/api/events";
+import { API_BASE_URL } from "../utils/api/api";
 
 
 type Props = {
@@ -27,7 +29,7 @@ type OptionType = {
   label: string;
 };
 
-function useDebounce(value, delay) {
+function useDebounce(value: string, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
@@ -72,9 +74,9 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/events/tags")
-        setAllTags(res.data)
-        console.log("Fetched tags:", res.data);
+        const data = await fetchAllTags();
+        setAllTags(data)
+        console.log("Fetched tags:", data);
       } catch (err) {
         console.error("Failed to fetch tags", err)
       }
@@ -92,7 +94,7 @@ export default function SearchResultsSidebar({ events, setEvents }: Props) {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5001/api/events", {
+        const res = await axios.get(`${API_BASE_URL}/events`, {
           params: {
             user_id: user?.id,
             term: debouncedSearchTerm,

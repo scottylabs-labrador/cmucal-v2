@@ -17,6 +17,8 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import axios from 'axios';
+import { fetchAllTags } from '../utils/api/events';
+import { API_BASE_URL } from '../utils/api/api';
 
 type Tag = { id?: string; name: string };
 
@@ -110,11 +112,7 @@ export default function ModalEventUpdate({ show, onClose, oldEventInfo, savedEve
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const res = await axios.get("http://localhost:5001/api/events/tags", {
-                    withCredentials: true, 
-                });
-        
-                const tags = res.data; // e.g. [{ id: "1", name: "computer science" }, ...]
+                const tags = await fetchAllTags(); // e.g. [{ id: "1", name: "computer science" }, ...]
                 setPredefinedTags(
                     tags.map((tag: any) => ({
                         id: tag.id,
@@ -211,7 +209,8 @@ export default function ModalEventUpdate({ show, onClose, oldEventInfo, savedEve
 
         }
         try {
-            const res = await axios.patch(`http://localhost:5001/api/events/${oldEventInfo.id}`, 
+            // will need to update later to include in events.ts
+            const res = await axios.patch(`${API_BASE_URL}/events/${oldEventInfo.id}`, 
                 updatedEventData
             );
         } catch (err) {
