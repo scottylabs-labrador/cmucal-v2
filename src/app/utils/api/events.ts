@@ -17,12 +17,8 @@ export const createEvent = async (payload: EventPayloadType): Promise<any> => {
   }
 };
 
-export const readIcalLink = async (payload : GCalLinkPayloadType) => {
-  try {
-    const res: AxiosResponse<ReadIcalLinkResponse> = await api.get<ReadIcalLinkResponse>('/events/read_gcal_link', { params: payload });
-    return res;
-  } catch (error) {
-    console.error("Failed to read iCal link:", error);
-    throw error;
-  }
-};
+export const readIcalLink = (payload: GCalLinkPayloadType) =>
+  apiPost<ReadIcalLinkResponse, GCalLinkPayloadType>(
+    "/events/read_gcal_link",
+    payload
+);

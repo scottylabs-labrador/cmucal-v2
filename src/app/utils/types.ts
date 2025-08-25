@@ -246,7 +246,7 @@ export interface TagType {
   name: string;
 }
 
-export type ReadIcalLinkResponse = { status: string };
+export type ReadIcalLinkResponse = { status: number };
 
 
 export type LoginPayload = {
