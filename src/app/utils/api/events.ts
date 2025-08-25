@@ -1,4 +1,4 @@
-import { apiGet, apiPost, api } from "./api";
+import { apiGet, apiPost, api, apiPostWithStatus } from "./api";
 import { TagType, EventPayloadType, GCalLinkPayloadType, ReadIcalLinkResponse } from "../types";
 import type { AxiosResponse } from "axios";
 
@@ -18,7 +18,7 @@ export const createEvent = async (payload: EventPayloadType): Promise<any> => {
 };
 
 export const readIcalLink = (payload: GCalLinkPayloadType) =>
-  apiPost<ReadIcalLinkResponse, GCalLinkPayloadType>(
+  apiPostWithStatus<ReadIcalLinkResponse, GCalLinkPayloadType>(
     "/events/read_gcal_link",
     payload
 );

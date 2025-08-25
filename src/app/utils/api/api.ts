@@ -43,6 +43,16 @@ export async function apiPost<T, B = unknown>(
   }
 }
 
+// new helper when you need HTTP status too
+export async function apiPostWithStatus<T, B = unknown>(
+  path: string,
+  body: B,
+  config?: AxiosRequestConfig
+): Promise<{ data: T; status: number }> {
+  const res = await api.post<T>(path, body, config);
+  return { data: res.data, status: res.status };
+}
+
 export async function apiPatch<T, B = unknown>(
   path: string,
   body: B,

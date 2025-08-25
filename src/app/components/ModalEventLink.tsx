@@ -108,6 +108,7 @@ export default function ModalEventLink({ show, onClose, selectedCategory }: Moda
 
         // for future improvement, will add a page for users to view their uploaded events
         // and then redirect to that page after successful upload
+        console.log("Response from readIcalLink:", res);
         if (res.status === 201) {
           alert("Events created successfully!");
           onClose(); // ✅ only close modal if backend call succeeds
