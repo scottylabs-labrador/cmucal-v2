@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 
 export default async function Home() {
   // redirect to profile if signed in, handled by middleware
-  // const { userId } = await auth();
-  // if (userId) {
-  //   redirect("/profile"); 
-  // }
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/profile"); 
+  }
 
   return (
     <div className="flex justify-center items-center h-[80vh]">
